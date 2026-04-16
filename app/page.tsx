@@ -1,209 +1,429 @@
 'use client'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, BarChart3, Zap, Target, TrendingUp, CheckCircle, Sparkles } from 'lucide-react'
+import { ArrowRight, TrendingUp, CheckCircle, Zap, BarChart3, Target, AlertCircle } from 'lucide-react'
 
-const OUTCOMES = [
-  { value: '฿5K–20K', label: 'ต่อเดือนที่เพิ่มได้จาก Affiliate อย่างเดียว', sub: 'โดยไม่ต้องสร้าง content เพิ่ม' },
-  { value: '฿40K+', label: 'เงินเฉลี่ยที่ Creator ยังไม่ได้ดึงออกมา', sub: 'ต่อเดือน จาก audience ที่มีอยู่แล้ว' },
-  { value: '7 วัน', label: 'เริ่มเห็นเงินเพิ่มครั้งแรก', sub: 'หลังวางระบบตามแผนที่ได้รับ' },
+// ── Platform tags ────────────────────────────────
+const PLATFORMS = [
+  { name: 'TikTok',     bg: '#1a1a1a', border: 'rgba(255,255,255,0.2)', text: '#fff',    symbol: '♪' },
+  { name: 'Instagram',  bg: '#c13584', border: '#c13584',                text: '#fff',    symbol: '◉' },
+  { name: 'YouTube',    bg: '#FF0000', border: '#FF0000',                text: '#fff',    symbol: '▶' },
+  { name: 'Facebook',   bg: '#1877F2', border: '#1877F2',                text: '#fff',    symbol: 'f'  },
 ]
 
+// ── Mock result card data ────────────────────────
+const MOCK_LEAKS = [
+  { label: 'ไม่มีช่องทางรับเงิน',    amount: '฿18,000', color: '#FF4D4F' },
+  { label: 'ไม่มีลิงก์ Affiliate',   amount: '฿8,400',  color: '#FF9F1C' },
+  { label: 'โพสต์ไม่สม่ำเสมอ',      amount: '฿5,200',  color: '#FBBF24' },
+]
+
+// ── How it works ─────────────────────────────────
 const STEPS = [
-  { n: '01', icon: BarChart3, title: 'กรอก Creator Profile', desc: 'Platform, Niche, Followers, รายได้ปัจจุบัน และระบบ Monetization ที่มีอยู่' },
-  { n: '02', icon: Zap, title: 'AI วิเคราะห์ 5 มิติ', desc: 'Reach, Funnel, Product, Conversion, Affiliate — คะแนนจาก 100' },
-  { n: '03', icon: Target, title: 'รับแผนเฉพาะตัวคุณ', desc: 'Revenue Gap + 3 วิธีทำเงินที่เหมาะกับ Niche และ Platform ของคุณ' },
+  { n: '1', icon: BarChart3, title: 'กรอกตัวเลขช่องของคุณ', desc: 'แค่ Platform · ยอด Follow · ยอดวิวเฉลี่ย · และรายได้ตอนนี้' },
+  { n: '2', icon: Zap,       title: 'AI คำนวณให้ใน 3 นาที', desc: 'วิเคราะห์ว่าตัวเลขที่มีอยู่ ควรสร้างเงินได้เท่าไหร่จริงๆ' },
+  { n: '3', icon: Target,    title: 'รู้ทันทีว่าต้องทำอะไร', desc: 'แผนเฉพาะตัวที่บอกว่า "เริ่มจากตรงไหน" เพื่อเพิ่มรายได้เร็วที่สุด' },
 ]
 
-const FEATURES = [
-  'Monetization Score 5 มิติ (0–100)',
-  'Revenue Gap — เงินที่ยังไม่ได้ดึงออกมา',
-  'Revenue Blockers — สาเหตุที่รายได้ไม่โต',
-  'AI Verdict โดย Monetization AI',
-  'Top 3 Actions — เริ่มได้เลยวันนี้',
-  'แผน 30/60/90 วัน พร้อมตัวเลขจริง',
-]
-
+// ── Testimonials ─────────────────────────────────
 const TESTIMONIALS = [
   {
     name: 'มินท์', handle: '@mint.beauty', platform: 'TikTok · 280K',
-    quote: 'ไม่เคยคิดว่าแค่ไม่มี Funnel จะทำให้รายได้ขาด 42,000 บาท/เดือน พอวางระบบปุ๊บ จาก 8K ขึ้น 35K เดือนเดียว',
+    avatar: 'M', avatarBg: 'linear-gradient(135deg,#f093fb,#f5576c)',
+    quote: 'ไม่รู้เลยว่าแค่ไม่มีลิงก์รับเงิน ทำให้หายไป 42,000 บาท/เดือน พอแก้ปุ๊บ จาก 8K ขึ้น 35K เดือนเดียว',
     gain: '+27,000 บาท/เดือน',
   },
   {
     name: 'บอส', handle: '@boss.finance', platform: 'YouTube · 156K',
-    quote: 'Monetization Score บอกว่าได้แค่ 34/100 ทั้งๆ ที่มี subscriber เยอะมาก ตอนนี้ recurring 65K/เดือน',
+    avatar: 'บ', avatarBg: 'linear-gradient(135deg,#4facfe,#00f2fe)',
+    quote: 'มี subscriber เยอะมาก แต่คะแนนได้แค่ 34/100 ตอนนี้มีรายได้ประจำ 65K/เดือนแล้ว',
     gain: '+65,000 บาท/เดือน',
   },
   {
     name: 'แตงโม', handle: '@tangmo.life', platform: 'Instagram · 95K',
-    quote: 'Affiliate ที่ทำมา 6 เดือนได้แค่ 3K พอรู้ว่า setup ผิดจุดไหน optimize เดือนเดียวขึ้น 18K',
+    avatar: 'ต', avatarBg: 'linear-gradient(135deg,#43e97b,#38f9d7)',
+    quote: 'ทำ Affiliate 6 เดือน ได้แค่ 3K รู้ว่าทำผิดตรงไหน แก้เดือนเดียว ขึ้น 18K เลย',
     gain: '+15,000 บาท/เดือน',
   },
+]
+
+const FEATURES = [
+  'คะแนนทำเงิน 0–100 ใน 5 ด้าน',
+  'บอกว่ารายได้หายไปที่ไหนบ้าง',
+  'เหตุที่รายได้ยังไม่โตเต็มที่',
+  'AI วิเคราะห์เฉพาะคุณ',
+  '3 วิธีเพิ่มเงิน เริ่มได้เลยวันนี้',
+  'แผน 30/60/90 วัน พร้อมตัวเลขจริง',
 ]
 
 export default function LandingPage() {
   return (
     <main className="bg-[#08080f] min-h-screen text-white overflow-x-hidden">
 
-      {/* NAV */}
+      {/* ── NAV ─────────────────────────────────── */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#08080f]/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <span className="text-lg font-black gradient-brand">MITA+</span>
+        <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+          <span className="text-lg font-black gradient-brand tracking-tight">MITA+</span>
           <Link
             href="/audit"
             className="flex items-center gap-1.5 bg-white text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-all"
           >
-            เริ่มวิเคราะห์ฟรี <ArrowRight size={13} />
+            เช็กฟรี <ArrowRight size={13} />
           </Link>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section className="relative pt-32 pb-20 px-6">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[700px] h-[450px] bg-violet-600/6 rounded-full blur-3xl" />
-        </div>
+      {/* ── HERO — gradient section ──────────────── */}
+      <section className="relative overflow-hidden">
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="inline-flex items-center gap-2 border border-violet-500/20 bg-violet-500/6 text-violet-300 text-xs px-3 py-1.5 rounded-full mb-8 font-medium">
-              <Sparkles size={11} />
-              AI Revenue Analysis for Creators
-            </div>
+        {/* Gradient bg */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(160deg, #2e1065 0%, #1e3a8a 55%, #0B0B0F 100%)',
+          }}
+        />
+        {/* Soft orbs */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full blur-[120px] opacity-30"
+          style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 60%)' }} />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20"
+          style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 60%)' }} />
+
+        <div className="relative max-w-5xl mx-auto px-5 pt-28 pb-0">
+
+          {/* Platform icons */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 mb-8"
+          >
+            {PLATFORMS.map((p) => (
+              <div
+                key={p.name}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '5px',
+                  padding: '5px 10px', borderRadius: '20px',
+                  background: `${p.bg}22`,
+                  border: `1px solid ${p.border}44`,
+                }}
+              >
+                <span style={{ fontSize: '11px', color: p.text }}>{p.symbol}</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{p.name}</span>
+              </div>
+            ))}
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-            className="text-4xl md:text-7xl font-black leading-[1.08] tracking-tight mb-6"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-black leading-[1.05] tracking-tight mb-5"
           >
-            เข้าใจว่า Audience<br />
-            ที่มีอยู่แล้ว ควรสร้าง<br />
-            <span className="gradient-brand">รายได้เท่าไหร่</span>
+            Follower และ View<br />
+            ของคุณ ทำเงินได้<br />
+            <span style={{
+              background: 'linear-gradient(90deg, #fbbf24, #f97316)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              เท่าไหร่จริงๆ?
+            </span>
           </motion.h1>
 
+          {/* Sub */}
           <motion.p
-            initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="text-lg text-white/45 max-w-xl mx-auto mb-10 leading-relaxed"
+            initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 }}
+            className="text-base sm:text-lg text-white/60 max-w-lg mb-8 leading-relaxed"
           >
-            MITA+ วิเคราะห์ Revenue Gap ของคุณใน 5 มิติ — บอกว่า content ที่ทำอยู่แล้ว
-            ควรสร้างรายได้ได้เท่าไหร่ และต้องทำอะไรเพื่อไปถึงตรงนั้น
+            กรอกตัวเลขช่องของคุณ 3 อย่าง — MITA+ จะบอกว่ารายได้ที่
+            <strong className="text-white/90"> ควรได้แต่ยังไม่ได้</strong> คือเท่าไหร่
+            และต้องแก้อะไรก่อน
           </motion.p>
 
+          {/* CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
-            className="flex flex-col gap-3 justify-center items-center sm:flex-row"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-16"
           >
             <Link
               href="/audit"
-              className="group w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-base px-7 h-14 rounded-2xl transition-all"
+              className="group flex items-center justify-center gap-2 text-black font-black text-base px-7 h-14 rounded-2xl transition-all w-full sm:w-auto"
+              style={{ background: 'linear-gradient(135deg, #fbbf24, #f97316)', boxShadow: '0 0 32px rgba(251,191,36,0.3)' }}
             >
-              เอาเงินกลับมา
+              เช็กตัวเลขของฉัน
               <ArrowRight className="group-hover:translate-x-0.5 transition-transform" size={16} />
             </Link>
-            <div className="flex items-center gap-2 text-white/30 text-sm">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              3 นาที · เห็นเงินใน 7 วัน · ฟรี 100%
+            <div className="flex items-center gap-2 text-white/40 text-sm">
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+              ฟรี 100% · ไม่ต้องสมัคร · ผลออกใน 3 นาที
             </div>
           </motion.div>
-        </div>
 
-        {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
-          className="max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4"
-        >
-          {OUTCOMES.map((o) => (
-            <div key={o.value} className="card rounded-2xl p-5 text-center">
-              <div className="text-3xl font-black gradient-money mb-1">{o.value}</div>
-              <div className="text-white/65 text-sm font-semibold leading-snug">{o.label}</div>
-              <div className="text-white/28 text-xs mt-1">{o.sub}</div>
+          {/* ── Mock Result Card (product preview) ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
+            className="relative mx-auto max-w-sm sm:max-w-md"
+            style={{ perspective: '1000px' }}
+          >
+            {/* Card shadow glow */}
+            <div className="absolute -inset-4 rounded-3xl blur-2xl opacity-30"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }} />
+
+            <div
+              className="relative rounded-2xl overflow-hidden"
+              style={{
+                background: 'rgba(15,15,25,0.95)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+              }}
+            >
+              {/* Card header */}
+              <div style={{
+                padding: '14px 16px',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <div>
+                  <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginBottom: '2px' }}>
+                    ผลวิเคราะห์ · @creator_example · TikTok 85K
+                  </p>
+                  <p style={{ fontWeight: 900, fontSize: '15px', color: '#fff' }}>ผลการวิเคราะห์ของคุณ</p>
+                </div>
+                <div style={{
+                  padding: '4px 10px', borderRadius: '20px',
+                  background: 'rgba(123,97,255,0.15)', border: '1px solid rgba(123,97,255,0.3)',
+                  fontSize: '12px', fontWeight: 700, color: '#a78bfa',
+                }}>
+                  47 / 100
+                </div>
+              </div>
+
+              {/* Revenue gap big number */}
+              <div style={{
+                padding: '16px',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.38)', marginBottom: '4px' }}>
+                  รายได้ที่ควรได้แต่ยังไม่ได้
+                </p>
+                <p style={{ fontWeight: 900, fontSize: '32px', color: '#FF4D4F', lineHeight: 1 }}>
+                  -฿31,600<span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>/เดือน</span>
+                </p>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.28)', marginTop: '4px' }}>
+                  = ฿379,200 ที่หายไปทุกปี
+                </p>
+              </div>
+
+              {/* Leak items */}
+              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>
+                  สาเหตุที่รายได้หาย
+                </p>
+                {MOCK_LEAKS.map((l) => (
+                  <div key={l.label} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 10px', borderRadius: '10px',
+                    background: `${l.color}0d`, border: `1px solid ${l.color}22`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertCircle size={11} style={{ color: l.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>{l.label}</span>
+                    </div>
+                    <span style={{ fontWeight: 700, fontSize: '12px', color: l.color }}>{l.amount}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom CTA */}
+              <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{
+                  width: '100%', height: '40px', borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #fbbf24, #f97316)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 900, fontSize: '13px', color: '#000', gap: '6px',
+                }}>
+                  ดูแผนทำเงินของฉัน <ArrowRight size={12} />
+                </div>
+              </div>
             </div>
-          ))}
-        </motion.div>
+
+            {/* Floating badge */}
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              style={{
+                position: 'absolute', top: '-12px', right: '-8px',
+                background: '#22C55E', color: '#000',
+                padding: '6px 12px', borderRadius: '20px',
+                fontSize: '11px', fontWeight: 900,
+                boxShadow: '0 4px 20px rgba(34,197,94,0.4)',
+              }}
+            >
+              ✓ ฟรี 100%
+            </motion.div>
+          </motion.div>
+
+          {/* Gradient fade to dark */}
+          <div className="h-16 w-full" style={{ background: 'linear-gradient(to bottom, transparent, #08080f)' }} />
+        </div>
       </section>
 
-      {/* WHAT YOU GET */}
-      <section className="py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-violet-400/55 text-xs font-semibold uppercase tracking-widest mb-3">สิ่งที่คุณจะได้รับ</p>
-            <h2 className="text-3xl md:text-4xl font-black mb-3">
-              Report ที่บอกตัวเลขจริง<br />
-              <span className="gradient-brand">ไม่ใช่แค่คำแนะนำทั่วไป</span>
-            </h2>
-            <p className="text-white/35 text-base max-w-md mx-auto">
-              ทุกส่วนอ้างอิงจากข้อมูลของคุณ — Platform, Niche, Followers และระบบที่มีอยู่แล้ว
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
-            {FEATURES.map((f) => (
-              <div key={f} className="card rounded-xl px-4 py-3 flex items-center gap-3">
-                <CheckCircle className="text-emerald-400 shrink-0" size={14} />
-                <span className="text-white/60 text-sm">{f}</span>
+      {/* ── SOCIAL PROOF — numbers ──────────────── */}
+      <section className="py-14 px-5 border-t border-white/4">
+        <div className="max-w-3xl mx-auto">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            {[
+              { n: '฿40K+', label: 'รายได้ที่ Creator ทั่วไปยังไม่ได้ดึงออกมา', sub: 'ต่อเดือน' },
+              { n: '3 นาที', label: 'เวลาที่ใช้รู้ผลวิเคราะห์', sub: 'ไม่ต้องรอ' },
+              { n: '7 วัน', label: 'เริ่มเห็นเงินเพิ่มหลังทำตามแผน', sub: 'เฉลี่ยจากผู้ใช้' },
+            ].map((s) => (
+              <div key={s.n} className="text-center">
+                <p className="font-black text-2xl sm:text-3xl mb-1" style={{
+                  background: 'linear-gradient(135deg, #fbbf24, #f97316)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>{s.n}</p>
+                <p className="text-white/55 text-xs sm:text-sm font-semibold leading-snug">{s.label}</p>
+                <p className="text-white/25 text-xs mt-0.5">{s.sub}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="py-20 px-6">
+      {/* ── HOW IT WORKS ────────────────────────── */}
+      <section className="py-16 px-5">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-black">
-              <span className="gradient-money">3 ขั้นตอน</span> เข้าใจ Monetization ของคุณ
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3"
+              style={{ color: 'rgba(251,191,36,0.6)' }}>วิธีใช้งาน</p>
+            <h2 className="text-2xl sm:text-4xl font-black">
+              แค่ <span style={{
+                background: 'linear-gradient(135deg, #fbbf24, #f97316)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}>3 ขั้นตอน</span> รู้เลยว่ารายได้หายไปที่ไหน
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {STEPS.map((s, i) => (
               <motion.div
                 key={s.n}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="card rounded-2xl p-6"
+                className="relative rounded-2xl p-6"
+                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
               >
-                <div className="text-5xl font-black text-white/5 mb-4 leading-none">{s.n}</div>
-                <s.icon className="text-amber-400 mb-3" size={18} />
-                <h3 className="font-bold text-white text-base mb-1.5">{s.title}</h3>
-                <p className="text-white/38 text-sm leading-relaxed">{s.desc}</p>
+                <div className="text-6xl font-black leading-none mb-4"
+                  style={{ color: 'rgba(255,255,255,0.04)' }}>{s.n}</div>
+                <s.icon size={20} className="mb-3" style={{ color: '#fbbf24' }} />
+                <h3 className="font-bold text-white text-base mb-2">{s.title}</h3>
+                <p className="text-white/40 text-sm leading-relaxed">{s.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="py-20 px-6">
+      {/* ── WHAT YOU GET ────────────────────────── */}
+      <section className="py-16 px-5">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-black">
-              Creator ที่ใช้ MITA+ แล้ว<br />
-              <span className="gradient-growth">รายได้เปลี่ยนไปยังไง</span>
+          <div className="flex flex-col md:flex-row gap-10 items-center">
+            {/* Left: text */}
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest mb-3"
+                style={{ color: 'rgba(123,97,255,0.7)' }}>ผลที่ได้รับ</p>
+              <h2 className="text-2xl sm:text-3xl font-black mb-4 leading-snug">
+                บอกตัวเลขจริง<br />
+                <span className="gradient-brand">ไม่ใช่คำแนะนำกว้างๆ</span>
+              </h2>
+              <p className="text-white/45 text-sm leading-relaxed mb-6">
+                ทุกอย่างอ้างอิงจากข้อมูลของคุณ — Platform, Niche, Followers
+                และรายได้ที่มีอยู่ ผลที่ได้จะไม่เหมือนกับใคร
+              </p>
+              <div className="flex flex-col gap-2.5">
+                {FEATURES.map((f) => (
+                  <div key={f} className="flex items-center gap-3">
+                    <CheckCircle size={14} style={{ color: '#22C55E', flexShrink: 0 }} />
+                    <span className="text-white/60 text-sm">{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: mini score card */}
+            <div className="w-full md:w-auto md:min-w-[260px]">
+              <div className="rounded-2xl overflow-hidden"
+                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginBottom: '4px' }}>คะแนนทำเงิน</p>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
+                    <p style={{ fontWeight: 900, fontSize: '40px', color: '#a78bfa', lineHeight: 1 }}>47</p>
+                    <p style={{ color: 'rgba(255,255,255,0.25)', marginBottom: '6px' }}>/100</p>
+                  </div>
+                </div>
+                {[
+                  { label: 'Reach', val: 18, max: 25, color: '#a78bfa' },
+                  { label: 'ระบบทำเงิน', val: 8, max: 25, color: '#FF9F1C' },
+                  { label: 'Funnel', val: 5, max: 25, color: '#FF4D4F' },
+                  { label: 'Conversion', val: 10, max: 15, color: '#22C55E' },
+                  { label: 'สินค้า', val: 6, max: 10, color: '#3ECFFF' },
+                ].map((row) => (
+                  <div key={row.label} style={{ padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)' }}>{row.label}</span>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: row.color }}>{row.val}/{row.max}</span>
+                    </div>
+                    <div style={{ height: '4px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${(row.val / row.max) * 100}%`, background: row.color, borderRadius: '4px' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ────────────────────────── */}
+      <section className="py-16 px-5">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3"
+              style={{ color: 'rgba(34,197,94,0.6)' }}>ตัวอย่างจริง</p>
+            <h2 className="text-2xl sm:text-4xl font-black">
+              Creator ที่เช็กแล้ว<br />
+              <span style={{
+                background: 'linear-gradient(135deg, #22C55E, #06b6d4)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}>รายได้เพิ่มขึ้นเท่าไหร่</span>
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {TESTIMONIALS.map((t, i) => (
               <motion.div
                 key={t.name}
                 initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                className="card rounded-2xl p-6"
+                className="rounded-2xl p-5"
+                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center font-bold text-white text-sm shrink-0">
-                    {t.name[0]}
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center font-black text-white text-sm shrink-0"
+                    style={{ background: t.avatarBg }}
+                  >
+                    {t.avatar}
                   </div>
                   <div>
-                    <div className="font-semibold text-sm text-white leading-tight">{t.name}</div>
-                    <div className="text-white/28 text-xs">{t.platform}</div>
+                    <p className="font-bold text-sm text-white leading-tight">{t.name}</p>
+                    <p className="text-white/30 text-xs">{t.platform}</p>
                   </div>
                 </div>
-                <p className="text-white/52 text-sm leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-2 bg-emerald-500/7 border border-emerald-500/14 rounded-xl px-3 py-2">
-                  <TrendingUp className="text-emerald-400 shrink-0" size={13} />
-                  <span className="text-emerald-400 font-black text-sm">{t.gain}</span>
+                <p className="text-white/50 text-sm leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</p>
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2"
+                  style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.15)' }}>
+                  <TrendingUp size={13} style={{ color: '#22C55E', flexShrink: 0 }} />
+                  <span className="font-black text-sm" style={{ color: '#22C55E' }}>{t.gain}</span>
                 </div>
               </motion.div>
             ))}
@@ -211,31 +431,39 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="py-24 px-6">
+      {/* ── FINAL CTA ────────────────────────────── */}
+      <section className="py-20 px-5">
         <motion.div
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-xl mx-auto text-center"
+          className="max-w-lg mx-auto text-center"
         >
-          <div className="card rounded-3xl p-10 md:p-14 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-violet-600/4 to-transparent pointer-events-none" />
+          <div className="relative rounded-3xl p-8 sm:p-12 overflow-hidden"
+            style={{
+              background: 'linear-gradient(160deg, #2e1065 0%, #1e3a8a 100%)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+            <div className="absolute inset-0 rounded-3xl"
+              style={{ background: 'radial-gradient(circle at 50% 0%, rgba(251,191,36,0.12) 0%, transparent 60%)' }} />
             <div className="relative">
-              <h2 className="text-3xl md:text-4xl font-black mb-3">
-                Revenue Gap ของคุณ<br />
-                <span className="gradient-money">รออยู่แล้ว</span>
+              <p className="text-white/50 text-sm mb-3">เริ่มได้เลยตอนนี้ · ฟรี 100%</p>
+              <h2 className="text-2xl sm:text-4xl font-black mb-2 leading-snug">
+                เช็กว่า Follower ของคุณ<br />
+                <span style={{
+                  background: 'linear-gradient(90deg, #fbbf24, #f97316)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>ทำเงินได้เท่าไหร่</span>
               </h2>
-              <p className="text-white/35 mb-8 text-base">
-                วิเคราะห์ฟรี · ไม่ต้องสมัคร · ผลออกทันที
-              </p>
+              <p className="text-white/40 text-sm mb-8">ไม่ต้องสมัคร · กรอก 3 นาที · รู้ผลทันที</p>
               <Link
                 href="/audit"
-                className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-lg px-8 h-14 rounded-2xl transition-all"
+                className="group w-full flex items-center justify-center gap-2 text-black font-black text-lg h-14 rounded-2xl transition-all"
+                style={{ background: 'linear-gradient(135deg, #fbbf24, #f97316)', boxShadow: '0 0 40px rgba(251,191,36,0.25)' }}
               >
-                เอาเงินกลับมา
+                เช็กตัวเลขของฉัน
                 <ArrowRight className="group-hover:translate-x-0.5 transition-transform" size={18} />
               </Link>
-              <div className="mt-6 flex items-center justify-center gap-5 text-white/20 text-sm">
+              <div className="mt-5 flex items-center justify-center gap-4 text-white/25 text-xs">
                 <span>✓ ฟรี 100%</span>
                 <span>✓ 3 นาที</span>
                 <span>✓ แผนเฉพาะตัว</span>
@@ -245,9 +473,9 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      <footer className="py-6 px-6 border-t border-white/5 text-center text-white/18 text-xs flex flex-col gap-2 items-center">
+      <footer className="py-6 px-5 border-t border-white/5 text-center text-white/18 text-xs flex flex-col gap-2 items-center">
         <span><span className="gradient-brand font-black">MITA+</span> — Money In The Air</span>
-        <a href="/privacy" className="text-white/22 hover:text-white/40 transition-colors no-underline">Privacy Policy</a>
+        <a href="/privacy" className="text-white/22 hover:text-white/40 transition-colors" style={{ textDecoration: 'none' }}>Privacy Policy</a>
       </footer>
     </main>
   )

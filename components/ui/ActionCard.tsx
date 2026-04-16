@@ -43,7 +43,6 @@ export function ActionCard({ rec, index }: ActionCardProps) {
             fontWeight: 900,
             fontSize: '14px',
             color: COLORS.ctaOrange,
-            shrink: 0,
             flexShrink: 0,
           }}
         >
