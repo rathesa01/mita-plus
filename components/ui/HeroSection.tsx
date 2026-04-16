@@ -16,10 +16,10 @@ export function HeroSection() {
         style={{ top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse, rgba(123,97,255,0.22) 0%, transparent 65%)', filter: 'blur(40px)' }} />
 
       {/* Mobile: visual top → text bottom (1 screen) | Desktop: text left | visual right */}
-      <div className="relative z-10 max-w-6xl mx-auto px-5 flex flex-col lg:flex-row lg:items-center lg:gap-12 lg:min-h-[100svh] lg:py-0 pt-20 pb-6">
+      <div className="relative z-10 max-w-6xl mx-auto px-5 flex flex-col lg:flex-row lg:items-center lg:gap-12 lg:min-h-[100svh] lg:py-0 pt-16 pb-4">
 
         {/* TEXT BLOCK */}
-        <div className="lg:w-[46%] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 mt-6 lg:mt-0">
+        <div className="lg:w-[46%] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 mt-3 lg:mt-0">
 
           {/* Label */}
           <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4"
@@ -101,7 +101,7 @@ export function HeroSection() {
 function HeroVisual() {
   return (
     /* ── Container wider than image so cards can peek from sides ── */
-    <div className="relative mx-auto" style={{ width: '100%', maxWidth: '560px', height: '420px' }}>
+    <div className="relative mx-auto" style={{ width: '100%', maxWidth: '560px', height: '300px' }}>
 
       {/* Soft glow center */}
       <div className="absolute pointer-events-none rounded-full"
@@ -223,7 +223,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute" style={{ top: '300px', right: '3px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
+      <div className="absolute" style={{ top: '210px', right: '3px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden"
             style={{ border: '2px solid rgba(34,197,94,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
@@ -237,25 +237,25 @@ function HeroVisual() {
       </div>
 
       {/* ── Floating chips (all within 420px height) ── */}
-      <SmallCard style={{ top: '140px', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 25 }}>
+      <SmallCard style={{ top: '85px', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>PROFIT</p>
         <p className="font-extrabold" style={{ fontSize: '18px', color: '#22c55e', lineHeight: 1 }}>+200%</p>
       </SmallCard>
 
-      <SmallCard style={{ top: '260px', left: '8px', transform: 'rotateZ(-3deg)', zIndex: 25 }}>
+      <SmallCard style={{ top: '180px', left: '8px', transform: 'rotateZ(-3deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,77,79,0.85)', marginBottom: '2px' }}>เงินที่หายไป</p>
         <p className="font-black" style={{ fontSize: '16px', color: '#FF4D4F', lineHeight: 1 }}>-฿28,500</p>
         <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)' }}>/เดือน</p>
       </SmallCard>
 
-      <SmallCard style={{ top: '270px', right: '5px', transform: 'rotateZ(4deg)', zIndex: 25 }}>
+      <SmallCard style={{ top: '185px', right: '5px', transform: 'rotateZ(4deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>SALES</p>
         <p className="font-bold" style={{ fontSize: '16px', color: '#22c55e', lineHeight: 1 }}>+400%</p>
       </SmallCard>
 
       {/* ── Main composite image — 90% wide, z-index highest ── */}
       <div className="absolute z-[20]"
-        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '108%' }}>
+        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '130%' }}>
         <Image
           src="/hero-composite.png"
           alt="Creator monetization"
@@ -268,9 +268,9 @@ function HeroVisual() {
 
       {/* 2 coins */}
       <span className="absolute pointer-events-none select-none"
-        style={{ top: '18%', left: '18%', zIndex: 25, fontSize: '1.3rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
+        style={{ top: '12%', left: '20%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
       <span className="absolute pointer-events-none select-none"
-        style={{ top: '65%', right: '14%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
+        style={{ top: '60%', right: '14%', zIndex: 25, fontSize: '1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
     </div>
   )
 }
