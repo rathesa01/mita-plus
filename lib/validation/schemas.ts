@@ -28,7 +28,7 @@ export const ContactSchema = z.object({
   name: z.string().min(1).max(100).trim(),
   email: z.string().email().max(200),
   phone: z.string().max(20).optional().or(z.literal('')),
-  plan: z.enum(['report', 'premium', 'revenue_share']).default('premium'),
+  plan: z.enum(['free', 'starter', 'pro', 'report', 'premium', 'revenue_share']).default('starter'),
   score: z.number().min(0).max(100).optional(),
   revenueGap: z.number().min(0).optional(),
   platform: z.string().max(50).optional(),

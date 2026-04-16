@@ -21,12 +21,18 @@ function fmt(n?: number) {
 }
 
 const PLAN_EMOJI: Record<string, string> = {
+  free:          '🆓',
+  starter:       '⭐',
+  pro:           '👑',
   report:        '📄',
   premium:       '🚀',
   revenue_share: '💰',
 }
 
 const PLAN_LABEL: Record<string, string> = {
+  free:          'Free',
+  starter:       'Starter ฿199/เดือน',
+  pro:           'Pro ฿499/เดือน',
   report:        'Paid Report',
   premium:       'Premium Setup',
   revenue_share: 'Revenue Share',

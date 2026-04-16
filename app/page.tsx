@@ -51,6 +51,12 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
           <span className="text-lg font-black gradient-brand tracking-tight">MITA+</span>
           <Link
+            href="/pricing"
+            className="text-white/45 hover:text-white/70 text-sm font-medium transition-colors hidden sm:block"
+          >
+            ราคา
+          </Link>
+          <Link
             href="/audit"
             className="flex items-center gap-1.5 bg-white text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-all"
           >

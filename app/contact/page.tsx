@@ -12,10 +12,14 @@ const LINE_OA_URL = process.env.NEXT_PUBLIC_LINE_OA_URL ?? ''
 const LINE_READY  = LINE_OA_URL.length > 0 && !LINE_OA_URL.includes('YOUR_LINE')
 
 // ── Plan labels ────────────────────────────────
-const PLAN_LABELS: Record<string, { label: string; price: string; color: string }> = {
-  report:        { label: 'Paid Report',     price: '',           color: COLORS.textSecondary },
-  premium:       { label: 'Premium Setup',   price: '',           color: COLORS.ctaOrange },
-  revenue_share: { label: 'Revenue Share',   price: '10–30%',     color: COLORS.success },
+const PLAN_LABELS: Record<string, { label: string; price: string; color: string; emoji: string; desc: string }> = {
+  free:          { label: 'Free',            price: 'ฟรี',         color: COLORS.textSecondary, emoji: '🆓', desc: 'เช็กผลวิเคราะห์ฟรีแล้ว ต้องการปลดล็อก Revenue Blocker ทั้งหมด?' },
+  starter:       { label: 'Starter',         price: '฿199/เดือน',  color: '#a78bfa',            emoji: '⭐', desc: 'ปลดล็อก Revenue Blocker ทุกตัว + แผน 90 วัน + รายงานรายเดือน' },
+  pro:           { label: 'Pro',             price: '฿499/เดือน',  color: COLORS.ctaOrange,     emoji: '👑', desc: 'มีทีมช่วยวางระบบ + Priority LINE Support + Strategy Call ทุกเดือน' },
+  // legacy
+  report:        { label: 'Paid Report',     price: '',            color: COLORS.textSecondary, emoji: '📄', desc: 'รับรายงานฉบับเต็ม' },
+  premium:       { label: 'Premium Setup',   price: '',            color: COLORS.ctaOrange,     emoji: '🚀', desc: 'วางระบบให้จบใน 30 วัน' },
+  revenue_share: { label: 'Revenue Share',   price: '10–30%',      color: COLORS.success,       emoji: '💰', desc: 'ไม่มีค่าใช้จ่ายล่วงหน้า' },
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
@@ -24,8 +28,8 @@ function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 function ContactContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const plan = searchParams.get('plan') ?? 'premium'
-  const planInfo = PLAN_LABELS[plan] ?? PLAN_LABELS.premium
+  const plan = searchParams.get('plan') ?? 'starter'
+  const planInfo = PLAN_LABELS[plan] ?? PLAN_LABELS.starter
 
   const [result, setResult] = useState<AuditResult | null>(null)
   const [name, setName] = useState('')
@@ -169,24 +173,27 @@ function ContactContent() {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           padding: '4px 12px', borderRadius: '20px',
-          background: `${planInfo.color}15`,
-          border: `1px solid ${planInfo.color}30`,
+          background: `${planInfo.color}18`,
+          border: `1px solid ${planInfo.color}40`,
           marginBottom: '20px',
         }}>
+          <span style={{ fontSize: '13px' }}>{planInfo.emoji}</span>
           <span style={{ fontSize: '11px', fontWeight: 700, color: planInfo.color, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             {planInfo.label}
           </span>
           {planInfo.price && (
-            <span style={{ fontSize: '11px', color: planInfo.color }}>{planInfo.price}</span>
+            <span style={{ fontSize: '11px', color: planInfo.color, fontWeight: 600 }}>{planInfo.price}</span>
           )}
         </div>
 
-        <h1 style={{ fontWeight: 900, fontSize: '26px', lineHeight: 1.2, marginBottom: '8px' }}>
-          ทีมงานจะติดต่อกลับ<br />
-          <span style={{ color: COLORS.ctaOrange }}>ภายใน 24 ชั่วโมง</span>
+        <h1 style={{ fontWeight: 900, fontSize: '26px', lineHeight: 1.25, marginBottom: '8px' }}>
+          {plan === 'starter' || plan === 'pro'
+            ? <>สมัครผ่านทีมงาน<br /><span style={{ color: planInfo.color }}>รับภายใน 24 ชั่วโมง</span></>
+            : <>ทีมงานจะติดต่อกลับ<br /><span style={{ color: COLORS.ctaOrange }}>ภายใน 24 ชั่วโมง</span></>
+          }
         </h1>
         <p style={{ color: COLORS.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
-          กรอกข้อมูลไว้ก่อนได้เลยค่ะ — ทีมเราจะวิเคราะห์ว่าแพ็คเกจไหนเหมาะกับคุณที่สุด แล้วแจ้งรายละเอียดให้ครบ
+          {planInfo.desc} — กรอกข้อมูลไว้เลยค่ะ ทีมจะแจ้งรายละเอียดการชำระเงินและ onboarding ให้ครบ
         </p>
 
         {/* Mini result summary */}

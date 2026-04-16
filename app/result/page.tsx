@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, animate } from 'framer-motion'
-import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight, Share2, Copy, Check as CheckIcon } from 'lucide-react'
+import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight, Share2, Copy, Check as CheckIcon, Lock } from 'lucide-react'
 import type { AuditResult } from '@/types'
 
 import { COLORS, CARD, RADIUS, GLOW, SPACE } from '@/lib/tokens'
@@ -54,6 +54,93 @@ function ScoreArc({ score }: { score: number }) {
       <text x="54" y="50" textAnchor="middle" fill="white" fontSize="22" fontWeight="900">{score}</text>
       <text x="54" y="66" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9">จาก 100</text>
     </svg>
+  )
+}
+
+// ── Upgrade Gate ───────────────────────────────
+function UpgradeGate({ lockedCount, lockedLossTotal, variant = 'leaks' }: {
+  lockedCount: number
+  lockedLossTotal: number
+  variant?: 'leaks' | 'plan'
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      style={{
+        background: 'linear-gradient(135deg, rgba(123,97,255,0.10), rgba(255,159,28,0.08))',
+        border: '1px solid rgba(123,97,255,0.30)',
+        borderRadius: '16px',
+        padding: '20px',
+        textAlign: 'center',
+        marginTop: '8px',
+      }}
+    >
+      <div style={{
+        width: '40px', height: '40px', borderRadius: '50%',
+        background: 'rgba(123,97,255,0.15)',
+        border: '1px solid rgba(123,97,255,0.30)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto 12px',
+      }}>
+        <Lock size={16} style={{ color: '#a78bfa' }} />
+      </div>
+
+      {variant === 'leaks' ? (
+        <>
+          <p style={{ fontWeight: 900, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
+            อีก {lockedCount} Revenue Blocker ที่ยังปิดไม่ได้
+          </p>
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.50)', marginBottom: '4px' }}>
+            กำลังเสีย{' '}
+            <span style={{ color: '#FF4D4F', fontWeight: 700 }}>
+              -฿{Math.round(lockedLossTotal).toLocaleString('th-TH')}/เดือน
+            </span>
+            {' '}เพิ่มเติมอยู่
+          </p>
+          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.30)', marginBottom: '16px' }}>
+            = -฿{Math.round(lockedLossTotal * 12).toLocaleString('th-TH')}/ปี
+          </p>
+        </>
+      ) : (
+        <>
+          <p style={{ fontWeight: 900, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
+            แผน 90 วัน + วิธีแก้ทุกจุด
+          </p>
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.50)', marginBottom: '16px' }}>
+            ปลดล็อกแผนทำงานจริงพร้อมตัวเลข เริ่มได้เลยวันนี้
+          </p>
+        </>
+      )}
+
+      {/* Primary CTA → contact form (ไม่ต้องตั้ง LINE OA ก็ใช้ได้) */}
+      <a
+        href="/contact?plan=starter"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+          height: '48px', borderRadius: '14px',
+          background: 'linear-gradient(135deg, #7B61FF, #FF9F1C)',
+          color: '#fff',
+          fontWeight: 900, fontSize: '14px',
+          textDecoration: 'none',
+          marginBottom: '10px',
+        }}
+      >
+        ⭐ ปลดล็อก Starter ฿199/เดือน
+      </a>
+
+      <a
+        href="/pricing"
+        style={{
+          display: 'block',
+          fontSize: '12px', color: 'rgba(255,255,255,0.35)',
+          textDecoration: 'none',
+        }}
+      >
+        ดูรายละเอียดแผนทั้งหมด →
+      </a>
+    </motion.div>
   )
 }
 
@@ -332,7 +419,28 @@ export default function ResultPage() {
         <SectionLabel n="②" label="สาเหตุ" />
         <AIBlock text={aiInsights.whyItHappens} />
         <div style={{ marginTop: '8px' }}>
-          {leaks.map((leak, i) => <LeakCard key={leak.id} leak={leak} index={i} />)}
+          {/* Leak 1 — free, fully visible */}
+          {leaks[0] && <LeakCard leak={leaks[0]} index={0} />}
+
+          {/* Leaks 2+ — 1 blurred ghost → fade → gate */}
+          {leaks.length > 1 && (() => {
+            const lockedLeaks = leaks.slice(1)
+            const lockedTotal = lockedLeaks.reduce((s, l) => s + l.missedPerMonth, 0)
+            return (
+              <>
+                {/* One blurred ghost fading out */}
+                {leaks[1] && (
+                  <div style={{ position: 'relative', overflow: 'hidden', maxHeight: '90px', marginTop: '8px' }}>
+                    <div style={{ filter: 'blur(4px)', opacity: 0.55, pointerEvents: 'none', userSelect: 'none' }}>
+                      <LeakCard leak={leaks[1]} index={1} />
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '64px', background: 'linear-gradient(transparent, #08080f)' }} />
+                  </div>
+                )}
+                <UpgradeGate lockedCount={lockedLeaks.length} lockedLossTotal={lockedTotal} variant="leaks" />
+              </>
+            )
+          })()}
         </div>
       </SectionWrapper>
 
@@ -343,7 +451,26 @@ export default function ResultPage() {
         <SectionLabel n="③" label="วิธีแก้" />
         <AIBlock text={aiInsights.topActions} />
         <div style={{ marginTop: '8px' }}>
-          {recommendations.map((rec, i) => <ActionCard key={rec.type} rec={rec} index={i} />)}
+          {/* Rec 1 — free */}
+          {recommendations[0] && <ActionCard key={recommendations[0].type} rec={recommendations[0]} index={0} />}
+
+          {/* Recs 2+ — 1 blurred ghost → gate */}
+          {recommendations.length > 1 && (() => {
+            const locked = recommendations.slice(1)
+            return (
+              <>
+                {recommendations[1] && (
+                  <div style={{ position: 'relative', overflow: 'hidden', maxHeight: '80px', marginTop: '8px' }}>
+                    <div style={{ filter: 'blur(4px)', opacity: 0.55, pointerEvents: 'none', userSelect: 'none' }}>
+                      <ActionCard rec={recommendations[1]} index={1} />
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60px', background: 'linear-gradient(transparent, #08080f)' }} />
+                  </div>
+                )}
+                <UpgradeGate lockedCount={locked.length} lockedLossTotal={0} variant="plan" />
+              </>
+            )
+          })()}
         </div>
       </SectionWrapper>
 
@@ -502,7 +629,7 @@ export default function ResultPage() {
       </SectionWrapper>
 
       {/* ══════════════════════════════════════
-          ⑤ แผน 90 วัน
+          ⑤ แผน 90 วัน — gated for free
       ══════════════════════════════════════ */}
       <SectionWrapper>
         <SectionLabel n="⑤" label="แผน 90 วัน" />
@@ -510,9 +637,14 @@ export default function ResultPage() {
           <Clock size={14} style={{ color: COLORS.accentPurple }} />
           <p style={{ fontSize: '13px', color: COLORS.textSecondary }}>ดึง Revenue Gap กลับมาทีละขั้น</p>
         </div>
-        <PhaseCard label="30 วันแรก"  items={actionPlan.day30} color={COLORS.ctaOrange}    accent="#FF9F1C" />
-        <PhaseCard label="วันที่ 31–60" items={actionPlan.day60} color={COLORS.accentPurple} accent="#7B61FF" />
-        <PhaseCard label="วันที่ 61–90" items={actionPlan.day90} color={COLORS.success}      accent="#22C55E" />
+        {/* Blurred day30 ghost fading into gate */}
+        <div style={{ position: 'relative', overflow: 'hidden', maxHeight: '110px' }}>
+          <div style={{ filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none', opacity: 0.55 }}>
+            <PhaseCard label="30 วันแรก" items={actionPlan.day30} color={COLORS.ctaOrange} accent="#FF9F1C" />
+          </div>
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70px', background: 'linear-gradient(transparent, #08080f)' }} />
+        </div>
+        <UpgradeGate lockedCount={3} lockedLossTotal={revenueGap} variant="plan" />
       </SectionWrapper>
 
       {/* ══════════════════════════════════════
@@ -548,83 +680,76 @@ export default function ResultPage() {
           ฿{fmt(revenueGap)}/เดือน = <span style={{ color: COLORS.danger }}>฿{fmt(revenueGap * 12)}/ปี</span> ที่ยังรออยู่
         </p>
 
-        {/* Pricing — stacked */}
-        {/* Tier 1: Report */}
-        <div style={{ ...CARD.base, padding: '20px', marginBottom: '12px' }}>
-          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>
-            Paid Report
-          </p>
-          <p style={{ fontWeight: 900, fontSize: '30px', color: COLORS.textPrimary, marginBottom: '4px' }}>฿{fmt(pricing.reportPrice)}</p>
-          <p style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '16px' }}>จ่ายครั้งเดียว · รายงานฉบับเต็ม</p>
-          {['Revenue Blocker ฉบับเต็มพร้อมวิธีแก้', 'แผน 90 วันละเอียด', 'Script ปิดการขาย DM', 'Template สำเร็จรูป'].map(f => (
-            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <CheckCircle2 size={12} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
-              <p style={{ fontSize: '13px', color: COLORS.textSecondary }}>{f}</p>
-            </div>
-          ))}
-          <div style={{ marginTop: '16px' }}>
-            <CTAButton label="รับ Report ฉบับเต็ม" variant="secondary" href="/contact?plan=report" />
-          </div>
-        </div>
-
-        {/* Tier 2: Premium — featured */}
+        {/* ── Starter — featured ───────────────── */}
         <div style={{
           ...CARD.orange,
           padding: '20px',
           marginBottom: '12px',
           position: 'relative',
-          overflow: 'hidden',
+          overflow: 'visible',
           boxShadow: GLOW.orange,
         }}>
+          {/* Top accent line */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', borderRadius: '16px 16px 0 0', background: 'linear-gradient(to right, #7B61FF, #FF9F1C)' }} />
+          {/* Badge */}
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
-            background: `linear-gradient(to right, ${COLORS.ctaOrange}, #FF6B35)`,
-          }} />
-          <div style={{
-            position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
-            background: COLORS.ctaOrange, color: '#000', fontSize: '11px', fontWeight: 900,
-            padding: '4px 14px', borderRadius: '20px', whiteSpace: 'nowrap',
+            position: 'absolute', top: '-13px', left: '50%', transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg,#7B61FF,#FF9F1C)', color: '#fff',
+            fontSize: '11px', fontWeight: 900, padding: '4px 14px', borderRadius: '20px', whiteSpace: 'nowrap',
           }}>
-            แนะนำ · คืนทุนใน 30 วัน
+            ⭐ แนะนำ · เริ่มเห็นเงินใน 7 วัน
           </div>
-          <p style={{ fontSize: '11px', color: COLORS.ctaOrange, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', marginTop: '6px' }}>
-            Premium Setup
-          </p>
-          <p style={{ fontWeight: 900, fontSize: '30px', color: COLORS.textPrimary, marginBottom: '4px' }}>฿{fmt(pricing.premiumPrice)}</p>
-          <p style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '16px' }}>วางระบบให้จบใน 30 วัน</p>
-          {['ทุกอย่างใน Report +', 'วาง Funnel ดักลูกค้า 24 ชม.', 'ตั้ง Affiliate + ระบบปิดการขาย', 'สร้าง/ปรับสินค้าให้ขายได้', 'Support ตลอด 30 วัน', 'ประกันผล: คืนทุนหรือ refund'].map(f => (
+
+          <p style={{ fontSize: '11px', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', marginTop: '6px' }}>Starter</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', marginBottom: '4px' }}>
+            <p style={{ fontWeight: 900, fontSize: '34px', color: COLORS.textPrimary, lineHeight: 1 }}>฿199</p>
+            <p style={{ fontSize: '13px', color: COLORS.textSecondary, marginBottom: '4px' }}>/เดือน</p>
+          </div>
+          <p style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '16px' }}>ยกเลิกได้ทุกเดือน · ไม่มีสัญญา</p>
+
+          {['Revenue Blocker ทั้งหมด (2–5 ตัว)', 'วิธีแก้ทุกจุด พร้อม action ชัดเจน', 'แผน 90 วัน แบบเต็ม', 'รายงานรายเดือน (ส่งทาง LINE)', 'Milestone unlock ตาม progress'].map(f => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <CheckCircle2 size={12} style={{ color: COLORS.ctaOrange, flexShrink: 0 }} />
+              <CheckCircle2 size={12} style={{ color: '#a78bfa', flexShrink: 0 }} />
               <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>{f}</p>
             </div>
           ))}
           <div style={{ marginTop: '16px' }}>
-            <CTAButton label="เริ่มวางระบบตอนนี้" variant="primary" href="/contact?plan=premium" />
+            <CTAButton label="สมัคร Starter — ฿199/เดือน" variant="primary" href="/contact?plan=starter" />
           </div>
           <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '10px' }}>
-            ฿{fmt(revenueGap)}/เดือน = ฿{fmt(revenueGap * 12)}/ปี ที่ยังรออยู่
+            ฿199 vs เสีย ฿{fmt(dailyLoss)} ทุกวัน — คุ้มมากค่ะ
           </p>
         </div>
 
-        {/* Tier 3: Revenue Share */}
-        <div style={{ ...CARD.base, padding: '20px' }}>
-          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>
-            Revenue Share
-          </p>
-          <p style={{ fontWeight: 900, fontSize: '30px', color: COLORS.textPrimary, marginBottom: '4px' }}>10–30%</p>
-          <p style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '16px' }}>ของรายได้ที่เพิ่มขึ้น · จ่ายเมื่อได้เงิน</p>
-          {['ไม่มีค่าใช้จ่ายล่วงหน้า', 'ทีมเราทำทุกอย่างให้', 'สำหรับ Creator 50K+/เดือน'].map(f => (
+        {/* ── Pro ────────────────────────────────── */}
+        <div style={{ ...CARD.base, padding: '20px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '11px', color: COLORS.ctaOrange, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>👑 Pro</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', marginBottom: '4px' }}>
+            <p style={{ fontWeight: 900, fontSize: '34px', color: COLORS.textPrimary, lineHeight: 1 }}>฿499</p>
+            <p style={{ fontSize: '13px', color: COLORS.textSecondary, marginBottom: '4px' }}>/เดือน</p>
+          </div>
+          <p style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '16px' }}>ทีมช่วยวางระบบ + Priority Support</p>
+          {['ทุกอย่างใน Starter +', 'แผน 30 วัน ปรับใหม่ทุกเดือน', 'Priority LINE Support ตลอดเดือน', 'Strategy Call 1 ครั้ง/เดือน', 'Template Funnel + Script ปิดการขาย'].map(f => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <CheckCircle2 size={12} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
+              <CheckCircle2 size={12} style={{ color: COLORS.ctaOrange, flexShrink: 0 }} />
               <p style={{ fontSize: '13px', color: COLORS.textSecondary }}>{f}</p>
             </div>
           ))}
           <div style={{ marginTop: '16px' }}>
-            <CTAButton label="นัดคุยกับทีม" variant="ghost" showArrow={false} href="/contact?plan=revenue_share" />
+            <CTAButton label="สมัคร Pro — ฿499/เดือน" variant="secondary" href="/contact?plan=pro" />
           </div>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.18)', marginTop: '20px' }}>
+        {/* ── Compare link ─────────────────────── */}
+        <a href="/pricing" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '13px', color: 'rgba(255,255,255,0.35)',
+          textDecoration: 'none', padding: '12px',
+        }}>
+          เปรียบเทียบแผนทั้งหมด →
+        </a>
+
+        <p style={{ textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.18)', marginTop: '4px' }}>
           ทุก ฿{fmt(dailyLoss)} ที่ไม่ได้รับ คือ gap ที่ยังปิดไม่ได้
         </p>
       </SectionWrapper>
@@ -649,7 +774,7 @@ export default function ResultPage() {
             className="sm:hidden safe-bottom"
           >
             <div style={{ maxWidth: '420px', margin: '0 auto' }}>
-              <CTAButton label="เอาเงินกลับมา" href="/contact?plan=premium" />
+              <CTAButton label="สมัคร Starter ฿199/เดือน" href="/contact?plan=starter" />
             </div>
           </motion.div>
         )}
