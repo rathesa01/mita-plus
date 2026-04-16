@@ -375,7 +375,7 @@ export default function AuditPage() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, email: (form.email ?? '').trim() }),
       })
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}))
