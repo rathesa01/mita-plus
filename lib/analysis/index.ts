@@ -55,10 +55,42 @@ export function analyzeAudit(data: AuditFormData): Omit<AuditResult, 'id' | 'cre
   const score = calculateScore(data)
   const stage = classifyStage(data, score)
   const revenueEstimation = estimateRevenue(data)
-  const leaks = detectLeaks(data, revenueEstimation)
+  const rawLeaks = detectLeaks(data, revenueEstimation)
+
+  // ── Normalize leak amounts ─────────────────────────────────────────
+  // Total leaks must not exceed the actual revenue gap (totalMissed).
+  // Raw multipliers are calibrated for large accounts — without this cap,
+  // a 5K-follower account can show ฿43K in "leaks" against a ฿3K potential,
+  // which destroys credibility.
+  const leaks = normalizeLeaks(rawLeaks, revenueEstimation.totalMissed)
+
   const recommendations = buildRecommendations(data)
   const actionPlan = buildActionPlan(data, leaks, recommendations)
   const pricing = getPricing(score.total, data.monthlyIncome, revenueEstimation.totalMissed)
 
   return { input: data, stage, score, leaks, revenueEstimation, recommendations, actionPlan, pricing }
+}
+
+function normalizeLeaks(
+  leaks: ReturnType<typeof detectLeaks>,
+  totalMissed: number,
+): ReturnType<typeof detectLeaks> {
+  if (leaks.length === 0 || totalMissed <= 0) return leaks
+
+  const rawTotal = leaks.reduce((s, l) => s + l.missedPerMonth, 0)
+  if (rawTotal <= 0) return leaks
+
+  // Scale so total = totalMissed (cap only — don't inflate if rawTotal < totalMissed)
+  const scale = rawTotal > totalMissed ? totalMissed / rawTotal : 1
+
+  return leaks.map(l => {
+    const normalized = Math.round(l.missedPerMonth * scale)
+    const fmtN = normalized.toLocaleString('th-TH')
+    return {
+      ...l,
+      missedPerMonth: normalized,
+      missedPerYear: normalized * 12,
+      impact: `฿${fmtN}/เดือน ที่หายไปจาก "${l.title}"`,
+    }
+  })
 }

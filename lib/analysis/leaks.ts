@@ -1,9 +1,5 @@
 import type { AuditFormData, RevenueLeak, RevenueEstimation } from '@/types'
 
-function fmt(n: number) {
-  return n.toLocaleString('th-TH')
-}
-
 export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): RevenueLeak[] {
   const leaks: RevenueLeak[] = []
   const { avgViews, postingFrequency } = data
@@ -28,8 +24,8 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
         'ทุก view ที่ได้มาคือโอกาสขายสินค้าที่หายไปตลอดกาล คนที่ดูคอนเทนต์คุณพร้อมซื้อ แต่ไม่มีอะไรให้ซื้อ',
       missedPerMonth: missed,
       missedPerYear: missed * 12,
-      shockSentence: `ทุกเดือนที่ไม่มีสินค้า คุณสูญเสียโอกาสทำเงิน ฿${fmt(missed)} — นั่นคือ ฿${fmt(missed * 12)} ต่อปีที่ไม่มีวันได้คืน`,
-      impact: `฿${fmt(missed)}/เดือน หายไปเพราะไม่มีอะไรให้คนซื้อ`,
+      shockSentence: `ทุกวิวที่ได้มาคือโอกาสขายที่หายไปตลอดกาล — คนดูคอนเทนต์คุณพร้อมซื้อ แต่ไม่มีอะไรให้ซื้อ`,
+      impact: `หายไปเพราะไม่มีสินค้าให้คนซื้อ`,
     })
   }
 
@@ -47,8 +43,8 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
         'Funnel คือระบบที่เปลี่ยนคนดูเป็นลูกค้า ถ้าไม่มี คนดู 10,000 คนก็ไม่มีความหมาย เพราะพวกเขาดูแล้วก็หายไปตลอดกาล',
       missedPerMonth: missed,
       missedPerYear: missed * 12,
-      shockSentence: `ไม่มี Funnel = ทุกคนที่เข้ามาดูแล้วออกไปคือเงินที่หาย ฿${fmt(missed)}/เดือน`,
-      impact: `฿${fmt(missed)}/เดือน ที่ดักไม่ได้เพราะไม่มีระบบ`,
+      shockSentence: `ไม่มี Funnel = ทุกคนที่เข้ามาดูแล้วออกไปคือเงินที่หายถาวร คนดู 10,000 คนก็ไม่มีความหมายถ้าไม่มีระบบดักไว้`,
+      impact: `หายไปเพราะไม่มีระบบดักลูกค้า`,
     })
   }
 
@@ -64,8 +60,8 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
         'คนดูคอนเทนต์คุณ สนใจแล้ว แต่ไม่รู้จะซื้อยังไง ไม่มีช่องทาง ไม่มีคนตอบ ก็เลยไปซื้อที่อื่นแทน',
       missedPerMonth: missed,
       missedPerYear: missed * 12,
-      shockSentence: `ไม่มีระบบปิดการขาย = ฿${fmt(missed)}/เดือน ที่ไหลออกไปหาคู่แข่ง`,
-      impact: `฿${fmt(missed)}/เดือน หายไปเพราะปิดการขายไม่ได้`,
+      shockSentence: `ลูกค้าสนใจคอนเทนต์คุณแล้ว แต่ไม่รู้จะซื้อยังไง ไม่มีช่องทาง ก็เลยไปซื้อที่อื่นแทน`,
+      impact: `หายไปเพราะไม่มีระบบปิดการขาย`,
     })
   }
 
@@ -81,8 +77,8 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
         'ทุกครั้งที่คุณพูดถึงสินค้าหรือบริการโดยไม่มี affiliate link คุณทิ้งค่าคอมไว้บนโต๊ะโดยเปล่าประโยชน์',
       missedPerMonth: missed,
       missedPerYear: missed * 12,
-      shockSentence: `คุณแนะนำของให้คนอื่นฟรีมาตลอด ทั้งที่ควรได้ ฿${fmt(missed)}/เดือน จากค่าคอม`,
-      impact: `฿${fmt(missed)}/เดือน ค่าคอมที่ไม่ได้รับ`,
+      shockSentence: `ทุกครั้งที่พูดถึงสินค้าหรือบริการโดยไม่มี affiliate link คุณทิ้งค่าคอมไว้บนโต๊ะโดยเปล่าประโยชน์`,
+      impact: `ค่าคอมที่ทิ้งไปทุกโพสต์`,
     })
   }
 
@@ -100,8 +96,8 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
           : 'Engagement ต่ำบอกว่า Algorithm จะไม่ดันคอนเทนต์คุณ ต่อให้โพสต์บ่อยแค่ไหน',
       missedPerMonth: missed,
       missedPerYear: missed * 12,
-      shockSentence: `Algorithm ดันคุณน้อยลงทุกวัน = ฿${fmt(missed)}/เดือน ที่หายไปเงียบๆ`,
-      impact: `฿${fmt(missed)}/เดือน เพราะ reach ต่ำกว่าที่ควรเป็น`,
+      shockSentence: `Algorithm ดันคุณน้อยลงทุกวัน — ต่อให้คอนเทนต์ดีแค่ไหน reach ก็ไม่เติบโตถ้าไม่แก้จุดนี้`,
+      impact: `Reach ต่ำกว่าที่ควรเป็น`,
     })
   }
 
@@ -121,8 +117,8 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
         'ถ้าคุณไม่รู้ว่าโพสต์ไหนสร้างรายได้ คุณก็ Scale ไม่ได้ นั่นคือเหตุผลที่รายได้คุณยังคงอยู่ที่เดิม',
       missedPerMonth: missed,
       missedPerYear: missed * 12,
-      shockSentence: `ไม่มี tracking = Scale ไม่ได้ = รายได้ติดเพดาน ฿${fmt(missed)}/เดือน`,
-      impact: `฿${fmt(missed)}/เดือน potential ที่ไม่สามารถ scale ได้`,
+      shockSentence: `ถ้าไม่รู้ว่าโพสต์ไหนสร้างรายได้ คุณก็ scale ไม่ได้ — รายได้จะติดเพดานเดิมไปเรื่อยๆ`,
+      impact: `Scale ไม่ได้เพราะไม่มีข้อมูล`,
     })
   }
 
