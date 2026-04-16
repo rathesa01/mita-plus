@@ -100,44 +100,175 @@ export function HeroSection() {
 
 function HeroVisual() {
   return (
-    <div className="relative w-full mx-auto" style={{ maxWidth: '480px' }}>
+    <div className="relative w-full mx-auto" style={{ maxWidth: '520px', height: '560px' }}>
 
-      {/* Soft glow */}
-      <div className="absolute pointer-events-none"
-        style={{ inset: '10%', background: 'radial-gradient(circle, rgba(123,97,255,0.15) 0%, transparent 70%)', filter: 'blur(40px)', borderRadius: '50%' }} />
+      {/* Soft glow center */}
+      <div className="absolute pointer-events-none rounded-full"
+        style={{ width: '300px', height: '300px', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: 'radial-gradient(circle, rgba(123,97,255,0.18) 0%, transparent 70%)', filter: 'blur(50px)' }} />
 
-      {/* Main image */}
-      <Image
-        src="/hero-composite.png"
-        alt="Creator monetization"
-        width={480} height={480}
-        className="relative z-10 w-full h-auto"
-        style={{ filter: 'drop-shadow(0 24px 56px rgba(123,97,255,0.28)) drop-shadow(0 4px 24px rgba(0,0,0,0.55))' }}
-        priority
-      />
+      {/* ── Analytics card LEFT (TikTok) — faded, peeking out ── */}
+      <div className="absolute rounded-2xl overflow-hidden"
+        style={{
+          width: '195px', top: '30px', left: '-10px',
+          transform: 'rotateZ(-6deg) rotateY(8deg)',
+          zIndex: 2, opacity: 0.45,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+          background: '#16162a', border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+        <div className="px-3 pt-3 pb-2 flex items-center gap-2"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs"
+            style={{ background: 'linear-gradient(135deg,#7B61FF,#FF9F1C)' }}>👩</div>
+          <div>
+            <p className="font-bold text-white" style={{ fontSize: '9px' }}>@mita_creator</p>
+            <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.4)' }}>TikTok · 52.3K</p>
+          </div>
+        </div>
+        <div className="p-3 grid grid-cols-3 gap-1">
+          {[['Followers','52.3K','#7B61FF'],['Views','1.2M','#FF9F1C'],['Eng.','3.2%','#22c55e']].map(([l,v,c]) => (
+            <div key={l} className="rounded-lg p-1.5 text-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <p style={{ fontSize: '6px', color: 'rgba(255,255,255,0.4)' }}>{l}</p>
+              <p className="font-bold" style={{ fontSize: '9px', color: c as string }}>{v}</p>
+            </div>
+          ))}
+        </div>
+        <div className="px-3 pb-3">
+          <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <p style={{ fontSize: '6px', color: 'rgba(255,255,255,0.35)', marginBottom: '3px' }}>Revenue / Week</p>
+            <div className="flex items-end gap-0.5" style={{ height: '26px' }}>
+              {[30,50,38,70,55,85,75].map((h,i) => (
+                <div key={i} className="flex-1 rounded-sm"
+                  style={{ height: `${h}%`, background: 'rgba(123,97,255,0.55)' }} />
+              ))}
+            </div>
+          </div>
+          <div className="rounded-lg p-2 mt-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <p style={{ fontSize: '6px', color: 'rgba(255,255,255,0.35)' }}>Top Content</p>
+            <p className="text-white" style={{ fontSize: '8px', marginTop: '2px' }}>🎵 รีวิวสกินแคร์ — 340K views</p>
+            <p className="text-white" style={{ fontSize: '8px' }}>🎵 วิธีแต่งหน้า — 210K views</p>
+          </div>
+        </div>
+      </div>
 
-      {/* Floating chips — 3 only */}
-      <SmallCard style={{ top: '6%', left: '-2%', transform: 'rotateZ(-7deg)', zIndex: 20 }}>
+      {/* ── Analytics card RIGHT (Instagram) — faded, peeking out ── */}
+      <div className="absolute rounded-2xl overflow-hidden"
+        style={{
+          width: '185px', top: '15px', right: '-5px',
+          transform: 'rotateZ(5deg) rotateY(-8deg)',
+          zIndex: 2, opacity: 0.45,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+          background: '#16162a', border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+        <div className="px-3 pt-3 pb-2 flex items-center gap-2"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs"
+            style={{ background: 'linear-gradient(135deg,#f09433,#cc2366)' }}>📸</div>
+          <div>
+            <p className="font-bold text-white" style={{ fontSize: '9px' }}>@lifestyle.th</p>
+            <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.4)' }}>Instagram · 48.5K</p>
+          </div>
+        </div>
+        <div className="p-3 space-y-1.5">
+          <div className="grid grid-cols-2 gap-1">
+            {[['Reach','89K'],['Saves','2.4K']].map(([l,v]) => (
+              <div key={l} className="rounded-lg p-1.5 text-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <p style={{ fontSize: '6px', color: 'rgba(255,255,255,0.4)' }}>{l}</p>
+                <p className="font-bold text-white" style={{ fontSize: '9px' }}>{v}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <p style={{ fontSize: '6px', color: 'rgba(255,255,255,0.35)', marginBottom: '3px' }}>Engagement Rate</p>
+            <div className="w-full rounded-full" style={{ height: '5px', background: 'rgba(255,255,255,0.08)' }}>
+              <div className="rounded-full" style={{ width: '68%', height: '100%', background: 'linear-gradient(to right,#f09433,#cc2366)' }} />
+            </div>
+            <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.5)', marginTop: '3px' }}>2.1% — ดีกว่าค่าเฉลี่ย</p>
+          </div>
+          <div className="rounded-lg p-2 text-center" style={{ background: 'rgba(255,159,28,0.08)', border: '1px solid rgba(255,159,28,0.2)' }}>
+            <p className="font-black" style={{ fontSize: '13px', color: '#FF9F1C' }}>฿12,400 / เดือน</p>
+            <p style={{ fontSize: '6px', color: 'rgba(255,255,255,0.35)' }}>Estimated Income</p>
+          </div>
+          <div className="rounded-lg p-2 text-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <p className="font-bold" style={{ fontSize: '11px', color: '#FF9F1C' }}>⭐ 72/100</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Creator bubbles — faded ── */}
+      <div className="absolute" style={{ top: '55px', left: '-12px', zIndex: 8, opacity: 0.5 }}>
+        <div className="relative">
+          <div className="w-14 h-14 rounded-full overflow-hidden"
+            style={{ border: '2px solid rgba(255,159,28,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+            <Image src="/influ-cooking.png" alt="Food creator" width={56} height={56} className="w-full h-full object-cover object-top" />
+          </div>
+          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-white font-bold whitespace-nowrap rounded-full px-2 py-0.5"
+            style={{ fontSize: '7px', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+            🍳 ทำอาหาร
+          </span>
+        </div>
+      </div>
+
+      <div className="absolute" style={{ top: '25px', right: '15px', zIndex: 8, opacity: 0.5 }}>
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full overflow-hidden"
+            style={{ border: '2px solid rgba(123,97,255,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+            <Image src="/influ-lifestyle.png" alt="Lifestyle creator" width={48} height={48} className="w-full h-full object-cover object-top" />
+          </div>
+          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-white font-bold whitespace-nowrap rounded-full px-2 py-0.5"
+            style={{ fontSize: '7px', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+            ☕ ไลฟ์สไตล์
+          </span>
+        </div>
+      </div>
+
+      <div className="absolute" style={{ bottom: '65px', right: '-8px', zIndex: 8, opacity: 0.5 }}>
+        <div className="relative">
+          <div className="w-14 h-14 rounded-full overflow-hidden"
+            style={{ border: '2px solid rgba(34,197,94,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+            <Image src="/influ-fitness.png" alt="Fitness creator" width={56} height={56} className="w-full h-full object-cover object-top" />
+          </div>
+          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-white font-bold whitespace-nowrap rounded-full px-2 py-0.5"
+            style={{ fontSize: '7px', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+            💪 ออกกำลัง
+          </span>
+        </div>
+      </div>
+
+      {/* ── Floating chips — crisp (full opacity) ── */}
+      <SmallCard style={{ top: '195px', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 20 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>PROFIT</p>
         <p className="font-extrabold" style={{ fontSize: '18px', color: '#22c55e', lineHeight: 1 }}>+200%</p>
       </SmallCard>
 
-      <SmallCard style={{ top: '5%', right: '-2%', transform: 'rotateZ(6deg)', zIndex: 20 }}>
+      <SmallCard style={{ bottom: '70px', left: '10px', transform: 'rotateZ(-3deg)', zIndex: 20 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,77,79,0.85)', marginBottom: '2px' }}>เงินที่หายไป</p>
         <p className="font-black" style={{ fontSize: '16px', color: '#FF4D4F', lineHeight: 1 }}>-฿28,500</p>
         <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)' }}>/เดือน</p>
       </SmallCard>
 
-      <SmallCard style={{ bottom: '8%', left: '3%', transform: 'rotateZ(-4deg)', zIndex: 20 }}>
+      <SmallCard style={{ bottom: '60px', right: '5px', transform: 'rotateZ(4deg)', zIndex: 20 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>SALES</p>
         <p className="font-bold" style={{ fontSize: '16px', color: '#22c55e', lineHeight: 1 }}>+400%</p>
       </SmallCard>
 
+      {/* ── Main composite image — center, front ── */}
+      <div className="absolute z-[12]"
+        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '82%' }}>
+        <Image
+          src="/hero-composite.png"
+          alt="Creator monetization"
+          width={480} height={480}
+          className="w-full h-auto"
+          style={{ filter: 'drop-shadow(0 24px 56px rgba(123,97,255,0.3)) drop-shadow(0 4px 24px rgba(0,0,0,0.6))' }}
+          priority
+        />
+      </div>
+
       {/* 2 coins */}
       <span className="absolute pointer-events-none select-none"
-        style={{ top: '18%', left: '10%', zIndex: 25, fontSize: '1.3rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
+        style={{ top: '22%', left: '18%', zIndex: 25, fontSize: '1.3rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
       <span className="absolute pointer-events-none select-none"
-        style={{ bottom: '16%', right: '6%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
+        style={{ bottom: '18%', right: '12%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
     </div>
   )
 }
