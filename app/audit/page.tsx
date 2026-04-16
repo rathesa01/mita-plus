@@ -123,6 +123,7 @@ const INCOME_SOURCES: { value: IncomeSource; label: string }[] = [
 
 const defaultForm: AuditFormData = {
   name: '',
+  email: '',
   platform: 'tiktok',
   niche: 'lifestyle',
   audienceType: 'general',
@@ -196,6 +197,7 @@ export default function AuditPage() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<AuditFormData>(defaultForm)
   const [loading, setLoading] = useState(false)
+  const [apiError, setApiError] = useState(false)
 
   const update = <K extends keyof AuditFormData>(key: K, val: AuditFormData[K]) =>
     setForm((f) => ({ ...f, [key]: val }))
@@ -214,6 +216,7 @@ export default function AuditPage() {
 
   const handleSubmit = async () => {
     setLoading(true)
+    setApiError(false)
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
@@ -226,6 +229,7 @@ export default function AuditPage() {
       router.push('/result')
     } catch {
       setLoading(false)
+      setApiError(true)
     }
   }
 
@@ -297,6 +301,19 @@ export default function AuditPage() {
                   </div>
 
                   <div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
+                      อีเมล <span className="text-white/20 normal-case font-normal">(รับผลวิเคราะห์ก่อนใคร)</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => update('email', e.target.value)}
+                      placeholder="your@email.com"
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
+                    />
+                  </div>
+
+                  <div>
                     <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">Platform หลัก</label>
                     <div className="grid grid-cols-3 gap-2">
                       {PLATFORMS.map((p) => (
@@ -333,6 +350,7 @@ export default function AuditPage() {
                     <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">จำนวน Followers / Subscribers</label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       value={form.followers || ''}
                       onChange={(e) => update('followers', Number(e.target.value))}
                       placeholder="เช่น 50000"
@@ -344,6 +362,7 @@ export default function AuditPage() {
                     <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ยอดวิวเฉลี่ยต่อโพสต์ / วิดีโอ</label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       value={form.avgViews || ''}
                       onChange={(e) => update('avgViews', Number(e.target.value))}
                       placeholder="เช่น 15000"
@@ -465,6 +484,21 @@ export default function AuditPage() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* API Error */}
+          {apiError && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 rounded-2xl border border-rose-500/30 bg-rose-500/8 px-4 py-3 flex items-start gap-3"
+            >
+              <span className="text-rose-400 text-base shrink-0 mt-0.5">⚠️</span>
+              <div>
+                <p className="text-rose-300 font-semibold text-sm">วิเคราะห์ไม่สำเร็จ</p>
+                <p className="text-white/40 text-xs mt-0.5">เกิดข้อผิดพลาดกับ AI — ลองใหม่อีกครั้งได้เลยค่ะ</p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Navigation — sticky in thumb zone */}
           <div className="mt-8 flex gap-3 pb-6">

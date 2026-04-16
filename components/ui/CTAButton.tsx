@@ -1,10 +1,12 @@
 'use client'
+import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { COLORS, RADIUS, GLOW } from '@/lib/tokens'
 
 interface CTAButtonProps {
   label: string
   onClick?: () => void
+  href?: string          // ถ้าใส่ href จะ render เป็น <Link> แทน <button>
   variant?: 'primary' | 'secondary' | 'ghost'
   showArrow?: boolean
   className?: string
@@ -14,6 +16,7 @@ interface CTAButtonProps {
 export function CTAButton({
   label,
   onClick,
+  href,
   variant = 'primary',
   showArrow = true,
   className = '',
@@ -34,6 +37,7 @@ export function CTAButton({
     opacity: disabled ? 0.6 : 1,
     border: 'none',
     outline: 'none',
+    textDecoration: 'none',
   }
 
   const styles: Record<string, React.CSSProperties> = {
@@ -57,12 +61,23 @@ export function CTAButton({
     },
   }
 
+  const activeClass = `active:scale-[0.98] hover:opacity-90 ${className}`
+
+  if (href) {
+    return (
+      <Link href={href} style={styles[variant]} className={activeClass}>
+        {label}
+        {showArrow && <ArrowRight size={16} />}
+      </Link>
+    )
+  }
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       style={styles[variant]}
-      className={`active:scale-[0.98] hover:opacity-90 ${className}`}
+      className={activeClass}
     >
       {label}
       {showArrow && <ArrowRight size={16} />}

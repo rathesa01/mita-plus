@@ -37,6 +37,7 @@ export type IncomeSource =
 export interface AuditFormData {
   // Step 1 — Profile
   name: string
+  email: string
   platform: Platform
   niche: Niche
   audienceType: AudienceType

@@ -245,8 +245,9 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      <footer className="py-6 px-6 border-t border-white/5 text-center text-white/18 text-xs">
-        <span className="gradient-brand font-black">MITA+</span> — Money In The Air
+      <footer className="py-6 px-6 border-t border-white/5 text-center text-white/18 text-xs flex flex-col gap-2 items-center">
+        <span><span className="gradient-brand font-black">MITA+</span> — Money In The Air</span>
+        <a href="/privacy" className="text-white/22 hover:text-white/40 transition-colors no-underline">Privacy Policy</a>
       </footer>
     </main>
   )

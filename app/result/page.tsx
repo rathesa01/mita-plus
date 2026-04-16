@@ -426,7 +426,7 @@ export default function ResultPage() {
             </div>
           ))}
           <div style={{ marginTop: '16px' }}>
-            <CTAButton label="รับ Report ฉบับเต็ม" variant="secondary" />
+            <CTAButton label="รับ Report ฉบับเต็ม" variant="secondary" href="/contact?plan=report" />
           </div>
         </div>
 
@@ -462,7 +462,7 @@ export default function ResultPage() {
             </div>
           ))}
           <div style={{ marginTop: '16px' }}>
-            <CTAButton label="เริ่มวางระบบตอนนี้" variant="primary" />
+            <CTAButton label="เริ่มวางระบบตอนนี้" variant="primary" href="/contact?plan=premium" />
           </div>
           <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '10px' }}>
             ฿{fmt(revenueGap)}/เดือน = ฿{fmt(revenueGap * 12)}/ปี ที่ยังรออยู่
@@ -483,7 +483,7 @@ export default function ResultPage() {
             </div>
           ))}
           <div style={{ marginTop: '16px' }}>
-            <CTAButton label="นัดคุยกับทีม" variant="ghost" showArrow={false} />
+            <CTAButton label="นัดคุยกับทีม" variant="ghost" showArrow={false} href="/contact?plan=revenue_share" />
           </div>
         </div>
 
@@ -509,21 +509,23 @@ export default function ResultPage() {
               borderTop: '1px solid rgba(255,255,255,0.06)',
               zIndex: 50,
             }}
-            className="sm:hidden"
+            className="sm:hidden safe-bottom"
           >
             <div style={{ maxWidth: '420px', margin: '0 auto' }}>
-              <CTAButton label="เอาเงินกลับมา" onClick={scrollToUpgrade} />
+              <CTAButton label="เอาเงินกลับมา" href="/contact?plan=premium" />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <footer style={{
-        textAlign: 'center', padding: '24px 16px',
+        textAlign: 'center', padding: '24px 16px 48px',
         borderTop: '1px solid rgba(255,255,255,0.05)',
         fontSize: '11px', color: 'rgba(255,255,255,0.18)',
+        display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center',
       }}>
-        <span className="gradient-purple-blue font-black">MITA+</span> — Money In The Air
+        <span><span className="gradient-purple-blue font-black">MITA+</span> — Money In The Air</span>
+        <a href="/privacy" style={{ color: 'rgba(255,255,255,0.22)', textDecoration: 'none' }}>Privacy Policy</a>
       </footer>
     </main>
   )
