@@ -59,7 +59,7 @@ export function LeakCard({ leak, index }: LeakCardProps) {
         </div>
 
         {/* Money + chevron */}
-        <div style={{ shrink: 0, textAlign: 'right', minWidth: '80px' }}>
+        <div style={{ flexShrink: 0, textAlign: 'right', minWidth: '80px' }}>
           <p style={{ fontWeight: 900, fontSize: '18px', color: COLORS.danger, lineHeight: 1 }}>
             -฿{fmt(leak.missedPerMonth)}
           </p>
