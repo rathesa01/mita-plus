@@ -75,7 +75,7 @@ export default function LandingPage() {
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-            className="text-5xl md:text-7xl font-black leading-[1.08] tracking-tight mb-6"
+            className="text-4xl md:text-7xl font-black leading-[1.08] tracking-tight mb-6"
           >
             เข้าใจว่า Audience<br />
             ที่มีอยู่แล้ว ควรสร้าง<br />
@@ -92,11 +92,11 @@ export default function LandingPage() {
 
           <motion.div
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center items-center"
+            className="flex flex-col gap-3 justify-center items-center sm:flex-row"
           >
             <Link
               href="/audit"
-              className="group flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-base px-7 py-3.5 rounded-full transition-all"
+              className="group w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-base px-7 h-14 rounded-2xl transition-all"
             >
               เอาเงินกลับมา
               <ArrowRight className="group-hover:translate-x-0.5 transition-transform" size={16} />
@@ -111,7 +111,7 @@ export default function LandingPage() {
         {/* Stats row */}
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
-          className="max-w-3xl mx-auto mt-16 grid grid-cols-3 gap-4"
+          className="max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4"
         >
           {OUTCOMES.map((o) => (
             <div key={o.value} className="card rounded-2xl p-5 text-center">
@@ -137,7 +137,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-3 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
             {FEATURES.map((f) => (
               <div key={f} className="card rounded-xl px-4 py-3 flex items-center gap-3">
                 <CheckCircle className="text-emerald-400 shrink-0" size={14} />
@@ -156,7 +156,7 @@ export default function LandingPage() {
               <span className="gradient-money">3 ขั้นตอน</span> เข้าใจ Monetization ของคุณ
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {STEPS.map((s, i) => (
               <motion.div
                 key={s.n}
@@ -183,7 +183,7 @@ export default function LandingPage() {
               <span className="gradient-growth">รายได้เปลี่ยนไปยังไง</span>
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t, i) => (
               <motion.div
                 key={t.name}
@@ -230,7 +230,7 @@ export default function LandingPage() {
               </p>
               <Link
                 href="/audit"
-                className="group inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-lg px-8 py-4 rounded-full transition-all"
+                className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-lg px-8 h-14 rounded-2xl transition-all"
               >
                 เอาเงินกลับมา
                 <ArrowRight className="group-hover:translate-x-0.5 transition-transform" size={18} />

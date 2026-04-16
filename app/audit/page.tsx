@@ -275,8 +275,8 @@ export default function AuditPage() {
         />
       </div>
 
-      <div className="flex-1 flex items-start justify-center px-6 py-10">
-        <div className="w-full max-w-lg">
+      <div className="flex-1 flex items-start justify-center px-4 py-8">
+        <div className="w-full max-w-[420px]">
           <AnimatePresence mode="wait">
 
             {/* ── STEP 1: PROFILE ── */}
@@ -466,32 +466,32 @@ export default function AuditPage() {
             )}
           </AnimatePresence>
 
-          {/* Navigation */}
-          <div className="mt-8 flex gap-3">
+          {/* Navigation — sticky in thumb zone */}
+          <div className="mt-8 flex gap-3 pb-6">
             {step > 1 && (
               <button
                 onClick={() => setStep(s => s - 1)}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/8 text-white/38 hover:text-white/70 hover:border-white/18 transition-all text-sm"
+                className="flex items-center justify-center gap-2 h-14 px-5 rounded-2xl border border-white/8 text-white/38 hover:text-white/70 hover:border-white/18 transition-all text-sm shrink-0"
               >
-                <ArrowLeft size={15} /> ย้อนกลับ
+                <ArrowLeft size={16} />
               </button>
             )}
             {step < TOTAL_STEPS ? (
               <button
                 onClick={() => canNext() && setStep(s => s + 1)}
-                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl font-bold text-base transition-all ${
                   canNext()
                     ? 'bg-white text-black hover:bg-white/90'
                     : 'bg-white/5 text-white/22 cursor-not-allowed'
                 }`}
               >
-                ถัดไป <ArrowRight size={15} />
+                ถัดไป <ArrowRight size={16} />
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-base transition-all disabled:opacity-60"
+                className="flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black text-base transition-all disabled:opacity-60"
               >
                 วิเคราะห์ Monetization ของฉัน <ArrowRight size={16} />
               </button>
