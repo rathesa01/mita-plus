@@ -35,6 +35,7 @@ export type IncomeSource =
 export type ContentDuration = 'under_3months' | '3-12months' | '1-2years' | 'over_2years'
 export type TriedAndFailed = 'affiliate' | 'sponsorship' | 'own_product' | 'coaching' | 'live_selling' | 'none_tried'
 export type AudienceBuyingPower = 'student' | 'worker' | 'homemaker' | 'business_owner' | 'mixed'
+export type SubNiche = string // free string — values come from the SUB_NICHES map
 
 // ── INPUT ──────────────────────────────────────
 export interface AuditFormData {
@@ -63,6 +64,7 @@ export interface AuditFormData {
   contentDuration: ContentDuration
   triedAndFailed: TriedAndFailed[]
   audienceBuyingPower: AudienceBuyingPower
+  subNiche: string
   biggestProblem: string
   goalIn90Days: string
 }

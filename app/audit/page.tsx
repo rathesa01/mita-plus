@@ -127,13 +127,88 @@ const NICHES: { value: Niche; label: string }[] = [
   { value: 'other', label: 'อื่นๆ' },
 ]
 
-const CONTENT_STYLES: { value: string; label: string; desc: string }[] = [
-  { value: 'tutorial', label: 'สอน / How-to', desc: 'อธิบาย วิธีทำ ขั้นตอน' },
-  { value: 'review', label: 'รีวิว / แนะนำ', desc: 'รีวิวสินค้า สถานที่ ร้านอาหาร' },
-  { value: 'vlog', label: 'Vlog / ชีวิตประจำวัน', desc: 'กิน เที่ยว ชีวิต daily' },
-  { value: 'entertainment', label: 'ความบันเทิง / ตลก', desc: 'คอนเทนต์ดูเพื่อสนุก' },
-  { value: 'news', label: 'ข้อมูล / อัพเดท', desc: 'ข่าว เทรนด์ ความรู้ทั่วไป' },
-]
+const SUB_NICHES: Record<string, { value: string; label: string; desc: string }[]> = {
+  lifestyle: [
+    { value: 'daily_vlog', label: 'Vlog ชีวิตประจำวัน', desc: 'ชีวิต กิจวัตร เดลี่' },
+    { value: 'home_deco', label: 'แต่งบ้าน / Minimalism', desc: 'ตกแต่งพื้นที่ จัดบ้าน' },
+    { value: 'productivity', label: 'Productivity / พัฒนาตัวเอง', desc: 'ระบบชีวิต นิสัยดี' },
+    { value: 'fashion', label: 'แฟชั่น / การแต่งตัว', desc: 'Outfit OOTD สไตล์' },
+    { value: 'relationship', label: 'ความสัมพันธ์ / ครอบครัว', desc: 'คู่รัก ครอบครัว' },
+    { value: 'lifestyle_other', label: 'ไลฟ์สไตล์อื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  education: [
+    { value: 'language', label: 'สอนภาษา', desc: 'อังกฤษ ญี่ปุ่น จีน ฯลฯ' },
+    { value: 'coding_tech', label: 'Coding / Tech', desc: 'โปรแกรม AI เทคโนโลยี' },
+    { value: 'career_skill', label: 'ทักษะอาชีพ', desc: 'ทำงาน ทักษะมืออาชีพ' },
+    { value: 'exam_prep', label: 'ติว / เตรียมสอบ', desc: 'GAT PAT TOEIC สอบต่างๆ' },
+    { value: 'general_knowledge', label: 'ความรู้ทั่วไป / สาระ', desc: 'วิทยาศาสตร์ ประวัติ ฯลฯ' },
+    { value: 'education_other', label: 'การศึกษาอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  finance: [
+    { value: 'stock_invest', label: 'หุ้น / กองทุน', desc: 'ลงทุนในตลาด SET กองทุน' },
+    { value: 'crypto', label: 'Crypto / DeFi', desc: 'Bitcoin Ethereum Web3' },
+    { value: 'saving', label: 'ออมเงิน / วางแผนการเงิน', desc: 'งบ ออม FIRE' },
+    { value: 'credit_bank', label: 'รีวิวบัตรเครดิต / ธนาคาร', desc: 'บัตรเครดิต สิทธิประโยชน์' },
+    { value: 'side_income', label: 'สร้างรายได้เสริม', desc: 'งาน part-time freelance online' },
+    { value: 'finance_other', label: 'การเงินอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  beauty: [
+    { value: 'makeup_tutorial', label: 'สอนแต่งหน้า', desc: 'Tutorial look step-by-step' },
+    { value: 'skincare', label: 'Skincare / รีวิวสกินแคร์', desc: 'routine ครีม เซรั่ม' },
+    { value: 'beauty_review', label: 'รีวิวสินค้าความงาม', desc: 'haul รีวิวรวม ซื้อของ' },
+    { value: 'haircare', label: 'เส้นผม / Hair care', desc: 'ทรงผม ดูแลผม' },
+    { value: 'nail', label: 'เล็บ / Nail art', desc: 'ทาเล็บ ออกแบบเล็บ' },
+    { value: 'beauty_other', label: 'ความงามอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  fitness: [
+    { value: 'workout', label: 'Workout / ออกกำลังกาย', desc: 'ท่าออกกำลัง gym home workout' },
+    { value: 'yoga_pilates', label: 'Yoga / Pilates', desc: 'ยืดเหยียด mindful' },
+    { value: 'nutrition', label: 'โภชนาการ / อาหารสุขภาพ', desc: 'clean eating แคลอรี่ diet' },
+    { value: 'running_sport', label: 'วิ่ง / กีฬา', desc: 'วิ่ง ปั่นจักรยาน กีฬา' },
+    { value: 'mental_health', label: 'Mental health / สุขภาพจิต', desc: 'stress จิตใจ mindfulness' },
+    { value: 'fitness_other', label: 'สุขภาพอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  business: [
+    { value: 'startup_sme', label: 'เริ่มต้นธุรกิจ / SME', desc: 'เปิดร้าน ธุรกิจใหม่' },
+    { value: 'marketing_social', label: 'Marketing / Social Media', desc: 'โฆษณา content strategy' },
+    { value: 'freelance', label: 'Freelance / WFH', desc: 'งานฟรีแลนซ์ remote work' },
+    { value: 'ecommerce', label: 'E-commerce / ขายออนไลน์', desc: 'Shopee Lazada TikTok Shop' },
+    { value: 'career', label: 'Career / สมัครงาน', desc: 'resume interview พัฒนาอาชีพ' },
+    { value: 'business_other', label: 'ธุรกิจอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  food: [
+    { value: 'eating_mukbang', label: 'กินรีวิว / Mukbang', desc: 'นั่งกิน ลองกิน กินเล่น' },
+    { value: 'restaurant_review', label: 'รีวิวร้านอาหาร', desc: 'แนะนำร้าน ออกไปกิน' },
+    { value: 'cooking_tutorial', label: 'สอนทำอาหาร / สูตรอาหาร', desc: 'สูตร ขั้นตอนทำอาหาร' },
+    { value: 'healthy_food', label: 'อาหารสุขภาพ / คลีน', desc: 'clean food สุขภาพ diet' },
+    { value: 'street_food', label: 'สตรีทฟู้ด / ของกิน', desc: 'ของกินแปลก ตลาด street' },
+    { value: 'food_other', label: 'อาหารอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  travel: [
+    { value: 'domestic_travel', label: 'ท่องเที่ยวในไทย', desc: 'จังหวัด ที่เที่ยวไทย' },
+    { value: 'international_travel', label: 'ท่องเที่ยวต่างประเทศ', desc: 'เที่ยวนอก ประเทศต่างๆ' },
+    { value: 'budget_travel', label: 'Budget travel / เที่ยวประหยัด', desc: 'เที่ยวถูก backpack' },
+    { value: 'luxury_travel', label: 'Luxury travel', desc: 'โรงแรมหรู business class' },
+    { value: 'solo_travel', label: 'Solo travel / เดี่ยว', desc: 'เที่ยวคนเดียว ผู้หญิงเดินทาง' },
+    { value: 'travel_other', label: 'ท่องเที่ยวอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  entertainment: [
+    { value: 'comedy', label: 'ตลก / Comedy', desc: 'สเก็ตช์ ตลก ขำขัน' },
+    { value: 'reaction', label: 'รีแอค / Commentary', desc: 'react video comment' },
+    { value: 'gaming', label: 'เกม / Gaming', desc: 'เล่นเกม review เกม' },
+    { value: 'music', label: 'ดนตรี / ร้องเพลง', desc: 'cover ร้องเพลง ดนตรี' },
+    { value: 'movie_series', label: 'รีวิวหนัง / ซีรีส์', desc: 'วิจารณ์ recap เนื้อเรื่อง' },
+    { value: 'entertainment_other', label: 'ความบันเทิงอื่นๆ', desc: 'ไม่มีใน list' },
+  ],
+  other: [
+    { value: 'pet', label: 'สัตว์เลี้ยง', desc: 'หมา แมว นก กระต่าย' },
+    { value: 'diy_craft', label: 'งานฝีมือ / DIY', desc: 'ทำของ ประดิษฐ์ handmade' },
+    { value: 'car_motor', label: 'รถยนต์ / มอเตอร์ไซค์', desc: 'รีวิวรถ ดูแลรถ' },
+    { value: 'gadget_tech', label: 'Gadget / Tech review', desc: 'รีวิวมือถือ อุปกรณ์ tech' },
+    { value: 'parenting', label: 'Parenting / เลี้ยงลูก', desc: 'พ่อแม่ พัฒนาการเด็ก' },
+    { value: 'other_other', label: 'อื่นๆ ที่ไม่ใน list', desc: 'บอกใน "ปัญหาหลัก"' },
+  ],
+}
 
 const FREQUENCIES: { value: PostingFrequency; label: string }[] = [
   { value: 'daily', label: 'ทุกวัน (30+/เดือน)' },
@@ -205,7 +280,7 @@ const defaultForm: AuditFormData = {
   contentDuration: '3-12months' as ContentDuration,
   triedAndFailed: ['none_tried'] as TriedAndFailed[],
   audienceBuyingPower: 'mixed' as AudienceBuyingPower,
-  contentStyle: 'vlog',
+  subNiche: '',
   biggestProblem: '',
   goalIn90Days: '',
 }
@@ -408,26 +483,40 @@ export default function AuditPage() {
                     <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">Niche / หมวดหมู่</label>
                     <div className="grid grid-cols-2 gap-2">
                       {NICHES.map((n) => (
-                        <Chip key={n.value} selected={form.niche === n.value} onClick={() => update('niche', n.value)}>
+                        <Chip
+                          key={n.value}
+                          selected={form.niche === n.value}
+                          onClick={() => {
+                            update('niche', n.value)
+                            update('subNiche' as any, '')
+                          }}
+                        >
                           {n.label}
                         </Chip>
                       ))}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                      ทำ Content แบบไหน?
-                    </label>
-                    <div className="space-y-2">
-                      {CONTENT_STYLES.map((s) => (
-                        <Chip key={s.value} selected={(form as any).contentStyle === s.value} onClick={() => update('contentStyle' as any, s.value)}>
-                          <span className="font-semibold">{s.label}</span>
-                          <span className="text-white/38 text-xs ml-2">— {s.desc}</span>
-                        </Chip>
-                      ))}
+                  {/* Sub-niche — dynamic ตาม niche ที่เลือก */}
+                  {SUB_NICHES[form.niche] && (
+                    <div>
+                      <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
+                        ทำ Content เกี่ยวกับอะไรโดยเฉพาะ?
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(SUB_NICHES[form.niche] ?? []).map((s) => (
+                          <Chip
+                            key={s.value}
+                            selected={(form as any).subNiche === s.value}
+                            onClick={() => update('subNiche' as any, s.value)}
+                          >
+                            <div className="font-semibold text-xs leading-tight">{s.label}</div>
+                            <div className="text-white/35 text-xs mt-0.5 leading-tight">{s.desc}</div>
+                          </Chip>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </motion.div>
             )}

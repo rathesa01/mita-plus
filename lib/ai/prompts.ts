@@ -152,20 +152,11 @@ export function buildUserPrompt(
   const niche = data.niche ?? 'other'
   const platform = data.platform ?? 'tiktok'
   // Use type assertion for new fields that may not be in old schema yet
-  const d = data as AuditFormData & { audienceBuyingPower?: string; contentDuration?: string; triedAndFailed?: string[]; contentStyle?: string }
+  const d = data as AuditFormData & { audienceBuyingPower?: string; contentDuration?: string; triedAndFailed?: string[]; subNiche?: string }
   const audienceBuyingPower = d.audienceBuyingPower ?? 'mixed'
   const contentDuration = d.contentDuration ?? '3-12months'
   const triedAndFailed: string[] = d.triedAndFailed ?? ['none_tried']
-  const contentStyle = d.contentStyle ?? 'vlog'
-
-  const CONTENT_STYLE_TH: Record<string, string> = {
-    tutorial: 'สอน / How-to (อธิบายวิธีทำ)',
-    review: 'รีวิว / แนะนำ (รีวิวสินค้าหรือสถานที่)',
-    vlog: 'Vlog / ชีวิตประจำวัน (กิน เที่ยว daily life)',
-    entertainment: 'ความบันเทิง / ตลก',
-    news: 'ข้อมูล / อัพเดท (ข่าว เทรนด์)',
-  }
-  const contentStyleTH = CONTENT_STYLE_TH[contentStyle] ?? contentStyle
+  const subNiche = d.subNiche ?? ''
 
   const blueprint = NICHE_BLUEPRINT[niche] ?? NICHE_BLUEPRINT.other
   const platformCtx = PLATFORM_MONETIZATION[platform] ?? ''
@@ -182,8 +173,7 @@ export function buildUserPrompt(
 
   return `=== CREATOR PROFILE ===
 ชื่อ: ${data.name}
-Platform: ${platformTH} | Niche: ${nicheTH}
-รูปแบบ Content: ${contentStyleTH}
+Platform: ${platformTH} | Niche: ${nicheTH}${subNiche ? ` → ${subNiche}` : ''}
 ทำมาแล้ว: ${durationTH}
 Followers: ${data.followers.toLocaleString('th-TH')} | ยอดวิวเฉลี่ย/โพสต์: ${data.avgViews.toLocaleString('th-TH')}
 วิวรวม/เดือน: ${fmt(monthlyViews)} | Engagement: ${data.engagementRate}%
@@ -231,11 +221,11 @@ ${topLeaks.map((l, i) => `${i+1}. [${l.severity.toUpperCase()}] ${l.title}: -฿
 ตอบเป็น JSON เท่านั้น ห้ามมีข้อความนอก JSON ครบ 4 field:
 
 {
-  "shock": "บอก ${data.name} ว่า: เขามี audience ขนาดนี้บน ${platformTH} niche ${nicheTH} แต่รายได้ยังเป็น ${INCOME_TH[data.monthlyIncome] ?? data.monthlyIncome} — ทั้งที่ควรได้ ฿${fmt(revenue.realistic)}/เดือน สาเหตุหลักคืออะไร ใน 1-2 ประโยค ภาษาชาวบ้าน",
+  "shock": "บอก ${data.name} ว่า: เขาทำ content ${subNiche ? `แบบ ${subNiche}` : nicheTH} บน ${platformTH} มี audience ${data.followers.toLocaleString('th-TH')} คน แต่รายได้ยังเป็น ${INCOME_TH[data.monthlyIncome] ?? data.monthlyIncome} — ทั้งที่ควรได้ ฿${fmt(revenue.realistic)}/เดือน บอกสาเหตุหลักใน 1-2 ประโยค ภาษาชาวบ้าน อย่าพูดถึงสิ่งที่เขาไม่ได้ทำ",
 
   "whyItHappens": "${hasTriedSomething
-    ? `อธิบายว่าทำไม ${triedText} ถึงไม่ work สำหรับ ${data.name} โดยเฉพาะ (เพราะ platform + niche + audience ของเขา) ไม่ใช่เพราะ effort ไม่พอ แต่เพราะ approach ไม่ match กับ ${nicheTH} บน ${platformTH} + audience ${audienceTH} จบด้วย "สิ่งที่ต้องเปลี่ยน: [วิธีที่ถูกต้องสำหรับเขา]"`
-    : `อธิบายว่าทำไม ${data.name} ที่ทำ ${nicheTH} บน ${platformTH} มานาน ${durationTH} ถึงยังไม่มีรายได้ — เน้น missing piece ที่ขาดไป ไม่ใช่ความผิดของเขา จบด้วย "ขั้นแรกที่ต้องทำ: [action ที่ชัดเจน]"`}",
+    ? `อธิบายว่าทำไม ${triedText} ถึงไม่ work สำหรับ ${data.name} ที่ทำ content ${subNiche ? `แบบ ${subNiche}` : nicheTH} บน ${platformTH} โดยเฉพาะ — ไม่ใช่เพราะ effort ไม่พอ แต่เพราะ approach ไม่ match กับ content type นี้ + audience ${audienceTH} จบด้วย "สิ่งที่ต้องเปลี่ยน: [วิธีที่ถูกต้องสำหรับเขา]"`
+    : `อธิบายว่าทำไม ${data.name} ที่ทำ content ${subNiche ? `แบบ ${subNiche}` : nicheTH} บน ${platformTH} มานาน ${durationTH} ถึงยังไม่มีรายได้ — เน้น missing piece ที่ขาดไป ไม่ใช่ความผิดของเขา จบด้วย "ขั้นแรกที่ต้องทำ: [action ที่ชัดเจน]"`}",
 
   "topActions": "3 ขั้นตอนที่ ${data.name} ต้องทำในสัปดาห์แรก เฉพาะสำหรับ ${platformTH} + ${nicheTH} + audience ${audienceTH}: วันที่ 1 ทำอะไร / วันที่ 3 ทำอะไร / วันที่ 7 ทำอะไร พร้อมตัวเลขที่คาดว่าได้รับในเดือนแรก จบด้วย 'เริ่มได้เลยตอนนี้: [สิ่งแรกที่ทำได้ภายใน 10 นาที]'",
 
