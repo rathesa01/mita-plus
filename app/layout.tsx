@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Thai } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -13,6 +13,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+
+const notoSansThai = Noto_Sans_Thai({
+  variable: "--font-noto-sans-thai",
+  subsets: ["thai"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+});
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.mitaplus.com'
 
@@ -56,8 +63,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
-      <body className="min-h-full flex flex-col bg-[#080810] text-white">
+    <html lang="th" className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} h-full antialiased dark`}>
+      <body className="min-h-full flex flex-col bg-[#080810] text-white" style={{ fontFamily: 'var(--font-noto-sans-thai), sans-serif' }}>
         {children}
         <Analytics />
       </body>

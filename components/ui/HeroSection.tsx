@@ -50,12 +50,11 @@ export function HeroSection() {
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
             <Link href="/audit" className="w-full sm:w-auto">
               <button
-                className="w-full sm:w-auto h-14 px-10 rounded-full text-lg font-black transition-all hover:scale-105 hover:brightness-110 active:scale-95"
+                className="w-full sm:w-auto h-12 px-6 rounded-full text-base font-bold transition-all hover:scale-105 hover:brightness-110 active:scale-95"
                 style={{
                   background: 'linear-gradient(135deg, #7B61FF, #FF9F1C)',
                   color: '#fff',
                   boxShadow: '0 0 32px rgba(123,97,255,0.4)',
-                  letterSpacing: '0.01em',
                 }}
               >
                 เช็กตัวเลขของฉัน →
