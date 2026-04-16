@@ -21,18 +21,15 @@ export function HeroSection() {
         {/* TEXT BLOCK */}
         <div className="lg:w-[46%] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 mt-3 lg:mt-0">
 
-          {/* Label */}
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4"
-            style={{ background: 'rgba(123,97,255,0.12)', border: '1px solid rgba(123,97,255,0.3)' }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-            <span className="text-xs font-bold tracking-widest uppercase" style={{ color: '#a78bfa' }}>
-              สำหรับ Creator ทุกช่องทาง
-            </span>
-          </div>
+          {/* Label — plain colored text, no pill */}
+          <p className="font-bold mb-3 tracking-wide"
+            style={{ fontSize: 'clamp(0.8rem, 2vw, 0.95rem)', color: '#a78bfa' }}>
+            ● วิเคราะห์รายได้ Creator ทุกช่องทาง
+          </p>
 
           {/* Headline */}
-          <h1 className="font-black leading-[1.1] tracking-tight mb-3"
-            style={{ fontSize: 'clamp(1.75rem, 5vw, 3.4rem)' }}>
+          <h1 className="font-black leading-[1.08] tracking-tight mb-2"
+            style={{ fontSize: 'clamp(2.2rem, 7vw, 4.2rem)' }}>
             <span className="text-white">Follower และ View<br />ของคุณ ทำเงินได้</span>
             <br />
             <span style={{
@@ -43,22 +40,22 @@ export function HeroSection() {
             </span>
           </h1>
 
-          {/* Sub */}
-          <p className="text-sm mb-5 max-w-xs mx-auto lg:mx-0 leading-relaxed"
-            style={{ color: 'rgba(255,255,255,0.45)' }}>
-            กรอกตัวเลขแค่ 3 อย่าง — แล้วรู้เลยว่าเงินหายไปที่ไหน
-            และต้องเริ่มจากตรงไหนก่อน
+          {/* Sub — short & punchy */}
+          <p className="mb-5"
+            style={{ fontSize: 'clamp(0.85rem, 2.5vw, 1rem)', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
+            กรอกตัวเลขแค่ 3 อย่าง รู้ผลใน 3 นาที
           </p>
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
             <Link href="/audit" className="w-full sm:w-auto">
               <button
-                className="w-full sm:w-auto h-12 px-8 rounded-xl text-base font-black transition-all hover:scale-105 hover:brightness-110 active:scale-95"
+                className="w-full sm:w-auto h-14 px-10 rounded-full text-lg font-black transition-all hover:scale-105 hover:brightness-110 active:scale-95"
                 style={{
                   background: 'linear-gradient(135deg, #7B61FF, #FF9F1C)',
                   color: '#fff',
-                  boxShadow: '0 0 28px rgba(123,97,255,0.35)',
+                  boxShadow: '0 0 32px rgba(123,97,255,0.4)',
+                  letterSpacing: '0.01em',
                 }}
               >
                 เช็กตัวเลขของฉัน →
