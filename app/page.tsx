@@ -4,9 +4,9 @@ import { motion } from 'framer-motion'
 import { ArrowRight, BarChart3, Zap, Target, TrendingUp, CheckCircle, Sparkles } from 'lucide-react'
 
 const OUTCOMES = [
-  { value: '3–5x', label: 'รายได้ที่เพิ่มขึ้นโดยเฉลี่ย', sub: 'จาก audience เดิมที่มีอยู่แล้ว' },
-  { value: '฿40K+', label: 'Revenue Gap เฉลี่ยต่อเดือน', sub: 'ที่ Creator ยังไม่ได้ดึงออกมา' },
-  { value: '3 นาที', label: 'เวลาที่ใช้วิเคราะห์', sub: 'ผลออกทันที พร้อมแผนเฉพาะตัว' },
+  { value: '฿5K–20K', label: 'ต่อเดือนที่เพิ่มได้จาก Affiliate อย่างเดียว', sub: 'โดยไม่ต้องสร้าง content เพิ่ม' },
+  { value: '฿40K+', label: 'เงินเฉลี่ยที่ Creator ยังไม่ได้ดึงออกมา', sub: 'ต่อเดือน จาก audience ที่มีอยู่แล้ว' },
+  { value: '7 วัน', label: 'เริ่มเห็นเงินเพิ่มครั้งแรก', sub: 'หลังวางระบบตามแผนที่ได้รับ' },
 ]
 
 const STEPS = [
@@ -98,12 +98,12 @@ export default function LandingPage() {
               href="/audit"
               className="group flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-base px-7 py-3.5 rounded-full transition-all"
             >
-              วิเคราะห์ Monetization ฟรี
+              เอาเงินกลับมา
               <ArrowRight className="group-hover:translate-x-0.5 transition-transform" size={16} />
             </Link>
             <div className="flex items-center gap-2 text-white/30 text-sm">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              ใช้เวลา 3 นาที · ผลออกทันที · ฟรี 100%
+              3 นาที · เห็นเงินใน 7 วัน · ฟรี 100%
             </div>
           </motion.div>
         </div>
@@ -232,7 +232,7 @@ export default function LandingPage() {
                 href="/audit"
                 className="group inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-lg px-8 py-4 rounded-full transition-all"
               >
-                เริ่มวิเคราะห์ฟรี
+                เอาเงินกลับมา
                 <ArrowRight className="group-hover:translate-x-0.5 transition-transform" size={18} />
               </Link>
               <div className="mt-6 flex items-center justify-center gap-5 text-white/20 text-sm">

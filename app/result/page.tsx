@@ -303,14 +303,29 @@ export default function ResultPage() {
       ══════════════════════════════════════════ */}
       <section className="px-6 py-10">
         <div className="max-w-4xl mx-auto">
+          {/* Total loss hero */}
+          <div className="card rounded-2xl p-5 mb-5 border-rose-500/18" style={{ borderColor: 'rgba(244,63,94,0.18)', background: 'rgba(244,63,94,0.04)' }}>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-white/40 text-xs mb-1">เงินที่ยังไม่ได้รับต่อเดือน</p>
+                <p className="text-rose-400 font-black text-3xl">-฿{fmt(totalLeakPerMonth)}<span className="text-rose-400/50 font-normal text-base">/เดือน</span></p>
+              </div>
+              <div className="text-right">
+                <p className="text-white/30 text-xs mb-1">ต่อปี (ถ้าไม่แก้ตอนนี้)</p>
+                <p className="text-rose-300/70 font-black text-2xl">-฿{fmt(totalLeakPerMonth * 12)}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-white/35 text-xs">
+              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+              พบ {leaks.length} จุดที่ดึงเงินออก — {leaks.filter(l => l.severity === 'critical' || l.severity === 'high').length} จุดหลักที่ต้องแก้ก่อน
+            </div>
+          </div>
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
               <h2 className="text-lg font-black">Revenue Blockers</h2>
             </div>
-            <span className="text-white/30 text-sm font-mono">฿{fmt(totalLeakPerMonth)}/เดือน</span>
           </div>
-          <p className="text-white/25 text-xs mb-5">สาเหตุที่ Revenue Gap ยังอยู่ตรงนี้ — คลิกเพื่อดูรายละเอียด</p>
+          <p className="text-white/25 text-xs mb-4">คลิกแต่ละจุดเพื่อดูว่าเสียเงินไปยังไง และต้องแก้ยังไง</p>
           <div className="space-y-2.5">
             {leaks.map((leak, i) => <BlockerCard key={leak.id} leak={leak} index={i} />)}
           </div>
@@ -465,11 +480,17 @@ export default function ResultPage() {
         <div className="max-w-4xl mx-auto">
 
           <div className="text-center mb-10">
-            <p className="text-white/30 text-sm mb-2">ขั้นตอนถัดไป</p>
+            <div className="inline-flex items-center gap-2 bg-emerald-500/8 border border-emerald-500/18 text-emerald-400 text-xs px-4 py-2 rounded-full mb-5 font-semibold">
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+              Creator ที่วางระบบแล้ว เริ่มเห็นเงินเพิ่มภายใน 7 วัน
+            </div>
             <h2 className="text-3xl md:text-4xl font-black mb-3">
-              วางระบบ<span className="gradient-money">ดึง ฿{fmt(revenueGap)}</span>กลับมา
+              ดึง<span className="gradient-money"> ฿{fmt(revenueGap)} </span>กลับมา
             </h2>
-            <p className="text-white/38 text-base">{pricing.valueProposition}</p>
+            <p className="text-white/38 text-base mb-2">{pricing.valueProposition}</p>
+            <p className="text-white/25 text-sm">
+              ฿{fmt(revenueGap)}/เดือน = <span className="text-rose-400/70 font-semibold">฿{fmt(revenueGap * 12)}/ปี</span> ที่ยังรออยู่
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
@@ -517,7 +538,11 @@ export default function ResultPage() {
               <button className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black transition-all flex items-center justify-center gap-2 text-sm">
                 เริ่มวางระบบ <ArrowRight size={14} />
               </button>
-              <p className="text-center text-white/22 text-xs mt-3">≈ คืนทุนใน 30 วัน</p>
+              <p className="text-center text-white/22 text-xs mt-3">คืนทุนใน 30 วัน · เริ่มเห็นเงินใน 7 วัน</p>
+              <div className="mt-3 p-3 rounded-xl bg-black/20 border border-amber-500/10 text-center">
+                <p className="text-white/30 text-xs">Revenue Gap ของคุณ</p>
+                <p className="text-amber-400 font-black text-sm">฿{fmt(revenueGap)}/เดือน = ฿{fmt(revenueGap * 12)}/ปี</p>
+              </div>
             </div>
 
             {/* REVENUE SHARE */}

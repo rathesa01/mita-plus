@@ -363,17 +363,23 @@ export default function AuditPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                      Engagement Rate: <span className="text-amber-400 font-black">{form.engagementRate}%</span>
-                    </label>
-                    <input
-                      type="range" min="0.5" max="15" step="0.5"
-                      value={form.engagementRate}
-                      onChange={(e) => update('engagementRate', Number(e.target.value))}
-                      className="w-full accent-violet-500"
-                    />
-                    <div className="flex justify-between text-xs text-white/22 mt-1">
-                      <span>0.5% (ต่ำ)</span><span>15% (สูงมาก)</span>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">คนที่ดูคอนเทนต์คุณมีปฏิกิริยายังไง?</label>
+                    <div className="space-y-2">
+                      {([
+                        { label: 'น้อยมาก', desc: 'คนดูเฉยๆ ไม่ค่อยทำอะไร', rate: 1.5 },
+                        { label: 'ปานกลาง', desc: 'มีคนกด Like บ้าง', rate: 3.5 },
+                        { label: 'ดี', desc: 'มีทั้ง Like และ Comment สม่ำเสมอ', rate: 6 },
+                        { label: 'สูงมาก', desc: 'คนมีส่วนร่วม แชร์ และพูดถึงเยอะ', rate: 10 },
+                      ] as { label: string; desc: string; rate: number }[]).map((opt) => (
+                        <Chip
+                          key={opt.rate}
+                          selected={form.engagementRate === opt.rate}
+                          onClick={() => update('engagementRate', opt.rate)}
+                        >
+                          <span className="font-semibold">{opt.label}</span>
+                          <span className="text-white/38 text-xs ml-2">— {opt.desc}</span>
+                        </Chip>
+                      ))}
                     </div>
                   </div>
                 </div>
