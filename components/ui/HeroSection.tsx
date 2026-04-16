@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import Image from 'next/image'
@@ -15,11 +15,10 @@ export function HeroSection() {
       <div className="absolute pointer-events-none"
         style={{ top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse, rgba(123,97,255,0.22) 0%, transparent 65%)', filter: 'blur(40px)' }} />
 
-      {/* ΓöÇΓöÇ MOBILE layout: text ΓåÆ visual (all in 1 screen) ΓöÇΓöÇ */}
-      {/* ΓöÇΓöÇ DESKTOP layout: text left | visual right ΓöÇΓöÇ */}
+      {/* Mobile: visual top → text bottom (1 screen) | Desktop: text left | visual right */}
       <div className="relative z-10 max-w-6xl mx-auto px-5 flex flex-col lg:flex-row lg:items-center lg:gap-12 lg:min-h-[100svh] lg:py-0 pt-20 pb-6">
 
-        {/* ΓöÇΓöÇ TEXT BLOCK ΓöÇΓöÇ */}
+        {/* TEXT BLOCK */}
         <div className="lg:w-[46%] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 mt-6 lg:mt-0">
 
           {/* Label */}
@@ -27,28 +26,28 @@ export function HeroSection() {
             style={{ background: 'rgba(123,97,255,0.12)', border: '1px solid rgba(123,97,255,0.3)' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
             <span className="text-xs font-bold tracking-widest uppercase" style={{ color: '#a78bfa' }}>
-              α╕¬α╕│α╕½α╕úα╕▒α╕Ü Creator α╕ùα╕╕α╕üα╕èα╣êα╕¡α╕çα╕ùα╕▓α╕ç
+              สำหรับ Creator ทุกช่องทาง
             </span>
           </div>
 
           {/* Headline */}
           <h1 className="font-black leading-[1.1] tracking-tight mb-3"
             style={{ fontSize: 'clamp(1.75rem, 5vw, 3.4rem)' }}>
-            <span className="text-white">Follower α╣üα╕Ñα╕░ View<br />α╕éα╕¡α╕çα╕äα╕╕α╕ô α╕ùα╕│α╣Çα╕çα╕┤α╕Öα╣äα╕öα╣ë</span>
+            <span className="text-white">Follower และ View<br />ของคุณ ทำเงินได้</span>
             <br />
             <span style={{
               background: 'linear-gradient(90deg, #7B61FF 0%, #FF9F1C 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>
-              α╣Çα╕ùα╣êα╕▓α╣äα╕½α╕úα╣êα╕êα╕úα╕┤α╕çα╣å?
+              เท่าไหร่จริงๆ?
             </span>
           </h1>
 
           {/* Sub */}
           <p className="text-sm mb-5 max-w-xs mx-auto lg:mx-0 leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.45)' }}>
-            α╕üα╕úα╕¡α╕üα╕òα╕▒α╕ºα╣Çα╕Ñα╕éα╣üα╕äα╣ê 3 α╕¡α╕óα╣êα╕▓α╕ç ΓÇö α╣üα╕Ñα╣ëα╕ºα╕úα╕╣α╣ëα╣Çα╕Ñα╕óα╕ºα╣êα╕▓α╣Çα╕çα╕┤α╕Öα╕½α╕▓α╕óα╣äα╕¢α╕ùα╕╡α╣êα╣äα╕½α╕Ö
-            α╣üα╕Ñα╕░α╕òα╣ëα╕¡α╕çα╣Çα╕úα╕┤α╣êα╕íα╕êα╕▓α╕üα╕òα╕úα╕çα╣äα╕½α╕Öα╕üα╣êα╕¡α╕Ö
+            กรอกตัวเลขแค่ 3 อย่าง — แล้วรู้เลยว่าเงินหายไปที่ไหน
+            และต้องเริ่มจากตรงไหนก่อน
           </p>
 
           {/* CTA */}
@@ -62,21 +61,21 @@ export function HeroSection() {
                   boxShadow: '0 0 28px rgba(123,97,255,0.35)',
                 }}
               >
-                α╣Çα╕èα╣çα╕üα╕òα╕▒α╕ºα╣Çα╕Ñα╕éα╕éα╕¡α╕çα╕ëα╕▒α╕Ö ΓåÆ
+                เช็กตัวเลขของฉัน →
               </button>
             </Link>
             <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ boxShadow: '0 0 6px #22c55e' }} />
-              α╕ƒα╕úα╕╡ 100% ┬╖ α╣äα╕íα╣êα╕òα╣ëα╕¡α╕çα╕¬α╕íα╕▒α╕äα╕ú
+              ฟรี 100% · ไม่ต้องสมัคร
             </p>
           </div>
 
-          {/* Stats ΓÇö desktop only */}
+          {/* Stats — desktop only */}
           <div className="hidden lg:flex gap-8 mt-10">
             {[
-              { n: 'α╕┐40K+', label: 'α╕úα╕▓α╕óα╣äα╕öα╣ëα╕ùα╕╡α╣êα╕½α╕▓α╕ó/α╣Çα╕öα╕╖α╕¡α╕Ö' },
-              { n: '3 α╕Öα╕▓α╕ùα╕╡', label: 'α╣äα╕öα╣ëα╕£α╕Ñα╕ºα╕┤α╣Çα╕äα╕úα╕▓α╕░α╕½α╣î' },
-              { n: '100%', label: 'α╕ƒα╕úα╕╡ α╣äα╕íα╣êα╕íα╕╡α╣Çα╕çα╕╖α╣êα╕¡α╕Öα╣äα╕é' },
+              { n: '฿40K+',  label: 'รายได้ที่หาย/เดือน'  },
+              { n: '3 นาที', label: 'ได้ผลวิเคราะห์'       },
+              { n: '100%',   label: 'ฟรี ไม่มีเงื่อนไข'   },
             ].map((s) => (
               <div key={s.n}>
                 <p className="font-black text-lg" style={{
@@ -89,7 +88,7 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* ΓöÇΓöÇ VISUAL BLOCK ΓöÇΓöÇ */}
+        {/* VISUAL BLOCK */}
         <div className="lg:w-[54%] order-1 lg:order-2 flex items-center justify-center">
           <HeroVisual />
         </div>
@@ -99,9 +98,6 @@ export function HeroSection() {
   )
 }
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
-/*  Hero Visual                        */
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 function HeroVisual() {
   return (
     <div className="relative w-full mx-auto" style={{ maxWidth: '480px' }}>
@@ -110,7 +106,7 @@ function HeroVisual() {
       <div className="absolute pointer-events-none"
         style={{ inset: '10%', background: 'radial-gradient(circle, rgba(123,97,255,0.15) 0%, transparent 70%)', filter: 'blur(40px)', borderRadius: '50%' }} />
 
-      {/* ΓöÇΓöÇ Main image ΓöÇΓöÇ */}
+      {/* Main image */}
       <Image
         src="/hero-composite.png"
         alt="Creator monetization"
@@ -120,16 +116,16 @@ function HeroVisual() {
         priority
       />
 
-      {/* ΓöÇΓöÇ Floating chips (3 only ΓÇö clean) ΓöÇΓöÇ */}
+      {/* Floating chips — 3 only */}
       <SmallCard style={{ top: '6%', left: '-2%', transform: 'rotateZ(-7deg)', zIndex: 20 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>PROFIT</p>
         <p className="font-extrabold" style={{ fontSize: '18px', color: '#22c55e', lineHeight: 1 }}>+200%</p>
       </SmallCard>
 
       <SmallCard style={{ top: '5%', right: '-2%', transform: 'rotateZ(6deg)', zIndex: 20 }}>
-        <p style={{ fontSize: '8px', color: 'rgba(255,77,79,0.85)', marginBottom: '2px' }}>α╣Çα╕çα╕┤α╕Öα╕ùα╕╡α╣êα╕½α╕▓α╕óα╣äα╕¢</p>
-        <p className="font-black" style={{ fontSize: '16px', color: '#FF4D4F', lineHeight: 1 }}>-α╕┐28,500</p>
-        <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)' }}>/α╣Çα╕öα╕╖α╕¡α╕Ö</p>
+        <p style={{ fontSize: '8px', color: 'rgba(255,77,79,0.85)', marginBottom: '2px' }}>เงินที่หายไป</p>
+        <p className="font-black" style={{ fontSize: '16px', color: '#FF4D4F', lineHeight: 1 }}>-฿28,500</p>
+        <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)' }}>/เดือน</p>
       </SmallCard>
 
       <SmallCard style={{ bottom: '8%', left: '3%', transform: 'rotateZ(-4deg)', zIndex: 20 }}>
@@ -137,18 +133,15 @@ function HeroVisual() {
         <p className="font-bold" style={{ fontSize: '16px', color: '#22c55e', lineHeight: 1 }}>+400%</p>
       </SmallCard>
 
-      {/* ΓöÇΓöÇ 2 coins ΓöÇΓöÇ */}
+      {/* 2 coins */}
       <span className="absolute pointer-events-none select-none"
-        style={{ top: '18%', left: '10%', zIndex: 25, fontSize: '1.3rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>≡ƒ¬Ö</span>
+        style={{ top: '18%', left: '10%', zIndex: 25, fontSize: '1.3rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
       <span className="absolute pointer-events-none select-none"
-        style={{ bottom: '16%', right: '6%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>≡ƒ¬Ö</span>
+        style={{ bottom: '16%', right: '6%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
     </div>
   )
 }
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
-/*  Reusable                           */
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 function SmallCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div className="absolute rounded-xl backdrop-blur-md"
