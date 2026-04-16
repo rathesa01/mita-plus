@@ -97,18 +97,17 @@ export function HeroSection() {
 
 function HeroVisual() {
   return (
-    /* ── Container wider than image so cards can peek from sides ── */
-    <div className="relative mx-auto" style={{ width: '100%', maxWidth: '560px', height: '300px' }}>
+    /* Image defines height — no fixed height, no overflow */
+    <div className="relative mx-auto w-full" style={{ maxWidth: '460px' }}>
 
-      {/* Soft glow center */}
+      {/* Soft glow */}
       <div className="absolute pointer-events-none rounded-full"
-        style={{ width: '300px', height: '300px', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: 'radial-gradient(circle, rgba(123,97,255,0.18) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        style={{ width: '60%', height: '60%', top: '20%', left: '20%', background: 'radial-gradient(circle, rgba(123,97,255,0.18) 0%, transparent 70%)', filter: 'blur(50px)' }} />
 
       {/* ── Analytics card LEFT (TikTok) — behind main image ── */}
-      {/* Card: 155px. Image covers rightmost 35% = ~54px. Visible: 65% = ~101px sticking out left */}
       <div className="absolute rounded-2xl overflow-hidden"
         style={{
-          width: '110px', top: '80px', left: '0px',
+          width: '110px', top: '14%', left: '0px',
           transform: 'rotateZ(-5deg)',
           zIndex: 3, opacity: 0.55,
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
@@ -152,7 +151,7 @@ function HeroVisual() {
       {/* ── Analytics card RIGHT (Instagram) — behind main image ── */}
       <div className="absolute rounded-2xl overflow-hidden"
         style={{
-          width: '108px', top: '60px', right: '0px',
+          width: '108px', top: '10%', right: '0px',
           transform: 'rotateZ(5deg)',
           zIndex: 3, opacity: 0.55,
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
@@ -194,7 +193,7 @@ function HeroVisual() {
       </div>
 
       {/* ── Creator bubbles — faded ── */}
-      <div className="absolute" style={{ top: '60px', left: '2px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'left top' }}>
+      <div className="absolute" style={{ top: '12%', left: '2px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'left top' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden"
             style={{ border: '2px solid rgba(255,159,28,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
@@ -207,7 +206,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute" style={{ top: '20px', right: '5px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
+      <div className="absolute" style={{ top: '6%', right: '5px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
         <div className="relative">
           <div className="w-12 h-12 rounded-full overflow-hidden"
             style={{ border: '2px solid rgba(123,97,255,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
@@ -220,7 +219,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute" style={{ top: '210px', right: '3px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
+      <div className="absolute" style={{ top: '58%', right: '3px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden"
             style={{ border: '2px solid rgba(34,197,94,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
@@ -234,40 +233,39 @@ function HeroVisual() {
       </div>
 
       {/* ── Floating chips (all within 420px height) ── */}
-      <SmallCard style={{ top: '85px', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 25 }}>
+      <SmallCard style={{ top: '22%', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>PROFIT</p>
         <p className="font-extrabold" style={{ fontSize: '18px', color: '#22c55e', lineHeight: 1 }}>+200%</p>
       </SmallCard>
 
-      <SmallCard style={{ top: '180px', left: '8px', transform: 'rotateZ(-3deg)', zIndex: 25 }}>
+      <SmallCard style={{ top: '50%', left: '8px', transform: 'rotateZ(-3deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,77,79,0.85)', marginBottom: '2px' }}>เงินที่หายไป</p>
         <p className="font-black" style={{ fontSize: '16px', color: '#FF4D4F', lineHeight: 1 }}>-฿28,500</p>
         <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)' }}>/เดือน</p>
       </SmallCard>
 
-      <SmallCard style={{ top: '185px', right: '5px', transform: 'rotateZ(4deg)', zIndex: 25 }}>
+      <SmallCard style={{ top: '52%', right: '5px', transform: 'rotateZ(4deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>SALES</p>
         <p className="font-bold" style={{ fontSize: '16px', color: '#22c55e', lineHeight: 1 }}>+400%</p>
       </SmallCard>
 
-      {/* ── Main composite image — 90% wide, z-index highest ── */}
-      <div className="absolute z-[20]"
-        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '130%' }}>
+      {/* ── Main composite image — normal flow, defines container height ── */}
+      <div className="relative z-[20] w-full">
         <Image
           src="/hero-composite.png"
           alt="Creator monetization"
           width={480} height={480}
           className="w-full h-auto"
-          style={{ filter: 'drop-shadow(0 24px 56px rgba(123,97,255,0.3)) drop-shadow(0 4px 24px rgba(0,0,0,0.6))' }}
+          style={{ filter: 'drop-shadow(0 20px 48px rgba(123,97,255,0.28)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))' }}
           priority
         />
       </div>
 
       {/* 2 coins */}
       <span className="absolute pointer-events-none select-none"
-        style={{ top: '12%', left: '20%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
+        style={{ top: '8%', left: '22%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
       <span className="absolute pointer-events-none select-none"
-        style={{ top: '60%', right: '14%', zIndex: 25, fontSize: '1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
+        style={{ top: '62%', right: '16%', zIndex: 25, fontSize: '1rem', transform: 'rotateZ(14deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
     </div>
   )
 }
