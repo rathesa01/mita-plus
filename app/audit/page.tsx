@@ -342,7 +342,7 @@ export default function AuditPage() {
   const [form, setForm] = useState<AuditFormData>(defaultForm)
   const [loading, setLoading] = useState(false)
   const [apiDone, setApiDone] = useState(false)
-  const [apiError, setApiError] = useState(false)
+  const [apiError, setApiError] = useState<string | false>(false)
 
   const update = <K extends keyof AuditFormData>(key: K, val: AuditFormData[K]) =>
     setForm((f) => ({ ...f, [key]: val }))
@@ -379,8 +379,9 @@ export default function AuditPage() {
       })
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}))
+        const msg = errBody?.error ?? errBody?.details ? JSON.stringify(errBody.details) : `HTTP ${res.status}`
         console.error('[MITA+] API error', res.status, errBody)
-        throw new Error(`${res.status}: ${JSON.stringify(errBody)}`)
+        throw new Error(msg)
       }
       const result = await res.json()
       sessionStorage.setItem('mita_result', JSON.stringify(result))
@@ -390,7 +391,7 @@ export default function AuditPage() {
     } catch (err) {
       console.error('[MITA+] Submit error:', err)
       setLoading(false)
-      setApiError(true)
+      setApiError(err instanceof Error ? err.message : 'Unknown error')
     }
   }
 
@@ -725,6 +726,9 @@ export default function AuditPage() {
               <div>
                 <p className="text-rose-300 font-semibold text-sm">วิเคราะห์ไม่สำเร็จ</p>
                 <p className="text-white/40 text-xs mt-0.5">เกิดข้อผิดพลาดกับ AI — ลองใหม่อีกครั้งได้เลยค่ะ</p>
+                {typeof apiError === 'string' && apiError !== 'true' && (
+                  <p className="text-rose-400/60 text-xs mt-1 font-mono break-all">{apiError}</p>
+                )}
               </div>
             </motion.div>
           )}
