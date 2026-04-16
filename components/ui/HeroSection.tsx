@@ -48,8 +48,8 @@ export function HeroSection() {
           {/* Sub */}
           <p className="text-sm sm:text-base mb-8 max-w-md mx-auto lg:mx-0 leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.45)' }}>
-            AI วิเคราะห์ Revenue Gap จาก Follower · View · Niche ของคุณ
-            — บอกว่าเงินหายไปที่ไหน และต้องแก้อะไรก่อน
+            กรอกตัวเลขช่องของคุณแค่ 3 อย่าง — แล้วรู้เลยว่า
+            เงินหายไปที่ไหน และต้องเริ่มจากตรงไหนก่อน
           </p>
 
           {/* Platform badges */}
