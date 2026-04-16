@@ -28,8 +28,8 @@ export function HeroSection() {
           </p>
 
           {/* Headline */}
-          <h1 className="font-black leading-[1.08] tracking-tight mb-2"
-            style={{ fontSize: 'clamp(2.2rem, 7vw, 4.2rem)' }}>
+          <h1 className="font-black leading-[1.35] mb-3"
+            style={{ fontSize: 'clamp(1.9rem, 6vw, 3.8rem)' }}>
             <span className="text-white">Follower และ View<br />ของคุณ ทำเงินได้</span>
             <br />
             <span style={{
