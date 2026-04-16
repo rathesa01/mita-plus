@@ -3,16 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import type { AuditFormData, Platform, Niche, PostingFrequency, MonthlyIncomeRange, IncomeSource } from '@/types'
 
-// ── Loading Screen ──────────────────────────────────────────
+// ── Loading Screen ─────────────────────────────────────────
 const LOADING_STEPS = [
   { text: 'กำลังวิเคราะห์ Audience & Reach...', pct: 15 },
-  { text: 'ตรวจหา Revenue Leak ในระบบ...', pct: 35 },
-  { text: 'คำนวณเงินที่หายไปต่อเดือน...', pct: 55 },
+  { text: 'ตรวจหา Revenue Blocker ในระบบ...', pct: 35 },
+  { text: 'คำนวณ Revenue Gap ต่อเดือน...', pct: 55 },
   { text: 'AI กำลัง Generate แผนทำเงิน...', pct: 75 },
-  { text: 'เตรียม Result สำหรับคุณโดยเฉพาะ...', pct: 92 },
+  { text: 'เตรียม Report สำหรับคุณโดยเฉพาะ...', pct: 92 },
 ]
 
 function AnalyzingScreen({ name }: { name: string }) {
@@ -20,57 +20,57 @@ function AnalyzingScreen({ name }: { name: string }) {
   const [pct, setPct] = useState(0)
 
   useEffect(() => {
-    const intervals: ReturnType<typeof setTimeout>[] = []
+    const timers: ReturnType<typeof setTimeout>[] = []
     LOADING_STEPS.forEach((s, i) => {
-      intervals.push(setTimeout(() => {
-        setStepIdx(i)
-        setPct(s.pct)
-      }, i * 1400))
+      timers.push(setTimeout(() => { setStepIdx(i); setPct(s.pct) }, i * 1400))
     })
-    return () => intervals.forEach(clearTimeout)
+    return () => timers.forEach(clearTimeout)
   }, [])
 
   return (
-    <div className="bg-[#080810] min-h-screen text-white flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-md text-center">
-        {/* Pulsing orb */}
-        <div className="relative mx-auto w-24 h-24 mb-10">
-          <div className="absolute inset-0 rounded-full bg-amber-500/20 animate-ping" />
-          <div className="absolute inset-2 rounded-full bg-amber-500/30 animate-pulse" />
-          <div className="absolute inset-4 rounded-full bg-amber-500/50 flex items-center justify-center text-2xl">⚡</div>
+    <div className="bg-[#08080f] min-h-screen text-white flex flex-col items-center justify-center px-6">
+      <div className="w-full max-w-sm text-center">
+        {/* Spinner */}
+        <div className="relative mx-auto w-16 h-16 mb-10">
+          <div className="absolute inset-0 rounded-full border-2 border-white/5" />
+          <div className="absolute inset-0 rounded-full border-t-2 border-violet-400 animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+          </div>
         </div>
 
-        <h2 className="text-2xl font-black mb-2">กำลังวิเคราะห์ {name}</h2>
-        <p className="text-white/40 text-sm mb-10">AI กำลังคำนวณว่าคุณเสียเงินไปเท่าไหร่</p>
+        <h2 className="text-xl font-black mb-1.5">กำลังวิเคราะห์ {name}</h2>
+        <p className="text-white/35 text-sm mb-10">AI กำลังประเมิน Monetization Score และ Revenue Gap ของคุณ</p>
 
         {/* Progress bar */}
-        <div className="h-1.5 bg-white/5 rounded-full mb-4 overflow-hidden">
+        <div className="h-px bg-white/8 rounded-full mb-5 overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full"
+            className="h-full bg-gradient-to-r from-violet-500 to-amber-400 rounded-full"
             animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
           />
         </div>
 
         <AnimatePresence mode="wait">
           <motion.p
             key={stepIdx}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="text-white/60 text-sm h-5"
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+            className="text-white/38 text-sm h-5"
           >
             {LOADING_STEPS[stepIdx]?.text}
           </motion.p>
         </AnimatePresence>
 
-        <p className="text-amber-500 font-black text-lg mt-6">{pct}%</p>
+        <p className="text-violet-400 font-black text-base mt-5">{pct}%</p>
       </div>
     </div>
   )
 }
 
+// ── Constants ─────────────────────────────────────────────
 const TOTAL_STEPS = 4
 
 const PLATFORMS: { value: Platform; label: string; emoji: string }[] = [
@@ -140,15 +140,16 @@ const defaultForm: AuditFormData = {
   goalIn90Days: '',
 }
 
-function SelectCard({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
+// ── UI Components ─────────────────────────────────────────
+function Chip({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full text-left p-4 rounded-xl border transition-all ${
+      className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm ${
         selected
-          ? 'border-amber-500 bg-amber-500/10 text-white'
-          : 'border-white/10 bg-white/3 text-white/60 hover:border-white/25 hover:text-white'
+          ? 'border-violet-500/60 bg-violet-500/10 text-white'
+          : 'border-white/8 bg-white/2 text-white/45 hover:border-white/18 hover:text-white/75'
       }`}
     >
       {children}
@@ -156,17 +157,39 @@ function SelectCard({ selected, onClick, children }: { selected: boolean; onClic
   )
 }
 
-function YesNoCard({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="glass rounded-xl p-4">
-      <p className="text-white/80 text-sm mb-3">{label}</p>
+    <div className="card rounded-xl p-4">
+      <p className="text-white/65 text-sm mb-3">{label}</p>
       <div className="flex gap-2">
-        <button type="button" onClick={() => onChange(true)} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${value ? 'bg-emerald-500/20 border border-emerald-500 text-emerald-400' : 'border border-white/10 text-white/40 hover:border-white/25'}`}>มี ✓</button>
-        <button type="button" onClick={() => onChange(false)} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${!value ? 'bg-red-500/20 border border-red-500 text-red-400' : 'border border-white/10 text-white/40 hover:border-white/25'}`}>ไม่มี ✗</button>
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+            value
+              ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400'
+              : 'border border-white/8 text-white/30 hover:border-white/18'
+          }`}
+        >
+          มี
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+            !value
+              ? 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+              : 'border border-white/8 text-white/30 hover:border-white/18'
+          }`}
+        >
+          ไม่มี
+        </button>
       </div>
     </div>
   )
 }
+
+const STEP_LABELS = ['Profile', 'Performance', 'Monetization', 'Goals']
 
 export default function AuditPage() {
   const router = useRouter()
@@ -206,61 +229,92 @@ export default function AuditPage() {
     }
   }
 
-  const progress = (step / TOTAL_STEPS) * 100
-
-  // Show analyzing screen while waiting for API
   if (loading) return <AnalyzingScreen name={form.name || 'Creator'} />
 
   return (
-    <main className="bg-[#080810] min-h-screen text-white flex flex-col">
+    <main className="bg-[#08080f] min-h-screen text-white flex flex-col">
+
       {/* Header */}
       <div className="border-b border-white/5 px-6 py-4 flex items-center gap-4">
-        <button onClick={() => step > 1 ? setStep(s => s - 1) : router.push('/')} className="text-white/40 hover:text-white transition-colors">
-          <ArrowLeft size={20} />
+        <button
+          onClick={() => step > 1 ? setStep(s => s - 1) : router.push('/')}
+          className="text-white/30 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={18} />
         </button>
-        <span className="gradient-text font-bold">MITA+</span>
-        <div className="ml-auto text-white/40 text-sm">{step}/{TOTAL_STEPS}</div>
+        <span className="gradient-brand font-black">MITA+</span>
+
+        {/* Step dots */}
+        <div className="ml-auto flex items-center gap-2">
+          {STEP_LABELS.map((label, i) => {
+            const n = i + 1
+            const done = n < step
+            const active = n === step
+            return (
+              <div key={label} className="flex items-center gap-2">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                  done ? 'bg-emerald-500 text-black' : active ? 'bg-violet-500 text-white' : 'bg-white/8 text-white/25'
+                }`}>
+                  {done ? <Check size={10} /> : n}
+                </div>
+                {i < STEP_LABELS.length - 1 && (
+                  <div className={`w-6 h-px transition-all ${done ? 'bg-emerald-500/50' : 'bg-white/8'}`} />
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Progress bar */}
-      <div className="h-1 bg-white/5">
-        <motion.div className="h-full bg-gradient-to-r from-amber-500 to-orange-500" animate={{ width: `${progress}%` }} transition={{ duration: 0.4 }} />
+      <div className="h-px bg-white/5">
+        <motion.div
+          className="h-full bg-gradient-to-r from-violet-500 to-amber-400"
+          animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+          transition={{ duration: 0.4 }}
+        />
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-xl">
+      <div className="flex-1 flex items-start justify-center px-6 py-10">
+        <div className="w-full max-w-lg">
           <AnimatePresence mode="wait">
+
             {/* ── STEP 1: PROFILE ── */}
             {step === 1 && (
-              <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-                <h1 className="text-3xl font-black mb-2">เริ่มต้นที่ตัวคุณ</h1>
-                <p className="text-white/50 mb-8">บอกเราว่าคุณเป็น Creator แบบไหน</p>
+              <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
+                <h1 className="text-2xl font-black mb-1">เริ่มต้นที่ตัวคุณ</h1>
+                <p className="text-white/38 text-sm mb-8">บอกเราว่าคุณเป็น Creator แบบไหน</p>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">ชื่อ / ชื่อแชนแนล</label>
-                    <input value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="ชื่อของคุณ..." className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none focus:border-amber-500/50 transition-colors" />
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ชื่อ / ชื่อแชนแนล</label>
+                    <input
+                      value={form.name}
+                      onChange={(e) => update('name', e.target.value)}
+                      placeholder="ชื่อของคุณ..."
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
+                    />
                   </div>
 
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">Platform หลัก</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">Platform หลัก</label>
                     <div className="grid grid-cols-3 gap-2">
                       {PLATFORMS.map((p) => (
-                        <SelectCard key={p.value} selected={form.platform === p.value} onClick={() => update('platform', p.value)}>
-                          <div className="text-xl mb-1">{p.emoji}</div>
+                        <Chip key={p.value} selected={form.platform === p.value} onClick={() => update('platform', p.value)}>
+                          <div className="text-lg mb-0.5">{p.emoji}</div>
                           <div className="text-xs font-medium">{p.label}</div>
-                        </SelectCard>
+                        </Chip>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">Niche / หมวดหมู่</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">Niche / หมวดหมู่</label>
                     <div className="grid grid-cols-2 gap-2">
                       {NICHES.map((n) => (
-                        <SelectCard key={n.value} selected={form.niche === n.value} onClick={() => update('niche', n.value)}>
-                          <span className="text-sm">{n.label}</span>
-                        </SelectCard>
+                        <Chip key={n.value} selected={form.niche === n.value} onClick={() => update('niche', n.value)}>
+                          {n.label}
+                        </Chip>
                       ))}
                     </div>
                   </div>
@@ -270,38 +324,55 @@ export default function AuditPage() {
 
             {/* ── STEP 2: PERFORMANCE ── */}
             {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-                <h1 className="text-3xl font-black mb-2">ตัวเลข Performance</h1>
-                <p className="text-white/50 mb-8">ข้อมูลนี้ใช้คำนวณว่าคุณเสียเงินไปเท่าไหร่จริงๆ</p>
+              <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
+                <h1 className="text-2xl font-black mb-1">ตัวเลข Performance</h1>
+                <p className="text-white/38 text-sm mb-8">ใช้คำนวณ Revenue Gap ที่แม่นยำสำหรับคุณ</p>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">จำนวน Followers / Subscribers</label>
-                    <input type="number" value={form.followers || ''} onChange={(e) => update('followers', Number(e.target.value))} placeholder="เช่น 50000" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none focus:border-amber-500/50 transition-colors" />
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">จำนวน Followers / Subscribers</label>
+                    <input
+                      type="number"
+                      value={form.followers || ''}
+                      onChange={(e) => update('followers', Number(e.target.value))}
+                      placeholder="เช่น 50000"
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
+                    />
                   </div>
 
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">ยอดวิวเฉลี่ยต่อโพสต์ / วิดีโอ</label>
-                    <input type="number" value={form.avgViews || ''} onChange={(e) => update('avgViews', Number(e.target.value))} placeholder="เช่น 15000" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none focus:border-amber-500/50 transition-colors" />
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ยอดวิวเฉลี่ยต่อโพสต์ / วิดีโอ</label>
+                    <input
+                      type="number"
+                      value={form.avgViews || ''}
+                      onChange={(e) => update('avgViews', Number(e.target.value))}
+                      placeholder="เช่น 15000"
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
+                    />
                   </div>
 
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">โพสต์บ่อยแค่ไหน?</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">โพสต์บ่อยแค่ไหน?</label>
                     <div className="space-y-2">
                       {FREQUENCIES.map((f) => (
-                        <SelectCard key={f.value} selected={form.postingFrequency === f.value} onClick={() => update('postingFrequency', f.value)}>
-                          <span className="text-sm">{f.label}</span>
-                        </SelectCard>
+                        <Chip key={f.value} selected={form.postingFrequency === f.value} onClick={() => update('postingFrequency', f.value)}>
+                          {f.label}
+                        </Chip>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">
-                      Engagement Rate โดยประมาณ: <span className="text-amber-400 font-bold">{form.engagementRate}%</span>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
+                      Engagement Rate: <span className="text-amber-400 font-black">{form.engagementRate}%</span>
                     </label>
-                    <input type="range" min="0.5" max="15" step="0.5" value={form.engagementRate} onChange={(e) => update('engagementRate', Number(e.target.value))} className="w-full accent-amber-500" />
-                    <div className="flex justify-between text-xs text-white/30 mt-1">
+                    <input
+                      type="range" min="0.5" max="15" step="0.5"
+                      value={form.engagementRate}
+                      onChange={(e) => update('engagementRate', Number(e.target.value))}
+                      className="w-full accent-violet-500"
+                    />
+                    <div className="flex justify-between text-xs text-white/22 mt-1">
                       <span>0.5% (ต่ำ)</span><span>15% (สูงมาก)</span>
                     </div>
                   </div>
@@ -311,38 +382,41 @@ export default function AuditPage() {
 
             {/* ── STEP 3: MONETIZATION ── */}
             {step === 3 && (
-              <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-                <h1 className="text-3xl font-black mb-2">ระบบทำเงินปัจจุบัน</h1>
-                <p className="text-white/50 mb-8">ตอบตรงๆ — นี่คือที่มาของ Revenue Leak ที่แม่นยำ</p>
+              <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
+                <h1 className="text-2xl font-black mb-1">ระบบทำเงินปัจจุบัน</h1>
+                <p className="text-white/38 text-sm mb-8">ส่วนนี้ใช้หา Revenue Blocker ที่ทำให้รายได้ไม่โต</p>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">รายได้จากที่ไหนบ้าง? (เลือกได้หลายอย่าง)</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">รายได้จากที่ไหนบ้าง? (เลือกได้หลายอย่าง)</label>
                     <div className="grid grid-cols-2 gap-2">
                       {INCOME_SOURCES.map((src) => (
-                        <SelectCard key={src.value} selected={form.currentIncomeSources.includes(src.value)} onClick={() => toggleIncomeSource(src.value)}>
-                          <span className="text-sm">{src.label}</span>
-                        </SelectCard>
+                        <Chip key={src.value} selected={form.currentIncomeSources.includes(src.value)} onClick={() => toggleIncomeSource(src.value)}>
+                          {src.label}
+                        </Chip>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">รายได้จาก Content ต่อเดือนโดยประมาณ</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">รายได้จาก Content ต่อเดือน</label>
                     <div className="space-y-2">
                       {INCOME_RANGES.map((r) => (
-                        <SelectCard key={r.value} selected={form.monthlyIncome === r.value} onClick={() => update('monthlyIncome', r.value)}>
-                          <span className="text-sm">{r.label}</span>
-                        </SelectCard>
+                        <Chip key={r.value} selected={form.monthlyIncome === r.value} onClick={() => update('monthlyIncome', r.value)}>
+                          {r.label}
+                        </Chip>
                       ))}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <YesNoCard label="มีสินค้า/บริการของตัวเอง?" value={form.hasProduct} onChange={(v) => update('hasProduct', v)} />
-                    <YesNoCard label="มี Funnel / Landing Page?" value={form.hasFunnel} onChange={(v) => update('hasFunnel', v)} />
-                    <YesNoCard label="มี Affiliate / พาร์ทเนอร์?" value={form.hasAffiliate} onChange={(v) => update('hasAffiliate', v)} />
-                    <YesNoCard label="มีระบบปิดการขาย / DM Closing?" value={form.hasClosingSystem} onChange={(v) => update('hasClosingSystem', v)} />
+                  <div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-3 block">ระบบที่มีอยู่แล้ว</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Toggle label="มีสินค้า/บริการของตัวเอง?" value={form.hasProduct} onChange={(v) => update('hasProduct', v)} />
+                      <Toggle label="มี Funnel / Landing Page?" value={form.hasFunnel} onChange={(v) => update('hasFunnel', v)} />
+                      <Toggle label="มี Affiliate / พาร์ทเนอร์?" value={form.hasAffiliate} onChange={(v) => update('hasAffiliate', v)} />
+                      <Toggle label="มีระบบปิดการขาย / DM?" value={form.hasClosingSystem} onChange={(v) => update('hasClosingSystem', v)} />
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -350,24 +424,36 @@ export default function AuditPage() {
 
             {/* ── STEP 4: GOALS ── */}
             {step === 4 && (
-              <motion.div key="step4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-                <h1 className="text-3xl font-black mb-2">เป้าหมายและปัญหา</h1>
-                <p className="text-white/50 mb-8">ส่วนนี้ช่วยให้ AI วิเคราะห์ได้ตรงกับสถานการณ์คุณมากที่สุด</p>
+              <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
+                <h1 className="text-2xl font-black mb-1">เป้าหมายและสถานการณ์</h1>
+                <p className="text-white/38 text-sm mb-8">ช่วยให้ AI วิเคราะห์ได้ตรงกับตัวคุณมากที่สุด</p>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">ปัญหาหลักในตอนนี้คืออะไร?</label>
-                    <textarea value={form.biggestProblem} onChange={(e) => update('biggestProblem', e.target.value)} placeholder="เช่น: มีคนดูเยอะแต่ไม่รู้จะขายอะไร หรือ มีสินค้าแต่ปิดการขายไม่ได้..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none focus:border-amber-500/50 transition-colors resize-none" />
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ปัญหาหลักในตอนนี้คืออะไร?</label>
+                    <textarea
+                      value={form.biggestProblem}
+                      onChange={(e) => update('biggestProblem', e.target.value)}
+                      placeholder="เช่น: มีคนดูเยอะแต่ไม่รู้จะขายอะไร หรือ มีสินค้าแต่ปิดการขายไม่ได้..."
+                      rows={3}
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all resize-none text-sm"
+                    />
                   </div>
 
                   <div>
-                    <label className="text-sm text-white/60 mb-2 block">อยากได้อะไรใน 90 วันนับจากนี้?</label>
-                    <textarea value={form.goalIn90Days} onChange={(e) => update('goalIn90Days', e.target.value)} placeholder="เช่น: รายได้ 50,000 บาท/เดือน หรือ เปิดคอร์สแรก หรือ Passive income 20K..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none focus:border-amber-500/50 transition-colors resize-none" />
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">อยากได้อะไรใน 90 วันนับจากนี้?</label>
+                    <textarea
+                      value={form.goalIn90Days}
+                      onChange={(e) => update('goalIn90Days', e.target.value)}
+                      placeholder="เช่น: รายได้ 50,000 บาท/เดือน หรือ เปิดคอร์สแรก หรือ Passive income 20K..."
+                      rows={3}
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all resize-none text-sm"
+                    />
                   </div>
 
-                  <div className="glass rounded-2xl p-5 border border-amber-500/20">
-                    <p className="text-amber-400 font-semibold text-sm mb-1">กำลังจะรู้แล้วว่าคุณเสียเงินไปเท่าไหร่</p>
-                    <p className="text-white/50 text-xs">AI จะวิเคราะห์ข้อมูลทั้งหมดและแสดง Revenue Leak + แผนทำเงินที่ทำได้จริงทันที</p>
+                  <div className="card rounded-xl p-4 border-violet-500/15" style={{ borderColor: 'rgba(139,92,246,0.15)', background: 'rgba(139,92,246,0.04)' }}>
+                    <p className="text-violet-300 font-semibold text-sm mb-1">พร้อมวิเคราะห์แล้ว</p>
+                    <p className="text-white/38 text-xs">AI จะประเมิน Monetization Score + Revenue Gap และสร้างแผนเฉพาะสำหรับคุณทันที</p>
                   </div>
                 </div>
               </motion.div>
@@ -377,17 +463,31 @@ export default function AuditPage() {
           {/* Navigation */}
           <div className="mt-8 flex gap-3">
             {step > 1 && (
-              <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/10 text-white/60 hover:text-white hover:border-white/25 transition-all">
-                <ArrowLeft size={16} /> ย้อนกลับ
+              <button
+                onClick={() => setStep(s => s - 1)}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/8 text-white/38 hover:text-white/70 hover:border-white/18 transition-all text-sm"
+              >
+                <ArrowLeft size={15} /> ย้อนกลับ
               </button>
             )}
             {step < TOTAL_STEPS ? (
-              <button onClick={() => canNext() && setStep(s => s + 1)} className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${canNext() ? 'bg-amber-500 hover:bg-amber-400 text-black' : 'bg-white/5 text-white/30 cursor-not-allowed'}`}>
-                ถัดไป <ArrowRight size={16} />
+              <button
+                onClick={() => canNext() && setStep(s => s + 1)}
+                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                  canNext()
+                    ? 'bg-white text-black hover:bg-white/90'
+                    : 'bg-white/5 text-white/22 cursor-not-allowed'
+                }`}
+              >
+                ถัดไป <ArrowRight size={15} />
               </button>
             ) : (
-              <button onClick={handleSubmit} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-lg transition-all disabled:opacity-70">
-                วิเคราะห์ Revenue ของฉัน <ArrowRight size={18} />
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-base transition-all disabled:opacity-60"
+              >
+                วิเคราะห์ Monetization ของฉัน <ArrowRight size={16} />
               </button>
             )}
           </div>

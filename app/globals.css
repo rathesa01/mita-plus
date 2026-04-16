@@ -50,7 +50,7 @@
 
 /* MITA+ custom utilities */
 .gradient-text {
-  background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
+  background: linear-gradient(135deg, #f59e0b, #f97316);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -61,14 +61,36 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.glass {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(12px);
+.gradient-brand {
+  background: linear-gradient(135deg, #818cf8, #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-.glow-amber { box-shadow: 0 0 40px rgba(245,158,11,0.15); }
-.glow-red   { box-shadow: 0 0 40px rgba(239,68,68,0.15); }
-.glow-green { box-shadow: 0 0 40px rgba(16,185,129,0.15); }
+.gradient-money {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-growth {
+  background: linear-gradient(135deg, #10b981, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.glass {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.glow-amber  { box-shadow: 0 0 60px rgba(245,158,11,0.10); }
+.glow-red    { box-shadow: 0 0 60px rgba(239,68,68,0.10); }
+.glow-green  { box-shadow: 0 0 60px rgba(16,185,129,0.10); }
+.glow-violet { box-shadow: 0 0 60px rgba(139,92,246,0.10); }
 
 :root {
   --background: oklch(1 0 0);
