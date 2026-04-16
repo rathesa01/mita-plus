@@ -15,56 +15,89 @@ const LOADING_STEPS = [
   { text: 'เตรียม Report สำหรับคุณโดยเฉพาะ...', pct: 92 },
 ]
 
-function AnalyzingScreen({ name }: { name: string }) {
+function AnalyzingScreen({ name, done }: { name: string; done: boolean }) {
   const [stepIdx, setStepIdx] = useState(0)
   const [pct, setPct] = useState(0)
+  const [longWait, setLongWait] = useState(false)
 
+  // Cycle through steps on a fixed schedule
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = []
     LOADING_STEPS.forEach((s, i) => {
-      timers.push(setTimeout(() => { setStepIdx(i); setPct(s.pct) }, i * 1400))
+      timers.push(setTimeout(() => { setStepIdx(i); setPct(s.pct) }, i * 1600))
     })
+    // After 10s show "still working" message if API hasn't returned yet
+    timers.push(setTimeout(() => setLongWait(true), 10_000))
     return () => timers.forEach(clearTimeout)
   }, [])
+
+  // When API is done → jump to 100% immediately
+  useEffect(() => {
+    if (done) {
+      setStepIdx(LOADING_STEPS.length - 1)
+      setPct(100)
+      setLongWait(false)
+    }
+  }, [done])
+
+  const displayText = done
+    ? '✅ วิเคราะห์เสร็จแล้ว!'
+    : longWait
+    ? 'ยังวิเคราะห์อยู่... AI กำลังทำงานค่ะ'
+    : LOADING_STEPS[stepIdx]?.text
 
   return (
     <div className="bg-[#08080f] min-h-screen text-white flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm text-center">
-        {/* Spinner */}
+        {/* Spinner / done icon */}
         <div className="relative mx-auto w-16 h-16 mb-10">
           <div className="absolute inset-0 rounded-full border-2 border-white/5" />
-          <div className="absolute inset-0 rounded-full border-t-2 border-violet-400 animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-          </div>
+          {done ? (
+            <div className="absolute inset-0 rounded-full border-2 border-emerald-400 flex items-center justify-center">
+              <span className="text-emerald-400 text-2xl">✓</span>
+            </div>
+          ) : (
+            <>
+              <div className="absolute inset-0 rounded-full border-t-2 border-violet-400 animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+              </div>
+            </>
+          )}
         </div>
 
-        <h2 className="text-xl font-black mb-1.5">กำลังวิเคราะห์ {name}</h2>
-        <p className="text-white/35 text-sm mb-10">AI กำลังประเมิน Monetization Score และ Revenue Gap ของคุณ</p>
+        <h2 className="text-xl font-black mb-1.5">
+          {done ? 'ผลวิเคราะห์พร้อมแล้ว!' : `กำลังวิเคราะห์ ${name}`}
+        </h2>
+        <p className="text-white/35 text-sm mb-10">
+          {done
+            ? 'กำลังพาคุณไปดูผลค่ะ...'
+            : 'AI กำลังประเมิน Monetization Score และ Revenue Gap ของคุณ'}
+        </p>
 
         {/* Progress bar */}
         <div className="h-px bg-white/8 rounded-full mb-5 overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-violet-500 to-amber-400 rounded-full"
             animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.9, ease: 'easeOut' }}
+            transition={{ duration: done ? 0.4 : 0.9, ease: 'easeOut' }}
           />
         </div>
 
         <AnimatePresence mode="wait">
           <motion.p
-            key={stepIdx}
+            key={done ? 'done' : longWait ? 'wait' : stepIdx}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25 }}
-            className="text-white/38 text-sm h-5"
+            className={`text-sm h-5 ${done ? 'text-emerald-400 font-semibold' : longWait ? 'text-amber-400' : 'text-white/38'}`}
           >
-            {LOADING_STEPS[stepIdx]?.text}
+            {displayText}
           </motion.p>
         </AnimatePresence>
 
-        <p className="text-violet-400 font-black text-base mt-5">{pct}%</p>
+        <p className={`font-black text-base mt-5 ${done ? 'text-emerald-400' : 'text-violet-400'}`}>{pct}%</p>
       </div>
     </div>
   )
@@ -197,6 +230,7 @@ export default function AuditPage() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<AuditFormData>(defaultForm)
   const [loading, setLoading] = useState(false)
+  const [apiDone, setApiDone] = useState(false)
   const [apiError, setApiError] = useState(false)
 
   const update = <K extends keyof AuditFormData>(key: K, val: AuditFormData[K]) =>
@@ -216,6 +250,7 @@ export default function AuditPage() {
 
   const handleSubmit = async () => {
     setLoading(true)
+    setApiDone(false)
     setApiError(false)
     try {
       const res = await fetch('/api/analyze', {
@@ -226,14 +261,16 @@ export default function AuditPage() {
       if (!res.ok) throw new Error('API error')
       const result = await res.json()
       sessionStorage.setItem('mita_result', JSON.stringify(result))
-      router.push('/result')
+      // Signal loading screen → 100%, then navigate after brief celebration moment
+      setApiDone(true)
+      setTimeout(() => router.push('/result'), 800)
     } catch {
       setLoading(false)
       setApiError(true)
     }
   }
 
-  if (loading) return <AnalyzingScreen name={form.name || 'Creator'} />
+  if (loading) return <AnalyzingScreen name={form.name || 'Creator'} done={apiDone} />
 
   return (
     <main className="bg-[#08080f] min-h-screen text-white flex flex-col">

@@ -7,8 +7,9 @@ import { ArrowLeft, MessageCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import type { AuditResult } from '@/types'
 import { COLORS, CARD, RADIUS } from '@/lib/tokens'
 
-// ── Config — ใส่ LINE OA URL ตรงนี้ ───────────
-const LINE_OA_URL = process.env.NEXT_PUBLIC_LINE_OA_URL ?? 'https://line.me/ti/p/YOUR_LINE_OA_ID'
+// ── Config ─────────────────────────────────────
+const LINE_OA_URL = process.env.NEXT_PUBLIC_LINE_OA_URL ?? ''
+const LINE_READY  = LINE_OA_URL.length > 0 && !LINE_OA_URL.includes('YOUR_LINE')
 
 // ── Plan labels ────────────────────────────────
 const PLAN_LABELS: Record<string, { label: string; price: string; color: string }> = {
@@ -66,6 +67,8 @@ function ContactContent() {
           platform: result?.input.platform,
           niche: result?.input.niche,
           followers: result?.input.followers,
+          reportPrice: result?.pricing.reportPrice,
+          premiumPrice: result?.pricing.premiumPrice,
         }),
       })
       setSubmitted(true)
@@ -102,22 +105,24 @@ function ContactContent() {
             ทีมงานจะ DM คุณกลับใน <strong style={{ color: COLORS.textPrimary }}>24 ชั่วโมง</strong> ผ่านอีเมลหรือ LINE ค่ะ
           </p>
 
-          {/* LINE button */}
-          <a
-            href={LINE_OA_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              width: '100%', height: '56px', borderRadius: RADIUS.button,
-              background: '#06C755', color: '#fff',
-              fontWeight: 900, fontSize: '16px', textDecoration: 'none',
-              marginBottom: '12px',
-            }}
-          >
-            <MessageCircle size={20} />
-            คุยต่อใน LINE ได้เลย
-          </a>
+          {/* LINE button — แสดงเฉพาะถ้าตั้ง LINE OA URL แล้ว */}
+          {LINE_READY && (
+            <a
+              href={LINE_OA_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                width: '100%', height: '56px', borderRadius: RADIUS.button,
+                background: '#06C755', color: '#fff',
+                fontWeight: 900, fontSize: '16px', textDecoration: 'none',
+                marginBottom: '12px',
+              }}
+            >
+              <MessageCircle size={20} />
+              คุยต่อใน LINE ได้เลย
+            </a>
+          )}
 
           <button
             onClick={() => router.push('/result')}
@@ -286,24 +291,28 @@ function ContactContent() {
           </button>
         </form>
 
-        {/* OR LINE direct */}
-        <div style={{ textAlign: 'center', margin: '20px 0 8px', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>
-          หรือ
-        </div>
-        <a
-          href={LINE_OA_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-            width: '100%', height: '52px', borderRadius: RADIUS.button,
-            background: 'rgba(6,199,85,0.1)', border: '1px solid rgba(6,199,85,0.25)',
-            color: '#06C755', fontWeight: 700, fontSize: '15px', textDecoration: 'none',
-          }}
-        >
-          <MessageCircle size={18} />
-          ทักหา LINE OA ได้เลย
-        </a>
+        {/* OR LINE direct — แสดงเฉพาะถ้า LINE OA พร้อม */}
+        {LINE_READY && (
+          <>
+            <div style={{ textAlign: 'center', margin: '20px 0 8px', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>
+              หรือ
+            </div>
+            <a
+              href={LINE_OA_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                width: '100%', height: '52px', borderRadius: RADIUS.button,
+                background: 'rgba(6,199,85,0.1)', border: '1px solid rgba(6,199,85,0.25)',
+                color: '#06C755', fontWeight: 700, fontSize: '15px', textDecoration: 'none',
+              }}
+            >
+              <MessageCircle size={18} />
+              ทักหา LINE OA ได้เลย
+            </a>
+          </>
+        )}
 
         <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.18)', marginTop: '24px' }}>
           ไม่มีค่าใช้จ่ายในการนัดคุย · ข้อมูลของคุณปลอดภัย

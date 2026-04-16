@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, animate } from 'framer-motion'
-import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight } from 'lucide-react'
+import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight, Share2, Copy, Check as CheckIcon } from 'lucide-react'
 import type { AuditResult } from '@/types'
 
 import { COLORS, CARD, RADIUS, GLOW, SPACE } from '@/lib/tokens'
@@ -107,6 +107,89 @@ function PhaseCard({ label, items, color, accent }: {
         ))}
       </div>
     </div>
+  )
+}
+
+// ── Share Section ──────────────────────────────
+function ShareSection({ score, revenueGap, name }: { score: number; revenueGap: number; name: string }) {
+  const [copied, setCopied] = useState(false)
+  const url = 'https://www.mitaplus.com'
+  const gap = Math.round(revenueGap).toLocaleString('th-TH')
+
+  const shareText = `Monetization Score ของฉัน: ${score}/100 🎯\nRevenue Gap: -฿${gap}/เดือน 💸\n\nลองเช็กของคุณที่ mitaplus.com`
+  const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n' + url)}`
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(url)}`
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch { /* ignore */ }
+  }
+
+  return (
+    <SectionWrapper>
+      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+        <Share2 size={18} style={{ color: COLORS.accentPurple, marginBottom: '8px' }} />
+        <p style={{ fontWeight: 900, fontSize: '16px', color: COLORS.textPrimary, marginBottom: '4px' }}>
+          แชร์ผลให้เพื่อน Creator
+        </p>
+        <p style={{ fontSize: '12px', color: COLORS.textSecondary }}>
+          ชวนเพื่อนมาเช็ก Revenue Gap ของตัวเองด้วย
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* LINE */}
+        <a
+          href={lineUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+            height: '50px', borderRadius: RADIUS.button,
+            background: 'rgba(6,199,85,0.10)', border: '1px solid rgba(6,199,85,0.25)',
+            color: '#06C755', fontWeight: 700, fontSize: '14px', textDecoration: 'none',
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>💬</span>
+          แชร์ใน LINE
+        </a>
+
+        {/* Twitter/X */}
+        <a
+          href={twitterUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+            height: '50px', borderRadius: RADIUS.button,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)',
+            color: COLORS.textPrimary, fontWeight: 700, fontSize: '14px', textDecoration: 'none',
+          }}
+        >
+          <span style={{ fontWeight: 900, fontSize: '15px' }}>𝕏</span>
+          แชร์บน X / Twitter
+        </a>
+
+        {/* Copy link */}
+        <button
+          onClick={copyLink}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            height: '44px', borderRadius: RADIUS.button,
+            background: 'transparent', border: '1px solid rgba(255,255,255,0.07)',
+            color: COLORS.textSecondary, fontWeight: 600, fontSize: '13px', cursor: 'pointer',
+          }}
+        >
+          {copied
+            ? <><CheckIcon size={14} style={{ color: COLORS.success }} /> คัดลอกแล้ว!</>
+            : <><Copy size={14} /> คัดลอกลิงก์</>
+          }
+        </button>
+      </div>
+    </SectionWrapper>
   )
 }
 
@@ -382,6 +465,11 @@ export default function ResultPage() {
         <PhaseCard label="วันที่ 31–60" items={actionPlan.day60} color={COLORS.accentPurple} accent="#7B61FF" />
         <PhaseCard label="วันที่ 61–90" items={actionPlan.day90} color={COLORS.success}      accent="#22C55E" />
       </SectionWrapper>
+
+      {/* ══════════════════════════════════════
+          SHARE
+      ══════════════════════════════════════ */}
+      <ShareSection score={score.total} revenueGap={revenueGap} name={input.name} />
 
       {/* ══════════════════════════════════════
           CTA / UPGRADE
