@@ -111,7 +111,7 @@ function HeroVisual() {
       {/* Card: 155px. Image covers rightmost 35% = ~54px. Visible: 65% = ~101px sticking out left */}
       <div className="absolute rounded-2xl overflow-hidden"
         style={{
-          width: '155px', top: '70px', left: '0px',
+          width: '110px', top: '80px', left: '0px',
           transform: 'rotateZ(-5deg)',
           zIndex: 3, opacity: 0.55,
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
@@ -155,7 +155,7 @@ function HeroVisual() {
       {/* ── Analytics card RIGHT (Instagram) — behind main image ── */}
       <div className="absolute rounded-2xl overflow-hidden"
         style={{
-          width: '150px', top: '50px', right: '0px',
+          width: '108px', top: '60px', right: '0px',
           transform: 'rotateZ(5deg)',
           zIndex: 3, opacity: 0.55,
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
@@ -255,7 +255,7 @@ function HeroVisual() {
 
       {/* ── Main composite image — 90% wide, z-index highest ── */}
       <div className="absolute z-[20]"
-        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '90%' }}>
+        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '108%' }}>
         <Image
           src="/hero-composite.png"
           alt="Creator monetization"
