@@ -75,6 +75,10 @@ function ContactContent() {
           premiumPrice: result?.pricing.premiumPrice,
         }),
       })
+      // ถ้ามี LINE OA → redirect ตรงไป LINE ได้เลย
+      if (LINE_READY) {
+        window.open(LINE_OA_URL, '_blank', 'noopener,noreferrer')
+      }
       setSubmitted(true)
     } catch {
       setError(true)
@@ -103,13 +107,15 @@ function ContactContent() {
           </div>
 
           <h1 style={{ fontWeight: 900, fontSize: '26px', color: COLORS.textPrimary, marginBottom: '8px' }}>
-            รับทราบแล้วค่ะ!
+            {LINE_READY ? 'ทักได้เลยค่ะ!' : 'รับทราบแล้วค่ะ!'}
           </h1>
-          <p style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: 1.6, marginBottom: '32px' }}>
-            ทีมงานจะ DM คุณกลับใน <strong style={{ color: COLORS.textPrimary }}>24 ชั่วโมง</strong> ผ่านอีเมลหรือ LINE ค่ะ
+          <p style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: 1.6, marginBottom: '28px' }}>
+            {LINE_READY
+              ? <>บันทึกข้อมูลแล้วค่ะ — ทักทีมงานใน LINE เพื่อ<strong style={{ color: COLORS.textPrimary }}>แจ้งช่องทางโอนเงินและ onboarding</strong> ได้เลย</>
+              : <>ทีมงานจะติดต่อกลับใน <strong style={{ color: COLORS.textPrimary }}>24 ชั่วโมง</strong> ค่ะ</>
+            }
           </p>
 
-          {/* LINE button — แสดงเฉพาะถ้าตั้ง LINE OA URL แล้ว */}
           {LINE_READY && (
             <a
               href={LINE_OA_URL}
@@ -117,14 +123,15 @@ function ContactContent() {
               rel="noopener noreferrer"
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                width: '100%', height: '56px', borderRadius: RADIUS.button,
+                width: '100%', height: '60px', borderRadius: RADIUS.button,
                 background: '#06C755', color: '#fff',
-                fontWeight: 900, fontSize: '16px', textDecoration: 'none',
+                fontWeight: 900, fontSize: '17px', textDecoration: 'none',
                 marginBottom: '12px',
+                boxShadow: '0 4px 24px rgba(6,199,85,0.35)',
               }}
             >
-              <MessageCircle size={20} />
-              คุยต่อใน LINE ได้เลย
+              <MessageCircle size={22} />
+              เปิด LINE OA ทีมงาน
             </a>
           )}
 
@@ -187,14 +194,32 @@ function ContactContent() {
         </div>
 
         <h1 style={{ fontWeight: 900, fontSize: '26px', lineHeight: 1.25, marginBottom: '8px' }}>
-          {plan === 'starter' || plan === 'pro'
-            ? <>สมัครผ่านทีมงาน<br /><span style={{ color: planInfo.color }}>รับภายใน 24 ชั่วโมง</span></>
-            : <>ทีมงานจะติดต่อกลับ<br /><span style={{ color: COLORS.ctaOrange }}>ภายใน 24 ชั่วโมง</span></>
-          }
+          ทักทีมงานใน LINE<br />
+          <span style={{ color: planInfo.color }}>เพื่อเริ่มต้นได้เลย</span>
         </h1>
-        <p style={{ color: COLORS.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
-          {planInfo.desc} — กรอกข้อมูลไว้เลยค่ะ ทีมจะแจ้งรายละเอียดการชำระเงินและ onboarding ให้ครบ
+        <p style={{ color: COLORS.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '16px' }}>
+          {planInfo.desc} — ทีมจะแนะนำช่องทางโอนเงินและ onboarding ให้ครบผ่าน LINE ค่ะ
         </p>
+
+        {/* LINE OA — Primary CTA (แสดงก่อนฟอร์มเลย) */}
+        {LINE_READY && (
+          <a
+            href={LINE_OA_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+              width: '100%', height: '58px', borderRadius: RADIUS.button,
+              background: '#06C755', color: '#fff',
+              fontWeight: 900, fontSize: '17px', textDecoration: 'none',
+              marginBottom: '24px',
+              boxShadow: '0 4px 24px rgba(6,199,85,0.30)',
+            }}
+          >
+            <MessageCircle size={22} />
+            ทักหาทีมงานใน LINE OA
+          </a>
+        )}
 
         {/* Mini result summary */}
         {result && (
@@ -286,40 +311,19 @@ function ContactContent() {
             disabled={loading || !name.trim() || !email.trim()}
             style={{
               width: '100%', height: '56px', borderRadius: RADIUS.button,
-              background: loading ? 'rgba(255,159,28,0.5)' : COLORS.ctaOrange,
-              color: '#000', fontWeight: 900, fontSize: '16px',
-              border: 'none', cursor: loading ? 'wait' : 'pointer',
+              background: loading ? 'rgba(255,159,28,0.5)' : LINE_READY ? 'rgba(6,199,85,0.15)' : COLORS.ctaOrange,
+              border: LINE_READY ? '1px solid rgba(6,199,85,0.35)' : 'none',
+              color: LINE_READY ? '#06C755' : '#000',
+              fontWeight: 900, fontSize: '15px',
+              cursor: loading ? 'wait' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               marginTop: '4px', opacity: (!name.trim() || !email.trim()) ? 0.5 : 1,
             }}
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : null}
-            {loading ? 'กำลังส่ง...' : 'ส่งข้อมูล — ทีมจะติดต่อกลับ'}
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <MessageCircle size={16} />}
+            {loading ? 'กำลังส่ง...' : LINE_READY ? 'บันทึกข้อมูล + เปิด LINE OA' : 'ส่งข้อมูล — ทีมจะติดต่อกลับ'}
           </button>
         </form>
-
-        {/* OR LINE direct — แสดงเฉพาะถ้า LINE OA พร้อม */}
-        {LINE_READY && (
-          <>
-            <div style={{ textAlign: 'center', margin: '20px 0 8px', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>
-              หรือ
-            </div>
-            <a
-              href={LINE_OA_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                width: '100%', height: '52px', borderRadius: RADIUS.button,
-                background: 'rgba(6,199,85,0.1)', border: '1px solid rgba(6,199,85,0.25)',
-                color: '#06C755', fontWeight: 700, fontSize: '15px', textDecoration: 'none',
-              }}
-            >
-              <MessageCircle size={18} />
-              ทักหา LINE OA ได้เลย
-            </a>
-          </>
-        )}
 
         <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.18)', marginTop: '24px' }}>
           ไม่มีค่าใช้จ่ายในการนัดคุย · ข้อมูลของคุณปลอดภัย
