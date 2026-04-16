@@ -32,6 +32,9 @@ export type IncomeSource =
   | 'merchandise'
   | 'subscription'
   | 'none'
+export type ContentDuration = 'under_3months' | '3-12months' | '1-2years' | 'over_2years'
+export type TriedAndFailed = 'affiliate' | 'sponsorship' | 'own_product' | 'coaching' | 'live_selling' | 'none_tried'
+export type AudienceBuyingPower = 'student' | 'worker' | 'homemaker' | 'business_owner' | 'mixed'
 
 // ── INPUT ──────────────────────────────────────
 export interface AuditFormData {
@@ -57,6 +60,9 @@ export interface AuditFormData {
   hasClosingSystem: boolean
 
   // Step 4 — Goals
+  contentDuration: ContentDuration
+  triedAndFailed: TriedAndFailed[]
+  audienceBuyingPower: AudienceBuyingPower
   biggestProblem: string
   goalIn90Days: string
 }
@@ -99,6 +105,8 @@ export type LeakType =
   | 'no_tracking'
   | 'low_frequency'
   | 'no_closing'
+  | 'wrong_monetization_model'
+  | 'duration_no_income'
 
 export type LeakSeverity = 'critical' | 'high' | 'medium' | 'low'
 

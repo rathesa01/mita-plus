@@ -21,6 +21,9 @@ export const AuditFormSchema = z.object({
   hasClosingSystem: z.boolean(),
   biggestProblem: z.string().max(1000).optional().default(''),
   goalIn90Days: z.string().max(1000).optional().default(''),
+  contentDuration: z.enum(['under_3months', '3-12months', '1-2years', 'over_2years']).default('3-12months'),
+  triedAndFailed: z.array(z.enum(['affiliate', 'sponsorship', 'own_product', 'coaching', 'live_selling', 'none_tried'])).min(1).max(6).default(['none_tried']),
+  audienceBuyingPower: z.enum(['student', 'worker', 'homemaker', 'business_owner', 'mixed']).default('mixed'),
 })
 
 // ── Contact form schema ────────────────────────

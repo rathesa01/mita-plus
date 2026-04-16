@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import type { AuditFormData, Platform, Niche, PostingFrequency, MonthlyIncomeRange, IncomeSource } from '@/types'
+import type { AuditFormData, Platform, Niche, PostingFrequency, MonthlyIncomeRange, IncomeSource, ContentDuration, TriedAndFailed, AudienceBuyingPower } from '@/types'
 
 // ── Loading Screen ─────────────────────────────────────────
 const LOADING_STEPS = [
@@ -154,6 +154,30 @@ const INCOME_SOURCES: { value: IncomeSource; label: string }[] = [
   { value: 'none', label: 'ยังไม่มีรายได้' },
 ]
 
+const CONTENT_DURATIONS: { value: ContentDuration; label: string }[] = [
+  { value: 'under_3months', label: 'น้อยกว่า 3 เดือน' },
+  { value: '3-12months', label: '3 เดือน – 1 ปี' },
+  { value: '1-2years', label: '1 – 2 ปี' },
+  { value: 'over_2years', label: 'มากกว่า 2 ปี' },
+]
+
+const TRIED_AND_FAILED: { value: TriedAndFailed; label: string }[] = [
+  { value: 'affiliate', label: 'Affiliate / ลิงก์ค่าคอม' },
+  { value: 'sponsorship', label: 'หา Sponsor / ติดต่อแบรนด์' },
+  { value: 'own_product', label: 'ขายสินค้า / คอร์สตัวเอง' },
+  { value: 'coaching', label: 'Coaching / ให้คำปรึกษา' },
+  { value: 'live_selling', label: 'ไลฟ์ขายของ' },
+  { value: 'none_tried', label: 'ยังไม่เคยลองเลย' },
+]
+
+const AUDIENCE_BUYING_POWERS: { value: AudienceBuyingPower; label: string; desc: string }[] = [
+  { value: 'student', label: 'นักเรียน / นักศึกษา', desc: 'อายุ 15-22 ปี' },
+  { value: 'worker', label: 'คนทำงาน / มนุษย์เงินเดือน', desc: 'มีรายได้ประจำ' },
+  { value: 'homemaker', label: 'แม่บ้าน / พ่อบ้าน', desc: 'ดูแลบ้านและครอบครัว' },
+  { value: 'business_owner', label: 'เจ้าของธุรกิจ / ฟรีแลนซ์', desc: 'รายได้ไม่แน่นอน' },
+  { value: 'mixed', label: 'หลากหลาย / ไม่แน่ใจ', desc: 'มีหลายกลุ่ม' },
+]
+
 const defaultForm: AuditFormData = {
   name: '',
   email: '',
@@ -170,6 +194,9 @@ const defaultForm: AuditFormData = {
   hasFunnel: false,
   hasAffiliate: false,
   hasClosingSystem: false,
+  contentDuration: '3-12months' as ContentDuration,
+  triedAndFailed: ['none_tried'] as TriedAndFailed[],
+  audienceBuyingPower: 'mixed' as AudienceBuyingPower,
   biggestProblem: '',
   goalIn90Days: '',
 }
@@ -240,6 +267,12 @@ export default function AuditPage() {
     if (src === 'none') { update('currentIncomeSources', ['none']); return }
     const current = form.currentIncomeSources.filter((s) => s !== 'none')
     update('currentIncomeSources', current.includes(src) ? current.filter((s) => s !== src) : [...current, src])
+  }
+
+  const toggleTriedAndFailed = (item: TriedAndFailed) => {
+    if (item === 'none_tried') { update('triedAndFailed', ['none_tried']); return }
+    const current = form.triedAndFailed.filter(s => s !== 'none_tried')
+    update('triedAndFailed', current.includes(item) ? current.filter(s => s !== item) : [...current, item])
   }
 
   const canNext = () => {
@@ -438,6 +471,20 @@ export default function AuditPage() {
                       ))}
                     </div>
                   </div>
+
+                  <div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
+                      คนที่ดูคอนเทนต์คุณส่วนใหญ่คือ?
+                    </label>
+                    <div className="space-y-2">
+                      {AUDIENCE_BUYING_POWERS.map((a) => (
+                        <Chip key={a.value} selected={form.audienceBuyingPower === a.value} onClick={() => update('audienceBuyingPower', a.value)}>
+                          <span className="font-semibold">{a.label}</span>
+                          <span className="text-white/38 text-xs ml-2">— {a.desc}</span>
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -480,6 +527,19 @@ export default function AuditPage() {
                       <Toggle label="มีระบบปิดการขาย / DM?" value={form.hasClosingSystem} onChange={(v) => update('hasClosingSystem', v)} />
                     </div>
                   </div>
+
+                  <div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
+                      เคยลองสร้างรายได้วิธีไหนบ้าง แต่ไม่ได้ผล? <span className="text-white/20 normal-case font-normal">(เลือกได้หลายอย่าง)</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {TRIED_AND_FAILED.map((t) => (
+                        <Chip key={t.value} selected={form.triedAndFailed.includes(t.value)} onClick={() => toggleTriedAndFailed(t.value)}>
+                          {t.label}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -491,6 +551,19 @@ export default function AuditPage() {
                 <p className="text-white/38 text-sm mb-8">ช่วยให้ AI วิเคราะห์ได้ตรงกับตัวคุณมากที่สุด</p>
 
                 <div className="space-y-5">
+                  <div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
+                      ทำ Content มาแล้วนานแค่ไหน?
+                    </label>
+                    <div className="space-y-2">
+                      {CONTENT_DURATIONS.map((d) => (
+                        <Chip key={d.value} selected={form.contentDuration === d.value} onClick={() => update('contentDuration', d.value)}>
+                          {d.label}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ปัญหาหลักในตอนนี้คืออะไร?</label>
                     <textarea
