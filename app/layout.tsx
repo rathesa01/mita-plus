@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Sarabun } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -13,12 +13,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const sarabun = Sarabun({
-  variable: "--font-sarabun",
-  subsets: ["thai", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.mitaplus.com'
 
@@ -62,8 +56,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className={`${geistSans.variable} ${geistMono.variable} ${sarabun.variable} h-full antialiased dark`}>
-      <body className="min-h-full flex flex-col bg-[#080810] text-white" style={{ fontFamily: 'var(--font-sarabun), sans-serif' }}>
+    <html lang="th" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
+      <body className="min-h-full flex flex-col bg-[#080810] text-white">
         {children}
         <Analytics />
       </body>
