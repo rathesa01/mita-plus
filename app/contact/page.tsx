@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, MessageCircle, CheckCircle2, Loader2 } from 'lucide-react'
@@ -19,7 +19,8 @@ const PLAN_LABELS: Record<string, { label: string; price: string; color: string 
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
-export default function ContactPage() {
+// useSearchParams ต้องอยู่ใน Suspense — แยก logic ออกมาเป็น ContactContent
+function ContactContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const plan = searchParams.get('plan') ?? 'premium'
@@ -309,5 +310,18 @@ export default function ContactPage() {
         </p>
       </div>
     </main>
+  )
+}
+
+// Suspense wrapper — required for useSearchParams in Next.js App Router
+export default function ContactPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ background: '#0B0B0F', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid rgba(123,97,255,0.3)', borderTopColor: '#7B61FF', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    }>
+      <ContactContent />
+    </Suspense>
   )
 }
