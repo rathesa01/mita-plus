@@ -3,7 +3,7 @@ import { z } from 'zod'
 // ── AuditFormData schema ───────────────────────
 export const AuditFormSchema = z.object({
   name: z.string().min(1).max(100).trim(),
-  email: z.string().email().max(200).optional().or(z.literal('')),
+  email: z.union([z.string().email().max(200), z.literal('')]).default(''),
   platform: z.enum(['tiktok', 'instagram', 'youtube', 'facebook', 'multi']),
   niche: z.enum(['lifestyle', 'education', 'finance', 'entertainment', 'beauty', 'fitness', 'business', 'food', 'travel', 'other']),
   audienceType: z.enum(['general', 'niche', 'professional', 'mixed']),
