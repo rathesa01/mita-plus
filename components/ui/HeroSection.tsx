@@ -19,7 +19,7 @@ export function HeroSection() {
       <div className="relative z-10 max-w-6xl mx-auto px-5 flex flex-col lg:flex-row lg:items-center lg:gap-12 lg:min-h-[100svh] lg:py-0 pt-16 pb-4">
 
         {/* TEXT BLOCK */}
-        <div className="lg:w-[46%] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 mt-3 lg:mt-0">
+        <div className="lg:w-[46%] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 mt-3 lg:mt-0 relative" style={{ zIndex: 50 }}>
 
           {/* Label — plain colored text, no pill */}
           <p className="font-bold mb-3 tracking-wide"
