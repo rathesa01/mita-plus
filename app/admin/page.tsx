@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { RefreshCw, Users, TrendingUp, AlertCircle, Copy, Check, LogOut, Crown, Shield, User } from 'lucide-react'
+import { RefreshCw, Users, TrendingUp, AlertCircle, Copy, Check, LogOut, Crown, Shield, User, UserPlus, Trash2, X, Eye, EyeOff } from 'lucide-react'
 import type { AdminRole } from '@/lib/admin/auth'
 
 // ── Role config ───────────────────────────────────────────
@@ -312,6 +312,234 @@ function Tag({ label, value, color }: { label: string; value: string; color: str
   )
 }
 
+// ── User Management (owner only) ─────────────────────────
+interface AdminUserRow { id: string; username: string; role: AdminRole; name: string; created_at?: string; created_by?: string }
+
+function UserManagement({ currentUser }: { currentUser: string }) {
+  const [users, setUsers] = useState<AdminUserRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  // Form state
+  const [form, setForm] = useState({ username: '', password: '', role: 'staff' as AdminRole, name: '' })
+  const [showPass, setShowPass] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [formOk, setFormOk] = useState(false)
+
+  const load = async () => {
+    setLoading(true)
+    const res = await fetch('/api/admin/users')
+    const json = await res.json()
+    setUsers(json.users ?? [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  const createUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true); setFormError(''); setFormOk(false)
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+    const json = await res.json()
+    setSaving(false)
+    if (!res.ok) { setFormError(json.error); return }
+    setFormOk(true)
+    setForm({ username: '', password: '', role: 'staff', name: '' })
+    setTimeout(() => { setFormOk(false); setShowForm(false) }, 1200)
+    load()
+  }
+
+  const deleteUser = async (id: string, username: string) => {
+    if (!confirm(`ลบ user "${username}" ใช่ไหมคะ?`)) return
+    setDeleting(id)
+    await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' })
+    setDeleting(null)
+    load()
+  }
+
+  return (
+    <div style={{ marginBottom: '32px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <h2 style={{ fontWeight: 900, fontSize: '15px', color: '#FF9F1C' }}>
+          👥 จัดการ User ({users.length})
+        </h2>
+        <button
+          onClick={() => { setShowForm(s => !s); setFormError(''); setFormOk(false) }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: showForm ? 'rgba(255,77,79,0.10)' : 'rgba(123,97,255,0.12)',
+            border: `1px solid ${showForm ? 'rgba(255,77,79,0.30)' : 'rgba(123,97,255,0.35)'}`,
+            borderRadius: '8px', padding: '6px 14px',
+            color: showForm ? '#FF4D4F' : '#a78bfa',
+            fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+          }}
+        >
+          {showForm ? <><X size={12} /> ยกเลิก</> : <><UserPlus size={12} /> สร้าง User ใหม่</>}
+        </button>
+      </div>
+
+      {/* Create Form */}
+      {showForm && (
+        <motion.form
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          onSubmit={createUser}
+          style={{
+            background: 'rgba(123,97,255,0.06)',
+            border: '1px solid rgba(123,97,255,0.25)',
+            borderRadius: '14px', padding: '18px',
+            marginBottom: '14px',
+            display: 'flex', flexDirection: 'column', gap: '12px',
+          }}
+        >
+          <p style={{ fontWeight: 700, fontSize: '13px', color: '#a78bfa', marginBottom: '2px' }}>สร้าง User ใหม่</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={labelStyle}>ชื่อ</label>
+              <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="เช่น ทีมการตลาด" style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Username</label>
+              <input required value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
+                placeholder="เช่น marketing1" style={inputStyle} />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={labelStyle}>Password</label>
+              <div style={{ position: 'relative' }}>
+                <input required type={showPass ? 'text' : 'password'} value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="อย่างน้อย 6 ตัว" style={{ ...inputStyle, paddingRight: '36px' }} />
+                <button type="button" onClick={() => setShowPass(s => !s)}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)' }}>
+                  {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Role</label>
+              <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AdminRole }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="staff">Staff — ดู leads (ปิด email)</option>
+                <option value="manager">Manager — ดู leads + email</option>
+                <option value="owner">Owner — สิทธิ์เต็ม</option>
+              </select>
+            </div>
+          </div>
+
+          {formError && <p style={{ fontSize: '12px', color: '#FF4D4F' }}>{formError}</p>}
+          {formOk && <p style={{ fontSize: '12px', color: '#22C55E' }}>✅ สร้าง user สำเร็จแล้วค่ะ!</p>}
+
+          <button type="submit" disabled={saving}
+            style={{
+              height: '42px', borderRadius: '10px',
+              background: 'linear-gradient(135deg, #7B61FF, #9B6BFF)',
+              color: '#fff', fontWeight: 900, fontSize: '13px',
+              border: 'none', cursor: saving ? 'wait' : 'pointer',
+            }}>
+            {saving ? 'กำลังสร้าง...' : '+ สร้าง User'}
+          </button>
+        </motion.form>
+      )}
+
+      {/* Users table */}
+      {loading ? (
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.30)' }}>กำลังโหลด...</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {users.map(u => {
+            const cfg = ROLE_CONFIG[u.role]
+            const Icon = cfg.icon
+            const isSelf = u.username === currentUser
+            return (
+              <div key={u.id} style={{
+                background: 'rgba(255,255,255,0.025)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: '12px', padding: '12px 16px',
+                display: 'flex', alignItems: 'center', gap: '12px',
+              }}>
+                {/* Avatar */}
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                  background: `${cfg.color}18`, border: `1px solid ${cfg.color}40`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={16} style={{ color: cfg.color }} />
+                </div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <p style={{ fontWeight: 700, fontSize: '14px', color: '#fff' }}>{u.name}</p>
+                    {isSelf && <span style={{ fontSize: '10px', color: '#22C55E', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', padding: '2px 8px', borderRadius: '20px' }}>คุณ</span>}
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.40)' }}>@{u.username}</p>
+                </div>
+
+                {/* Role badge */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  padding: '3px 10px', borderRadius: '20px',
+                  background: `${cfg.color}18`, border: `1px solid ${cfg.color}40`,
+                }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: cfg.color }}>{cfg.label}</span>
+                </div>
+
+                {/* Delete */}
+                {!isSelf && (
+                  <button
+                    onClick={() => deleteUser(u.id, u.username)}
+                    disabled={deleting === u.id}
+                    style={{
+                      background: 'rgba(255,77,79,0.08)', border: '1px solid rgba(255,77,79,0.20)',
+                      borderRadius: '8px', padding: '6px 10px', cursor: 'pointer',
+                      color: '#FF4D4F', display: 'flex', alignItems: 'center',
+                    }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            )
+          })}
+
+          {users.length === 0 && (
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.30)', textAlign: 'center', padding: '20px' }}>
+              ยังไม่มี user ในระบบค่ะ — กด "สร้าง User ใหม่" ได้เลย
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const labelStyle: React.CSSProperties = {
+  fontSize: '11px', fontWeight: 700,
+  color: 'rgba(255,255,255,0.40)', textTransform: 'uppercase',
+  letterSpacing: '0.06em', display: 'block', marginBottom: '5px',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', height: '40px',
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  borderRadius: '10px',
+  color: '#fff', padding: '0 12px',
+  fontSize: '13px', outline: 'none',
+  boxSizing: 'border-box',
+}
+
 // ── Main Page ─────────────────────────────────────────────
 export default function AdminPage() {
   const router = useRouter()
@@ -449,6 +677,11 @@ export default function AdminPage() {
             <p style={{ fontSize: '32px', marginBottom: '12px' }}>⚙️</p>
             <p style={{ fontSize: '14px' }}>รอ Owner ตั้งค่าระบบก่อนนะคะ</p>
           </div>
+        )}
+
+        {/* User Management — owner only */}
+        {!loading && role === 'owner' && (
+          <UserManagement currentUser={me?.username ?? ''} />
         )}
 
         {/* Stats */}
