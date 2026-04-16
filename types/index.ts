@@ -120,13 +120,18 @@ export interface RevenueEstimation {
   realistic: number     // บาท/เดือน (จริง)
   aggressive: number    // บาท/เดือน (โอกาส)
   totalMissed: number   // เงินที่เสียไปแล้วต่อเดือน
+  currentIncome: number // จากที่กรอกมา
+  breakdown: {
+    sponsorship: number  // รายได้จาก Sponsorship
+    affiliate: number    // รายได้จาก Affiliate/Product
+    platformAds: number  // รายได้จาก Platform Ads
+  }
   formula: {
     monthlyViews: number
     ctr: number
     conversionRate: number
     avgOrderValue: number
   }
-  currentIncome: number // จากที่กรอกมา
 }
 
 // ── RECOMMENDATION ────────────────────────────

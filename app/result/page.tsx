@@ -356,6 +356,55 @@ export default function ResultPage() {
         {/* Revenue gap hero */}
         <MoneyHero perMonth={revenueGap} label="รายได้ที่ควรได้เพิ่มต่อเดือน" type="gain" />
 
+        {/* Income Breakdown */}
+        <div style={{ marginTop: '16px', marginBottom: '4px' }}>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+            รายได้แยกตามช่องทาง
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {[
+              {
+                label: '💼 Sponsorship',
+                sub: 'แบรนด์จ่ายค่าโพสต์',
+                value: revenueEstimation.breakdown.sponsorship,
+                color: COLORS.accentPurple,
+                note: revenueEstimation.breakdown.sponsorship === 0 ? 'ต้องการ 3K+ followers' : undefined,
+              },
+              {
+                label: '🔗 Affiliate / สินค้า',
+                sub: 'ค่าคอม + ขายของตัวเอง',
+                value: revenueEstimation.breakdown.affiliate,
+                color: COLORS.ctaOrange,
+              },
+              {
+                label: '▶️ Platform Ads',
+                sub: input.platform === 'tiktok' ? 'TikTok ไม่มี Creator Fund ในไทย' : 'ค่า Ads จาก platform',
+                value: revenueEstimation.breakdown.platformAds,
+                color: COLORS.accentBlue,
+                note: input.platform === 'tiktok' ? '฿0 — ต้อง monetize ผ่าน sponsorship แทน' : undefined,
+              },
+            ].map(item => (
+              <div key={item.label} style={{
+                ...CARD.base,
+                padding: '12px 16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: '13px', color: COLORS.textPrimary }}>{item.label}</p>
+                  <p style={{ fontSize: '11px', color: item.note ? COLORS.danger : COLORS.textSecondary, marginTop: '2px' }}>
+                    {item.note ?? item.sub}
+                  </p>
+                </div>
+                <p style={{ fontWeight: 900, fontSize: '18px', color: item.value > 0 ? item.color : 'rgba(255,255,255,0.2)' }}>
+                  {item.value > 0 ? `฿${fmt(item.value)}` : '฿0'}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 3 tiers stacked */}
         <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {[
