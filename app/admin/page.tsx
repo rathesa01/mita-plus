@@ -1,8 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { RefreshCw, Users, TrendingUp, AlertCircle, Copy, Check } from 'lucide-react'
+import { RefreshCw, Users, TrendingUp, AlertCircle, Copy, Check, LogOut, Crown, Shield, User } from 'lucide-react'
+import type { AdminRole } from '@/lib/admin/auth'
+
+// ── Role config ───────────────────────────────────────────
+const ROLE_CONFIG: Record<AdminRole, { label: string; color: string; icon: typeof Crown }> = {
+  owner:   { label: 'Owner',   color: '#FF9F1C', icon: Crown  },
+  manager: { label: 'Manager', color: '#a78bfa', icon: Shield },
+  staff:   { label: 'Staff',   color: '#22C55E', icon: User   },
+}
 
 // ── Types ─────────────────────────────────────────────────
 interface Lead {
@@ -305,15 +314,23 @@ function Tag({ label, value, color }: { label: string; value: string; color: str
 
 // ── Main Page ─────────────────────────────────────────────
 export default function AdminPage() {
+  const router = useRouter()
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [me, setMe] = useState<{ username: string; role: AdminRole; name: string } | null>(null)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   const load = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/leads')
-      const json = await res.json()
+      const [leadsRes, meRes] = await Promise.all([
+        fetch('/api/admin/leads'),
+        fetch('/api/admin/me'),
+      ])
+      const json = await leadsRes.json()
+      const meJson = await meRes.json()
       setData(json)
+      setMe(meJson.user)
     } catch {
       setData({ ok: false, error: 'ดึงข้อมูลไม่ได้' })
     } finally {
@@ -321,9 +338,32 @@ export default function AdminPage() {
     }
   }
 
+  const logout = async () => {
+    setLoggingOut(true)
+    await fetch('/api/admin/logout', { method: 'POST' })
+    router.push('/admin/login')
+  }
+
   useEffect(() => { load() }, [])
 
   const needsSetup = !data?.supabaseOk
+  const role = me?.role ?? 'staff'
+  // Staff cannot see full email/phone
+  const canSeeContact = role === 'owner' || role === 'manager'
+  const canSeeSetup   = role === 'owner'
+
+  const maskEmail = (e?: string) => {
+    if (!e) return '—'
+    if (canSeeContact) return e
+    const [u, d] = e.split('@')
+    return `${u.slice(0, 2)}***@${d}`
+  }
+  const maskPhone = (p?: string) => {
+    if (!p) return null
+    if (canSeeContact) return p
+    return p.slice(0, 3) + '***' + p.slice(-2)
+  }
+
   const contactLeads = data?.leads?.filter(l => l.type === 'contact') ?? []
   const auditLeads = data?.leads?.filter(l => l.type === 'audit') ?? []
 
@@ -333,10 +373,10 @@ export default function AdminPage() {
       {/* Nav */}
       <div style={{
         borderBottom: '1px solid rgba(255,255,255,0.05)',
-        padding: '14px 20px',
+        padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(8,8,15,0.9)', backdropFilter: 'blur(16px)',
+        background: 'rgba(8,8,15,0.92)', backdropFilter: 'blur(16px)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{
@@ -344,33 +384,71 @@ export default function AdminPage() {
             background: 'linear-gradient(90deg, #7B61FF, #FF9F1C)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>MITA+</span>
-          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.30)' }}>Admin</span>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>Admin</span>
+
+          {/* Role badge */}
+          {me && (() => {
+            const cfg = ROLE_CONFIG[me.role]
+            const Icon = cfg.icon
+            return (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                padding: '3px 10px', borderRadius: '20px',
+                background: `${cfg.color}18`, border: `1px solid ${cfg.color}40`,
+              }}>
+                <Icon size={11} style={{ color: cfg.color }} />
+                <span style={{ fontSize: '11px', fontWeight: 700, color: cfg.color }}>{cfg.label}</span>
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.40)' }}>· {me.name}</span>
+              </div>
+            )
+          })()}
         </div>
-        <button
-          onClick={load}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: '8px',
-            padding: '6px 12px',
-            color: 'rgba(255,255,255,0.50)',
-            fontSize: '12px', cursor: 'pointer',
-          }}
-        >
-          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-          Refresh
-        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={load}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px', padding: '6px 12px',
+              color: 'rgba(255,255,255,0.45)', fontSize: '12px', cursor: 'pointer',
+            }}
+          >
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+          <button
+            onClick={logout}
+            disabled={loggingOut}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: 'rgba(255,77,79,0.08)',
+              border: '1px solid rgba(255,77,79,0.20)',
+              borderRadius: '8px', padding: '6px 12px',
+              color: '#FF4D4F', fontSize: '12px', cursor: 'pointer',
+            }}
+          >
+            <LogOut size={12} />
+            ออก
+          </button>
+        </div>
       </div>
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '28px 20px 60px' }}>
 
-        {/* Setup Guide */}
-        {!loading && needsSetup && (
+        {/* Setup Guide — owner only */}
+        {!loading && needsSetup && canSeeSetup && (
           <SetupGuide
             supabaseOk={data?.supabaseOk ?? false}
             discordOk={data?.discordOk ?? false}
           />
+        )}
+        {!loading && needsSetup && !canSeeSetup && (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'rgba(255,255,255,0.30)' }}>
+            <p style={{ fontSize: '32px', marginBottom: '12px' }}>⚙️</p>
+            <p style={{ fontSize: '14px' }}>รอ Owner ตั้งค่าระบบก่อนนะคะ</p>
+          </div>
         )}
 
         {/* Stats */}
@@ -401,7 +479,13 @@ export default function AdminPage() {
               🔥 Intent to Pay ({contactLeads.length})
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {contactLeads.map(l => <LeadRow key={l.id} lead={l} />)}
+              {contactLeads.map(l => (
+                <LeadRow key={l.id} lead={{
+                  ...l,
+                  email: maskEmail(l.email),
+                  phone: maskPhone(l.phone) ?? undefined,
+                }} />
+              ))}
             </div>
           </div>
         )}
@@ -413,7 +497,13 @@ export default function AdminPage() {
               📊 Audit ล่าสุด ({auditLeads.length})
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {auditLeads.slice(0, 20).map(l => <LeadRow key={l.id} lead={l} />)}
+              {auditLeads.slice(0, 20).map(l => (
+                <LeadRow key={l.id} lead={{
+                  ...l,
+                  email: maskEmail(l.email),
+                  phone: maskPhone(l.phone) ?? undefined,
+                }} />
+              ))}
             </div>
           </div>
         )}
