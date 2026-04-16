@@ -356,7 +356,9 @@ export default function AuditPage() {
   const toggleTriedAndFailed = (item: TriedAndFailed) => {
     if (item === 'none_tried') { update('triedAndFailed', ['none_tried']); return }
     const current = form.triedAndFailed.filter(s => s !== 'none_tried')
-    update('triedAndFailed', current.includes(item) ? current.filter(s => s !== item) : [...current, item])
+    const next = current.includes(item) ? current.filter(s => s !== item) : [...current, item]
+    // ถ้า unselect จนหมด → fallback เป็น none_tried (Zod ต้องการ min 1)
+    update('triedAndFailed', next.length === 0 ? ['none_tried'] : next)
   }
 
   const canNext = () => {
@@ -375,13 +377,18 @@ export default function AuditPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error('API error')
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        console.error('[MITA+] API error', res.status, errBody)
+        throw new Error(`${res.status}: ${JSON.stringify(errBody)}`)
+      }
       const result = await res.json()
       sessionStorage.setItem('mita_result', JSON.stringify(result))
       // Signal loading screen → 100%, then navigate after brief celebration moment
       setApiDone(true)
       setTimeout(() => router.push('/result'), 800)
-    } catch {
+    } catch (err) {
+      console.error('[MITA+] Submit error:', err)
       setLoading(false)
       setApiError(true)
     }
