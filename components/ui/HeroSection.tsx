@@ -100,19 +100,20 @@ export function HeroSection() {
 
 function HeroVisual() {
   return (
-    <div className="relative w-full mx-auto" style={{ maxWidth: '520px', height: '560px' }}>
+    /* ── Container wider than image so cards can peek from sides ── */
+    <div className="relative mx-auto" style={{ width: '100%', maxWidth: '560px', height: '560px' }}>
 
       {/* Soft glow center */}
       <div className="absolute pointer-events-none rounded-full"
         style={{ width: '300px', height: '300px', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: 'radial-gradient(circle, rgba(123,97,255,0.18) 0%, transparent 70%)', filter: 'blur(50px)' }} />
 
-      {/* ── Analytics card LEFT (TikTok) — faded, peeking out ── */}
+      {/* ── Analytics card LEFT (TikTok) — behind main image ── */}
+      {/* Card: 155px. Image covers rightmost 35% = ~54px. Visible: 65% = ~101px sticking out left */}
       <div className="absolute rounded-2xl overflow-hidden"
         style={{
-          width: '130px', top: '80px', left: '-8px',
-          transform: 'rotateZ(-6deg) rotateY(8deg) scale(0.85)',
-          transformOrigin: 'left center',
-          zIndex: 15, opacity: 0.35,
+          width: '155px', top: '70px', left: '0px',
+          transform: 'rotateZ(-5deg)',
+          zIndex: 3, opacity: 0.55,
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
           background: '#16162a', border: '1px solid rgba(255,255,255,0.1)',
         }}>
@@ -151,13 +152,12 @@ function HeroVisual() {
         </div>
       </div>
 
-      {/* ── Analytics card RIGHT (Instagram) — faded, peeking out ── */}
+      {/* ── Analytics card RIGHT (Instagram) — behind main image ── */}
       <div className="absolute rounded-2xl overflow-hidden"
         style={{
-          width: '125px', top: '60px', right: '-5px',
-          transform: 'rotateZ(5deg) rotateY(-8deg) scale(0.85)',
-          transformOrigin: 'right center',
-          zIndex: 15, opacity: 0.35,
+          width: '150px', top: '50px', right: '0px',
+          transform: 'rotateZ(5deg)',
+          zIndex: 3, opacity: 0.55,
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
           background: '#16162a', border: '1px solid rgba(255,255,255,0.1)',
         }}>
@@ -197,7 +197,7 @@ function HeroVisual() {
       </div>
 
       {/* ── Creator bubbles — faded ── */}
-      <div className="absolute" style={{ top: '55px', left: '-8px', zIndex: 18, opacity: 0.4, transform: 'scale(0.8)', transformOrigin: 'left top' }}>
+      <div className="absolute" style={{ top: '60px', left: '2px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'left top' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden"
             style={{ border: '2px solid rgba(255,159,28,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
@@ -210,7 +210,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute" style={{ top: '20px', right: '10px', zIndex: 18, opacity: 0.4, transform: 'scale(0.8)', transformOrigin: 'right top' }}>
+      <div className="absolute" style={{ top: '20px', right: '5px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
         <div className="relative">
           <div className="w-12 h-12 rounded-full overflow-hidden"
             style={{ border: '2px solid rgba(123,97,255,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
@@ -223,7 +223,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute" style={{ bottom: '65px', right: '-5px', zIndex: 18, opacity: 0.4, transform: 'scale(0.8)', transformOrigin: 'right bottom' }}>
+      <div className="absolute" style={{ bottom: '65px', right: '3px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right bottom' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden"
             style={{ border: '2px solid rgba(34,197,94,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
@@ -237,25 +237,25 @@ function HeroVisual() {
       </div>
 
       {/* ── Floating chips — crisp (full opacity) ── */}
-      <SmallCard style={{ top: '195px', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 20 }}>
+      <SmallCard style={{ top: '195px', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>PROFIT</p>
         <p className="font-extrabold" style={{ fontSize: '18px', color: '#22c55e', lineHeight: 1 }}>+200%</p>
       </SmallCard>
 
-      <SmallCard style={{ bottom: '70px', left: '10px', transform: 'rotateZ(-3deg)', zIndex: 20 }}>
+      <SmallCard style={{ bottom: '70px', left: '10px', transform: 'rotateZ(-3deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,77,79,0.85)', marginBottom: '2px' }}>เงินที่หายไป</p>
         <p className="font-black" style={{ fontSize: '16px', color: '#FF4D4F', lineHeight: 1 }}>-฿28,500</p>
         <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)' }}>/เดือน</p>
       </SmallCard>
 
-      <SmallCard style={{ bottom: '60px', right: '5px', transform: 'rotateZ(4deg)', zIndex: 20 }}>
+      <SmallCard style={{ bottom: '60px', right: '5px', transform: 'rotateZ(4deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>SALES</p>
         <p className="font-bold" style={{ fontSize: '16px', color: '#22c55e', lineHeight: 1 }}>+400%</p>
       </SmallCard>
 
-      {/* ── Main composite image — center, front ── */}
-      <div className="absolute z-[12]"
-        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '75%' }}>
+      {/* ── Main composite image — 90% wide, z-index highest ── */}
+      <div className="absolute z-[20]"
+        style={{ left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: '90%' }}>
         <Image
           src="/hero-composite.png"
           alt="Creator monetization"
