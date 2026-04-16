@@ -4,8 +4,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 const platforms = [
-  { icon: '📸', name: 'Instagram' },
   { icon: '🎵', name: 'TikTok' },
+  { icon: '📸', name: 'Instagram' },
   { icon: '▶️', name: 'YouTube' },
 ]
 
@@ -21,52 +21,60 @@ export function HeroSection() {
       {/* Ambient glows */}
       <div className="absolute top-[-80px] left-[-60px] w-72 h-72 rounded-full pointer-events-none"
         style={{ background: 'rgba(123,97,255,0.3)', filter: 'blur(120px)' }} />
-      <div className="absolute bottom-[-40px] right-[-40px] w-48 h-48 rounded-full pointer-events-none"
+      <div className="absolute bottom-[-40px] right-[-40px] w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'rgba(123,97,255,0.12)', filter: 'blur(100px)' }} />
 
-      <div className="relative z-10 flex flex-col items-center px-5 pt-10 pb-8 max-w-[420px] mx-auto">
+      {/* ── INNER — responsive layout ── */}
+      <div className="relative z-10 max-w-6xl mx-auto px-5 pt-24 pb-12 flex flex-col md:flex-row md:items-center md:gap-16 min-h-[100svh]">
 
-        {/* Logo */}
-        <div className="mb-6 self-start">
-          <span className="text-xl font-black tracking-tight text-white">
-            MITA<span style={{ color: '#7B61FF' }}>+</span>
-          </span>
+        {/* ── LEFT: Text + CTA ── */}
+        <div className="flex-1 flex flex-col items-start md:max-w-[480px]">
+
+          {/* Platform badges */}
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {platforms.map((p) => (
+              <div key={p.name} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs backdrop-blur-sm"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.7)' }}>
+                <span>{p.icon}</span>
+                <span>{p.name}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Headline */}
+          <h1 className="text-[2rem] sm:text-[2.6rem] md:text-[3.2rem] leading-[1.1] font-extrabold text-white mb-4">
+            Follower และ View<br />
+            ของคุณ ทำเงินได้<br />
+            <span style={{ color: '#7B61FF' }}>เท่าไหร่จริงๆ?</span>
+          </h1>
+
+          <p className="text-sm sm:text-base font-medium mb-8 max-w-sm" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+            วิเคราะห์ Revenue Gap ฟรี ใน 3 นาที — AI คำนวณให้เห็นว่าเงินหายไปที่ไหน และต้องแก้อะไรก่อน
+          </p>
+
+          {/* CTA */}
+          <Link href="/audit">
+            <button
+              className="h-12 px-8 rounded-xl text-base font-black transition-opacity hover:opacity-90"
+              style={{ background: '#FF9F1C', color: '#000' }}
+            >
+              เช็กตัวเลขของฉัน →
+            </button>
+          </Link>
+
+          <p className="mt-3 text-xs flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ boxShadow: '0 0 6px #22c55e' }} />
+            ฟรี 100% · ไม่ต้องสมัคร · ผลออกใน 3 นาที
+          </p>
         </div>
 
-        {/* Platform badges */}
-        <div className="flex gap-2 mb-5 self-start flex-wrap">
-          {platforms.map((p) => (
-            <div key={p.name} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs backdrop-blur-sm"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.7)' }}>
-              <span>{p.icon}</span>
-              <span>{p.name}</span>
-            </div>
-          ))}
+        {/* ── RIGHT: Visual ── */}
+        <div className="flex-1 mt-12 md:mt-0 flex items-center justify-center md:justify-end">
+          <div className="w-full max-w-[420px] md:max-w-[520px]">
+            <HeroVisual />
+          </div>
         </div>
 
-        {/* Headline */}
-        <h1 className="text-[1.6rem] leading-tight font-extrabold text-white mb-3 self-start">
-          Follower และ View ของคุณ
-          <br />
-          <span style={{ color: '#7B61FF' }}>ทำเงินได้เท่าไหร่จริงๆ?</span>
-        </h1>
-
-        <p className="text-sm font-medium mb-6 self-start" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          วิเคราะห์ Revenue Gap ฟรี ใน 3 นาที
-        </p>
-
-        {/* CTA */}
-        <Link href="/audit" className="w-full">
-          <button className="w-full h-12 rounded-xl text-base font-black transition-opacity hover:opacity-90"
-            style={{ background: '#FF9F1C', color: '#000' }}>
-            เช็กตัวเลขของฉัน →
-          </button>
-        </Link>
-
-        {/* Hero Visual */}
-        <div className="mt-8 w-full">
-          <HeroVisual />
-        </div>
       </div>
     </section>
   )
@@ -74,7 +82,7 @@ export function HeroSection() {
 
 function HeroVisual() {
   return (
-    <div className="relative w-full mx-auto" style={{ height: '520px', perspective: '1000px', maxWidth: '420px' }}>
+    <div className="relative w-full mx-auto" style={{ height: '520px', perspective: '1000px' }}>
 
       {/* Ambient glow center */}
       <div className="absolute rounded-full pointer-events-none"
@@ -82,7 +90,7 @@ function HeroVisual() {
 
       {/* Left screen — TikTok analytics */}
       <div className="absolute rounded-xl overflow-hidden"
-        style={{ width: '190px', height: '270px', top: '15px', left: '-10px', transform: 'rotateZ(-6deg) rotateY(8deg)', zIndex: 0, opacity: 0.7, boxShadow: '0 8px 30px rgba(0,0,0,0.4)', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.08)' }}>
+        style={{ width: '190px', height: '270px', top: '15px', left: '0px', transform: 'rotateZ(-6deg) rotateY(8deg)', zIndex: 0, opacity: 0.75, boxShadow: '0 8px 30px rgba(0,0,0,0.4)', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="p-3 space-y-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
@@ -100,7 +108,6 @@ function HeroVisual() {
               </div>
             ))}
           </div>
-          {/* Mini chart */}
           <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.06)' }}>
             <p style={{ fontSize: '7px', color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}>Revenue / Week</p>
             <div className="flex items-end gap-0.5" style={{ height: '32px' }}>
@@ -119,7 +126,7 @@ function HeroVisual() {
 
       {/* Right screen — Instagram analytics */}
       <div className="absolute rounded-xl overflow-hidden"
-        style={{ width: '180px', height: '255px', top: '5px', right: '-5px', transform: 'rotateZ(5deg) rotateY(-6deg)', zIndex: 0, opacity: 0.65, boxShadow: '0 8px 30px rgba(0,0,0,0.4)', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.08)' }}>
+        style={{ width: '180px', height: '255px', top: '5px', right: '0px', transform: 'rotateZ(5deg) rotateY(-6deg)', zIndex: 0, opacity: 0.7, boxShadow: '0 8px 30px rgba(0,0,0,0.4)', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="p-3 space-y-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
@@ -155,29 +162,29 @@ function HeroVisual() {
       </div>
 
       {/* Floating data cards */}
-      <FloatingCard style={{ top: '8px', left: '5px', transform: 'rotateZ(-8deg)', zIndex: 5 }}>
+      <FloatingCard style={{ top: '8px', left: '30px', transform: 'rotateZ(-8deg)', zIndex: 5 }}>
         <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>PROFIT</p>
         <p className="font-extrabold" style={{ fontSize: '14px', color: '#22c55e' }}>+200%</p>
       </FloatingCard>
 
-      <FloatingCard style={{ top: '5px', right: '0px', transform: 'rotateZ(6deg)', zIndex: 5 }}>
+      <FloatingCard style={{ top: '5px', right: '20px', transform: 'rotateZ(6deg)', zIndex: 5 }}>
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full" style={{ background: '#FF4D4F' }} />
           <span className="font-bold" style={{ fontSize: '10px', color: '#FF4D4F' }}>-฿28,500/เดือน</span>
         </div>
       </FloatingCard>
 
-      <FloatingCard style={{ top: '185px', left: '-15px', transform: 'rotateZ(-5deg)', zIndex: 5 }}>
+      <FloatingCard style={{ top: '185px', left: '0px', transform: 'rotateZ(-5deg)', zIndex: 5 }}>
         <p className="font-semibold text-white" style={{ fontSize: '10px' }}>❤️ 3.2%</p>
         <p style={{ fontSize: '8px', color: '#22c55e' }}>สูงกว่าค่าเฉลี่ย</p>
       </FloatingCard>
 
-      <FloatingCard style={{ bottom: '30px', left: '0px', transform: 'rotateZ(-3deg)', zIndex: 5 }}>
+      <FloatingCard style={{ bottom: '30px', left: '15px', transform: 'rotateZ(-3deg)', zIndex: 5 }}>
         <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>SALES</p>
         <p className="font-bold" style={{ fontSize: '12px', color: '#22c55e' }}>+400%</p>
       </FloatingCard>
 
-      <FloatingCard style={{ bottom: '55px', right: '0px', transform: 'rotateZ(4deg)', zIndex: 5 }}>
+      <FloatingCard style={{ bottom: '55px', right: '10px', transform: 'rotateZ(4deg)', zIndex: 5 }}>
         <div className="flex items-center gap-1.5">
           <IGIcon /><YTIcon /><TTIcon />
         </div>
@@ -185,17 +192,17 @@ function HeroVisual() {
 
       {/* Coins */}
       {[
-        { top: '20px', left: '70px', rotate: '-20deg', size: '1.4rem' },
-        { top: '50px', right: '30px', rotate: '15deg', size: '1.2rem' },
-        { top: '130px', left: '8px', rotate: '-35deg', size: '1rem' },
-        { bottom: '130px', right: '15px', rotate: '25deg', size: '1.4rem' },
-        { bottom: '60px', left: '30px', rotate: '-10deg', size: '1rem' },
+        { top: '20px', left: '90px', rotate: '-20deg', size: '1.4rem' },
+        { top: '50px', right: '50px', rotate: '15deg', size: '1.2rem' },
+        { top: '130px', left: '20px', rotate: '-35deg', size: '1rem' },
+        { bottom: '130px', right: '30px', rotate: '25deg', size: '1.4rem' },
+        { bottom: '60px', left: '50px', rotate: '-10deg', size: '1rem' },
       ].map((coin, i) => (
         <span key={i} className="absolute" style={{ ...coin, zIndex: 15, fontSize: coin.size, filter: 'drop-shadow(0 0 6px rgba(255,200,50,0.4))' }}>🪙</span>
       ))}
 
       {/* Creator bubbles */}
-      <div className="absolute z-[12]" style={{ top: '5px', left: '-15px' }}>
+      <div className="absolute z-[12]" style={{ top: '5px', left: '5px' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden" style={{ border: '2px solid rgba(255,159,28,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
             <Image src="/influ-cooking.png" alt="Food creator" width={56} height={56} className="w-full h-full object-cover object-top" />
@@ -207,7 +214,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute z-[12]" style={{ top: '30px', right: '-5px' }}>
+      <div className="absolute z-[12]" style={{ top: '30px', right: '5px' }}>
         <div className="relative">
           <div className="w-12 h-12 rounded-full overflow-hidden" style={{ border: '2px solid rgba(123,97,255,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
             <Image src="/influ-lifestyle.png" alt="Lifestyle creator" width={48} height={48} className="w-full h-full object-cover object-top" />
@@ -219,7 +226,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute z-[12]" style={{ bottom: '55px', right: '-10px' }}>
+      <div className="absolute z-[12]" style={{ bottom: '55px', right: '0px' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden" style={{ border: '2px solid rgba(34,197,94,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
             <Image src="/influ-fitness.png" alt="Fitness creator" width={56} height={56} className="w-full h-full object-cover object-top" />
@@ -233,7 +240,7 @@ function HeroVisual() {
 
       {/* Main composite image */}
       <div className="absolute z-10" style={{ left: '50%', top: '52%', transform: 'translate(-50%, -50%)', width: '100%' }}>
-        <Image src="/hero-composite.png" alt="Creator monetization" width={420} height={420} className="w-full h-auto drop-shadow-2xl" priority />
+        <Image src="/hero-composite.png" alt="Creator monetization" width={520} height={520} className="w-full h-auto drop-shadow-2xl" priority />
       </div>
     </div>
   )
