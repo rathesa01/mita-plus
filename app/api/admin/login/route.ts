@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'กรุณากรอก username และ password' }, { status: 400 })
   }
 
-  const user = validateCredentials(username, password)
+  const user = await validateCredentials(username, password)
   if (!user) {
     return NextResponse.json({ error: 'Username หรือ Password ไม่ถูกต้อง' }, { status: 401 })
   }
