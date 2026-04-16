@@ -122,9 +122,17 @@ const NICHES: { value: Niche; label: string }[] = [
   { value: 'beauty', label: 'ความงาม' },
   { value: 'fitness', label: 'ออกกำลังกาย / สุขภาพ' },
   { value: 'business', label: 'ธุรกิจ / การตลาด' },
-  { value: 'food', label: 'อาหาร / การทำอาหาร' },
+  { value: 'food', label: 'อาหาร' },
   { value: 'travel', label: 'ท่องเที่ยว' },
   { value: 'other', label: 'อื่นๆ' },
+]
+
+const CONTENT_STYLES: { value: string; label: string; desc: string }[] = [
+  { value: 'tutorial', label: 'สอน / How-to', desc: 'อธิบาย วิธีทำ ขั้นตอน' },
+  { value: 'review', label: 'รีวิว / แนะนำ', desc: 'รีวิวสินค้า สถานที่ ร้านอาหาร' },
+  { value: 'vlog', label: 'Vlog / ชีวิตประจำวัน', desc: 'กิน เที่ยว ชีวิต daily' },
+  { value: 'entertainment', label: 'ความบันเทิง / ตลก', desc: 'คอนเทนต์ดูเพื่อสนุก' },
+  { value: 'news', label: 'ข้อมูล / อัพเดท', desc: 'ข่าว เทรนด์ ความรู้ทั่วไป' },
 ]
 
 const FREQUENCIES: { value: PostingFrequency; label: string }[] = [
@@ -197,6 +205,7 @@ const defaultForm: AuditFormData = {
   contentDuration: '3-12months' as ContentDuration,
   triedAndFailed: ['none_tried'] as TriedAndFailed[],
   audienceBuyingPower: 'mixed' as AudienceBuyingPower,
+  contentStyle: 'vlog',
   biggestProblem: '',
   goalIn90Days: '',
 }
@@ -401,6 +410,20 @@ export default function AuditPage() {
                       {NICHES.map((n) => (
                         <Chip key={n.value} selected={form.niche === n.value} onClick={() => update('niche', n.value)}>
                           {n.label}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
+                      ทำ Content แบบไหน?
+                    </label>
+                    <div className="space-y-2">
+                      {CONTENT_STYLES.map((s) => (
+                        <Chip key={s.value} selected={(form as any).contentStyle === s.value} onClick={() => update('contentStyle' as any, s.value)}>
+                          <span className="font-semibold">{s.label}</span>
+                          <span className="text-white/38 text-xs ml-2">— {s.desc}</span>
                         </Chip>
                       ))}
                     </div>

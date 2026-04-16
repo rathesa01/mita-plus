@@ -152,10 +152,20 @@ export function buildUserPrompt(
   const niche = data.niche ?? 'other'
   const platform = data.platform ?? 'tiktok'
   // Use type assertion for new fields that may not be in old schema yet
-  const d = data as AuditFormData & { audienceBuyingPower?: string; contentDuration?: string; triedAndFailed?: string[] }
+  const d = data as AuditFormData & { audienceBuyingPower?: string; contentDuration?: string; triedAndFailed?: string[]; contentStyle?: string }
   const audienceBuyingPower = d.audienceBuyingPower ?? 'mixed'
   const contentDuration = d.contentDuration ?? '3-12months'
   const triedAndFailed: string[] = d.triedAndFailed ?? ['none_tried']
+  const contentStyle = d.contentStyle ?? 'vlog'
+
+  const CONTENT_STYLE_TH: Record<string, string> = {
+    tutorial: 'สอน / How-to (อธิบายวิธีทำ)',
+    review: 'รีวิว / แนะนำ (รีวิวสินค้าหรือสถานที่)',
+    vlog: 'Vlog / ชีวิตประจำวัน (กิน เที่ยว daily life)',
+    entertainment: 'ความบันเทิง / ตลก',
+    news: 'ข้อมูล / อัพเดท (ข่าว เทรนด์)',
+  }
+  const contentStyleTH = CONTENT_STYLE_TH[contentStyle] ?? contentStyle
 
   const blueprint = NICHE_BLUEPRINT[niche] ?? NICHE_BLUEPRINT.other
   const platformCtx = PLATFORM_MONETIZATION[platform] ?? ''
@@ -173,6 +183,7 @@ export function buildUserPrompt(
   return `=== CREATOR PROFILE ===
 ชื่อ: ${data.name}
 Platform: ${platformTH} | Niche: ${nicheTH}
+รูปแบบ Content: ${contentStyleTH}
 ทำมาแล้ว: ${durationTH}
 Followers: ${data.followers.toLocaleString('th-TH')} | ยอดวิวเฉลี่ย/โพสต์: ${data.avgViews.toLocaleString('th-TH')}
 วิวรวม/เดือน: ${fmt(monthlyViews)} | Engagement: ${data.engagementRate}%

@@ -380,8 +380,12 @@ export default function ResultPage() {
           ① เงินที่เสีย
       ══════════════════════════════════════ */}
       <SectionWrapper>
-        <SectionLabel n="①" label="เงินที่เสีย" />
-        <MoneyHero perMonth={totalLeakPerMonth} type="loss" />
+        <SectionLabel n="①" label="โอกาสรายได้ของคุณ" />
+        <MoneyHero
+          perMonth={totalLeakPerMonth}
+          label="รายได้ที่คุณเพิ่มได้ทันที ถ้าทำตามแผนนี้"
+          type="gain"
+        />
 
         {/* Progress: current vs potential */}
         <div style={{ marginTop: '16px' }}>
@@ -390,19 +394,19 @@ export default function ResultPage() {
               ปัจจุบัน ฿{fmt(revenueEstimation.currentIncome)}/เดือน
             </span>
             <span style={{ fontSize: '12px', color: COLORS.success, fontWeight: 700 }}>
-              ควรได้ ฿{fmt(revenueEstimation.realistic)}/เดือน
+              เป้าหมาย ฿{fmt(revenueEstimation.realistic)}/เดือน
             </span>
           </div>
           <div style={{ height: '6px', borderRadius: '99px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
             <motion.div
-              style={{ height: '100%', borderRadius: '99px', background: `linear-gradient(to right, ${COLORS.danger}, ${COLORS.ctaOrange})` }}
+              style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(to right, #7B61FF, #FF9F1C)' }}
               initial={{ width: 0 }}
               animate={{ width: `${Math.min((revenueEstimation.currentIncome / Math.max(revenueEstimation.realistic, 1)) * 100, 100)}%` }}
               transition={{ duration: 1.5, delay: 0.3 }}
             />
           </div>
           <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '6px' }}>
-            คุณดึงรายได้ได้ {Math.round((revenueEstimation.currentIncome / Math.max(revenueEstimation.realistic, 1)) * 100)}% ของที่ควรได้
+            ยังมีโอกาสเพิ่มรายได้อีก {Math.round((1 - revenueEstimation.currentIncome / Math.max(revenueEstimation.realistic, 1)) * 100)}% จากที่มีอยู่
           </p>
         </div>
 
