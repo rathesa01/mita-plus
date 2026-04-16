@@ -45,13 +45,14 @@ const NICHE_WHY: Record<string, string> = {
 }
 
 // ตัวเลือกสลับเพื่อสร้าง variation — ป้องกันตอบซ้ำ
+// SHOCK = พูดเรื่อง GAP ระหว่าง followers กับรายได้จริง — ไม่พูดถึง leak โดยตรง (LeakCard พูดแทนแล้ว)
 const SHOCK_OPENERS = [
-  (name: string, total: number, leak: string, perMonth: number) =>
-    `${name} มีคนดูอยู่แล้ว แต่ทุกเดือนปล่อยให้ ฿${fmt(total)} ผ่านมือไปเฉยๆ — ปัญหาหลักคือ${leak} ที่ดึงเงินออกไป ฿${fmt(perMonth)} ทุกเดือน`,
-  (name: string, total: number, leak: string, perMonth: number) =>
-    `ทุกเดือนที่ผ่านไป ${name} ขาดรายได้ ฿${fmt(total)} — ส่วนใหญ่มาจาก${leak} ที่ยังไม่ได้แก้ คิดเป็น ฿${fmt(perMonth)}/เดือน`,
-  (name: string, total: number, leak: string, perMonth: number) =>
-    `${name} สร้าง content ทุกวัน แต่เงิน ฿${fmt(total)}/เดือนยังไม่เข้ากระเป๋า — สาเหตุหลักคือ${leak} ซึ่งคิดเป็น ฿${fmt(perMonth)}/เดือน`,
+  (name: string, followers: number, platform: string, current: number, potential: number) =>
+    `${name} มี ${fmt(followers)} คนติดตามบน${platform} แต่รายได้ยังอยู่ที่ ฿${fmt(current)}/เดือน — ทั้งที่ follower ระดับนี้ควรได้ ฿${fmt(potential)}/เดือน นั่นคือ gap ที่ยังปิดไม่ได้`,
+  (name: string, followers: number, platform: string, current: number, potential: number) =>
+    `${fmt(followers)} คนดู content ของ ${name} ทุกเดือน แต่มีน้อยมากที่กลายเป็นเงิน — ปัจจุบัน ฿${fmt(current)}/เดือน ทั้งที่ศักยภาพอยู่ที่ ฿${fmt(potential)}/เดือน`,
+  (name: string, followers: number, platform: string, current: number, potential: number) =>
+    `${name} ลงทุนเวลาสร้าง content มาแล้ว แต่รายได้ ฿${fmt(current)}/เดือนยังต่ำกว่าที่ควรได้ถึง ฿${fmt(potential - current)} — ไม่ใช่เพราะ content ไม่ดี แต่เพราะระบบยังขาดอยู่`,
 ]
 
 export function generateMockInsights(
@@ -63,20 +64,19 @@ export function generateMockInsights(
   const secondLeak = leaks[1]
   const totalLeak = leaks.reduce((s, l) => s + l.missedPerMonth, 0)
 
-  // เลือก opener แบบ rotate ตาม follower เพื่อ variation
+  const platformTH = data.platform === 'tiktok' ? 'TikTok' : data.platform === 'instagram' ? 'Instagram' : data.platform === 'youtube' ? 'YouTube' : data.platform === 'facebook' ? 'Facebook' : 'แพลตฟอร์ม'
+
+  // SHOCK — GAP ระหว่าง followers กับรายได้จริง (ไม่พูดถึง leak โดยตรง)
   const openerIdx = data.followers % SHOCK_OPENERS.length
   const openerFn = SHOCK_OPENERS[openerIdx]
+  const shock = openerFn(data.name, data.followers, platformTH, revenue.currentIncome, revenue.realistic)
 
-  // SHOCK — ชื่อ + ตัวเลข + สาเหตุหลัก ภาษาชาวบ้าน
-  const shock = topLeak
-    ? openerFn(data.name, totalLeak, topLeak.title, topLeak.missedPerMonth)
-    : `${data.name} ยังมีรายได้จาก content น้อยกว่าที่ควรได้ ฿${fmt(totalLeak)}/เดือน — เพราะยังไม่มีระบบที่เปลี่ยนคนดูให้เป็นรายได้`
-
-  // WHY — อธิบายภาษาชาวบ้าน + สิ่งที่ต้องทำต่อ
+  // WHY — ROOT CAUSE เชิงระบบ ไม่ซ้ำกับ LeakCard ด้านล่าง
+  // LeakCard พูดถึง "อะไร" แล้ว — ที่นี่พูดถึง "ทำไม" เชิงพฤติกรรม/mindset
   const nicheWhy = NICHE_WHY[data.niche] ?? NICHE_WHY.other
   const whyItHappens = topLeak
-    ? `${nicheWhy} ${data.name} มีผู้ติดตาม ${data.followers.toLocaleString('th-TH')} คนบน${data.platform === 'tiktok' ? 'TikTok' : data.platform === 'instagram' ? 'Instagram' : data.platform === 'youtube' ? 'YouTube' : 'แพลตฟอร์ม'} ทุกคนดูแล้วก็ออกไปโดยไม่มีอะไรให้ซื้อ — นั่นคือ ฿${fmt(topLeak.missedPerMonth)}/เดือนที่หายไป${secondLeak ? ` บวกกับ "${secondLeak.title}" อีก ฿${fmt(secondLeak.missedPerMonth)}/เดือน` : ''} สิ่งที่ต้องทำต่อ: เริ่มแก้จุด "${topLeak.title}" ก่อน ทำแค่จุดนี้จุดเดียวก็ได้เงินเพิ่มทันที`
-    : `คนดู content ของ ${data.name} แล้วออกไปโดยไม่ได้ทำอะไร เพราะไม่มีที่ให้ซื้อหรือสนับสนุน สิ่งที่ต้องทำต่อ: เลือกวิธีทำเงิน 1 วิธีแล้วเริ่มภายใน 7 วัน`
+    ? `${nicheWhy} ปัญหาไม่ใช่เรื่อง effort — ${data.name} ทำ content สม่ำเสมอแล้ว แต่ content กับรายได้ยังไม่ได้เชื่อมกัน คนดูจบแล้วออกไปโดยไม่มี "ขั้นตอนต่อไป" รอรับอยู่ แก้แค่จุดนี้จุดเดียวก่อน รายได้จะเริ่มขยับทันที`
+    : `${data.name} ทำ content ดีแล้ว แต่ยังขาด "สะพาน" ที่เชื่อมระหว่างคนดูกับเงิน — เลือก 1 วิธีทำเงินที่ตรงกับ niche แล้วเริ่มภายใน 7 วัน`
 
   // TOP ACTIONS — ทำได้วันนี้ + ตัวเลขที่จะได้
   const firstMove = NICHE_FIRST_MOVE[data.niche] ?? NICHE_FIRST_MOVE.other

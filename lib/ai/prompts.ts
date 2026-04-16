@@ -221,15 +221,15 @@ ${topLeaks.map((l, i) => `${i+1}. [${l.severity.toUpperCase()}] ${l.title}: -฿
 ตอบเป็น JSON เท่านั้น ห้ามมีข้อความนอก JSON ครบ 4 field:
 
 {
-  "shock": "บอก ${data.name} ว่า: เขาทำ content ${subNiche ? `แบบ ${subNiche}` : nicheTH} บน ${platformTH} มี audience ${data.followers.toLocaleString('th-TH')} คน แต่รายได้ยังเป็น ${INCOME_TH[data.monthlyIncome] ?? data.monthlyIncome} — ทั้งที่ควรได้ ฿${fmt(revenue.realistic)}/เดือน บอกสาเหตุหลักใน 1-2 ประโยค ภาษาชาวบ้าน อย่าพูดถึงสิ่งที่เขาไม่ได้ทำ",
+  "shock": "พูดถึง GAP — ${data.name} มี ${data.followers.toLocaleString('th-TH')} followers บน ${platformTH} แต่รายได้ยัง ${INCOME_TH[data.monthlyIncome] ?? data.monthlyIncome} ทั้งที่ควรได้ ฿${fmt(revenue.realistic)}/เดือน อธิบายว่าทำไม followers เยอะแต่เงินไม่เข้า ด้วยภาษาชาวบ้าน 1-2 ประโยค ห้ามพูดถึงชื่อปัญหาเฉพาะเจาะจง (ให้ section ด้านล่างพูด) พูดเรื่อง gap ของ follower vs รายได้เท่านั้น",
 
   "whyItHappens": "${hasTriedSomething
-    ? `อธิบายว่าทำไม ${triedText} ถึงไม่ work สำหรับ ${data.name} ที่ทำ content ${subNiche ? `แบบ ${subNiche}` : nicheTH} บน ${platformTH} โดยเฉพาะ — ไม่ใช่เพราะ effort ไม่พอ แต่เพราะ approach ไม่ match กับ content type นี้ + audience ${audienceTH} จบด้วย "สิ่งที่ต้องเปลี่ยน: [วิธีที่ถูกต้องสำหรับเขา]"`
-    : `อธิบายว่าทำไม ${data.name} ที่ทำ content ${subNiche ? `แบบ ${subNiche}` : nicheTH} บน ${platformTH} มานาน ${durationTH} ถึงยังไม่มีรายได้ — เน้น missing piece ที่ขาดไป ไม่ใช่ความผิดของเขา จบด้วย "ขั้นแรกที่ต้องทำ: [action ที่ชัดเจน]"`}",
+    ? `ROOT CAUSE — ทำไม ${triedText} ถึงไม่ work สำหรับ content ${subNiche ? `แบบ ${subNiche}` : nicheTH} บน ${platformTH} โดยเฉพาะ อธิบายเชิงพฤติกรรมหรือ approach ที่ผิด ไม่ใช่แค่บอกว่า "ขาดอะไร" (คนอ่านรู้แล้วจากข้อมูลด้านล่าง) จบด้วย "วิธีที่ต่างออกไป: [approach ใหม่ที่ match กับ content type นี้]"`
+    : `ROOT CAUSE — อธิบายว่าทำไม ${data.name} ที่ทำ content มานาน ${durationTH} ถึงยังไม่มีรายได้ เชิงระบบ/approach ไม่ใช่แค่ชี้ว่าขาดอะไร (คนอ่านจะเห็นรายการปัญหาด้านล่างอยู่แล้ว) จบด้วย "จุดเปลี่ยน: [มุมมองหรือ approach ที่ต้องเปลี่ยน]"`}",
 
-  "topActions": "3 ขั้นตอนที่ ${data.name} ต้องทำในสัปดาห์แรก เฉพาะสำหรับ ${platformTH} + ${nicheTH} + audience ${audienceTH}: วันที่ 1 ทำอะไร / วันที่ 3 ทำอะไร / วันที่ 7 ทำอะไร พร้อมตัวเลขที่คาดว่าได้รับในเดือนแรก จบด้วย 'เริ่มได้เลยตอนนี้: [สิ่งแรกที่ทำได้ภายใน 10 นาที]'",
+  "topActions": "แผนสัปดาห์แรกที่ทำได้เลย เฉพาะสำหรับ ${platformTH} + ${nicheTH} + audience ${audienceTH}: วันที่ 1 ทำอะไร (ระบุเวลาและสิ่งที่ต้องทำ) / วันที่ 3 ทำอะไร / วันที่ 7 คาดว่าจะมีรายได้เท่าไหร่ จบด้วย 'เริ่มได้เลยตอนนี้: [action ที่ใช้เวลาไม่เกิน 10 นาที]'",
 
-  "upside": "ถ้า ${data.name} ทำตาม 3 ขั้นตอน: เดือนที่ 1 ได้ประมาณ ฿เท่าไหร่ / เดือนที่ 2 ได้ประมาณ ฿เท่าไหร่ / เดือนที่ 3 ได้ประมาณ ฿เท่าไหร่ ตัวเลขต้องสมเหตุสมผลกับ followers ${data.followers.toLocaleString()} + ${nicheTH} ปิดด้วยประโยคที่ทำให้รู้สึกว่า 'ฉันทำได้จริงๆ'"
+  "upside": "ตัวเลขอนาคต — ถ้า ${data.name} ทำตามแผน: เดือน 1 ประมาณ ฿เท่าไหร่ / เดือน 2 ประมาณ ฿เท่าไหร่ / เดือน 3 ประมาณ ฿เท่าไหร่ ตัวเลขต้องสมเหตุสมผลกับ followers ${data.followers.toLocaleString()} + ${nicheTH} (อย่า overestimate) ปิดด้วยประโยคที่ทำให้รู้สึกว่า 'ทำได้จริง ไม่ใช่ฝัน'"
 }
 
 สำคัญ: ห้าม generic ห้าม buzzword ทุก field ต้องอ้างอิงข้อมูลจริงของ ${data.name}`
