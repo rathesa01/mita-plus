@@ -264,30 +264,48 @@ export default function StarterPage() {
 
   // ── Auth check ──────────────────────────────────
   useEffect(() => {
-    const check = async () => {
-      const supabase = getSupabaseClient()
-      if (!supabase) { setAuthState('ok'); return } // dev mode: ข้ามเลย
+    const supabase = getSupabaseClient()
+    if (!supabase) { setAuthState('ok'); return } // dev mode
 
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) { setAuthState('no_auth'); return }
-
+    const checkProfile = async (userId: string) => {
       const { data } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', userId)
         .single()
 
       if (!data) { setAuthState('no_plan'); return }
-
       const p = data as UserProfile
       setProfile(p)
-      if (p.plan === 'starter' || p.plan === 'pro') {
-        setAuthState('ok')
-      } else {
-        setAuthState('no_plan')
-      }
+      setAuthState(p.plan === 'starter' || p.plan === 'pro' ? 'ok' : 'no_plan')
     }
-    check()
+
+    // ฟัง auth state — รองรับทั้ง magic link และ Google OAuth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        // upsert profile เผื่อ user ใหม่จาก Google
+        await supabase.from('user_profiles').upsert(
+          {
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.user_metadata?.full_name ?? session.user.user_metadata?.name ?? session.user.email?.split('@')[0],
+            plan: 'none',
+          } as never,
+          { onConflict: 'id', ignoreDuplicates: true }
+        )
+        await checkProfile(session.user.id)
+      } else {
+        setAuthState('no_auth')
+      }
+    })
+
+    // check session ปัจจุบันด้วย (กรณี refresh)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) setAuthState('no_auth')
+      // ถ้ามี session onAuthStateChange จะจัดการให้
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   // ── Loading ──────────────────────────────────────
