@@ -59,11 +59,14 @@ export function LeakCard({ leak, index }: LeakCardProps) {
         </div>
 
         {/* Money + chevron */}
-        <div style={{ flexShrink: 0, textAlign: 'right', minWidth: '80px' }}>
+        <div style={{ flexShrink: 0, textAlign: 'right', minWidth: '90px' }}>
+          <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.30)', marginBottom: '2px' }}>พลาดรายได้</p>
           <p style={{ fontWeight: 900, fontSize: '18px', color: COLORS.danger, lineHeight: 1 }}>
-            -฿{fmt(leak.missedPerMonth)}
+            ฿{fmt(leak.missedPerMonth)}
           </p>
-          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>/เดือน</p>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>
+            = ฿{fmt(leak.missedPerMonth * 12)}/ปี
+          </p>
           <div style={{ marginTop: '6px', color: 'rgba(255,255,255,0.25)' }}>
             {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </div>
