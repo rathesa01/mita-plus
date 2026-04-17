@@ -158,7 +158,7 @@ function AIBlock({ text }: { text: string }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
         <Sparkles size={11} style={{ color: '#a78bfa' }} />
         <span style={{ fontSize: '10px', color: '#a78bfa', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          AI วิเคราะห์เฉพาะคุณ
+          MITA+ วิเคราะห์เฉพาะคุณ
         </span>
       </div>
       {/* render newlines properly */}

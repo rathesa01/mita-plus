@@ -11,7 +11,7 @@ const LOADING_STEPS = [
   { text: 'กำลังวิเคราะห์ Audience & Reach...', pct: 15 },
   { text: 'ตรวจหา Revenue Blocker ในระบบ...', pct: 35 },
   { text: 'คำนวณ Revenue Gap ต่อเดือน...', pct: 55 },
-  { text: 'AI กำลัง Generate แผนทำเงิน...', pct: 75 },
+  { text: 'MITA+ กำลังสร้างแผนทำเงินให้คุณ...', pct: 75 },
   { text: 'เตรียม Report สำหรับคุณโดยเฉพาะ...', pct: 92 },
 ]
 
@@ -72,7 +72,7 @@ function AnalyzingScreen({ name, done }: { name: string; done: boolean }) {
         <p className="text-white/35 text-sm mb-10">
           {done
             ? 'กำลังพาคุณไปดูผลค่ะ...'
-            : 'AI กำลังประเมิน Monetization Score และ Revenue Gap ของคุณ'}
+            : 'MITA+ กำลังประเมิน Score และ Revenue Gap ของคุณ'}
         </p>
 
         {/* Progress bar */}
@@ -684,7 +684,7 @@ export default function AuditPage() {
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
                 <h1 className="text-2xl font-black mb-1">เป้าหมายและสถานการณ์</h1>
-                <p className="text-white/38 text-sm mb-8">ช่วยให้ AI วิเคราะห์ได้ตรงกับตัวคุณมากที่สุด</p>
+                <p className="text-white/38 text-sm mb-8">ช่วยให้ MITA+ วิเคราะห์ได้ตรงกับตัวคุณมากที่สุด</p>
 
                 <div className="space-y-5">
                   <div>
@@ -724,7 +724,7 @@ export default function AuditPage() {
 
                   <div className="card rounded-xl p-4 border-violet-500/15" style={{ borderColor: 'rgba(139,92,246,0.15)', background: 'rgba(139,92,246,0.04)' }}>
                     <p className="text-violet-300 font-semibold text-sm mb-1">พร้อมวิเคราะห์แล้ว</p>
-                    <p className="text-white/38 text-xs">AI จะประเมิน Monetization Score + Revenue Gap และสร้างแผนเฉพาะสำหรับคุณทันที</p>
+                    <p className="text-white/38 text-xs">MITA+ จะประเมิน Score + Revenue Gap และสร้างแผนเฉพาะสำหรับคุณทันที</p>
                   </div>
                 </div>
               </motion.div>
@@ -741,7 +741,7 @@ export default function AuditPage() {
               <span className="text-rose-400 text-base shrink-0 mt-0.5">⚠️</span>
               <div>
                 <p className="text-rose-300 font-semibold text-sm">วิเคราะห์ไม่สำเร็จ</p>
-                <p className="text-white/40 text-xs mt-0.5">เกิดข้อผิดพลาดกับ AI — ลองใหม่อีกครั้งได้เลยค่ะ</p>
+                <p className="text-white/40 text-xs mt-0.5">เกิดข้อผิดพลาด — ลองใหม่อีกครั้งได้เลยค่ะ</p>
                 {typeof apiError === 'string' && apiError !== 'true' && (
                   <p className="text-rose-400/60 text-xs mt-1 font-mono break-all">{apiError}</p>
                 )}
