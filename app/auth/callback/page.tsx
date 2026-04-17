@@ -8,23 +8,27 @@ export default function AuthCallback() {
   const router = useRouter()
 
   useEffect(() => {
-    const handle = async () => {
-      const supabase = getSupabaseClient()
-      if (!supabase) { router.replace('/starter'); return }
+    const supabase = getSupabaseClient()
+    if (!supabase) { router.replace('/starter'); return }
 
-      // รับ code จาก URL query
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get('code')
-      const next = params.get('next') ?? '/starter'
+    const params = new URLSearchParams(window.location.search)
+    const next = params.get('next') ?? '/starter'
 
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code)
+    // Implicit flow: Supabase อ่าน #access_token hash อัตโนมัติตอน client init
+    // ฟัง onAuthStateChange — เมื่อ SIGNED_IN หรือ INITIAL_SESSION แสดงว่า session พร้อมแล้ว
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        // มี session แล้ว → ไปต่อ
+        subscription.unsubscribe()
+        router.replace(next)
+      } else if (event === 'INITIAL_SESSION') {
+        // ไม่มี session เลย → กลับ login
+        subscription.unsubscribe()
+        router.replace('/login')
       }
+    })
 
-      router.replace(next)
-    }
-
-    handle()
+    return () => subscription.unsubscribe()
   }, [router])
 
   return (

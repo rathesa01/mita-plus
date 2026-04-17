@@ -287,17 +287,30 @@ export default function StarterPage() {
       setAuthState(p.plan === 'starter' || p.plan === 'pro' ? 'ok' : 'no_plan')
     }
 
-    // ฟัง onAuthStateChange ก่อน — จับได้ทั้ง implicit hash token และ existing session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sess) => {
-      if (sess?.user) {
-        await checkProfile(sess.user.id)
-      } else if (event === 'INITIAL_SESSION') {
-        // INITIAL_SESSION + no session = ไม่มี login จริงๆ
-        setAuthState('no_auth')
-      }
-    })
+    let sub: { unsubscribe: () => void } | null = null
 
-    return () => subscription.unsubscribe()
+    const init = async () => {
+      // 1️⃣ getSession() — อ่านจาก localStorage (session ถูกเก็บโดย /auth/callback แล้ว)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        await checkProfile(session.user.id)
+        return
+      }
+
+      // 2️⃣ fallback: ฟัง event (กรณี magic link หรือ session ยังไม่ sync)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sess) => {
+        if (sess?.user) {
+          sub?.unsubscribe()
+          await checkProfile(sess.user.id)
+        } else if (event === 'INITIAL_SESSION') {
+          setAuthState('no_auth')
+        }
+      })
+      sub = subscription
+    }
+
+    init()
+    return () => sub?.unsubscribe()
   }, [])
 
   // ── Loading ──────────────────────────────────────
