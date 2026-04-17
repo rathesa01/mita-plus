@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Circle, Lock, ChevronRight, Flame, Target, TrendingUp, Star, Bell } from 'lucide-react'
 import { COLORS, CARD, RADIUS, GLOW } from '@/lib/tokens'
+import CheckInModal from './CheckInModal'
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
@@ -166,7 +167,7 @@ function WeekCard({ week, isActive, onClick }: { week: typeof WEEKS[0]; isActive
   )
 }
 
-function TaskList({ week }: { week: typeof WEEKS[0] }) {
+function TaskList({ week, onCheckIn }: { week: typeof WEEKS[0]; onCheckIn?: () => void }) {
   const [tasks, setTasks] = useState(week.tasks)
   const toggle = (i: number) => {
     const updated = [...tasks]
@@ -226,6 +227,7 @@ function TaskList({ week }: { week: typeof WEEKS[0] }) {
       {week.week === CREATOR.weekNo && !week.coachMsg && (
         <motion.button
           whileTap={{ scale: 0.97 }}
+          onClick={onCheckIn}
           style={{
             width: '100%', marginTop: '14px', padding: '12px',
             background: `${week.color}15`, border: `1px solid ${week.color}40`,
@@ -247,8 +249,31 @@ function TaskList({ week }: { week: typeof WEEKS[0] }) {
 export default function StarterPage() {
   const [activeWeek, setActiveWeek] = useState(CREATOR.weekNo - 1)
   const [tab, setTab] = useState<'plan' | 'products' | 'milestones'>('plan')
+  const [checkInOpen, setCheckInOpen] = useState(false)
+  const [coachReply, setCoachReply] = useState<string | null>(null)
+  const [lineConnected, setLineConnected] = useState(false)
+  const [showLineSetup, setShowLineSetup] = useState(false)
+  const [lineToken, setLineToken] = useState('')
+  const [lineLoading, setLineLoading] = useState(false)
 
   const progressPct = Math.min((CREATOR.currentEarned / CREATOR.targetIncome) * 100, 100)
+
+  const connectLine = async () => {
+    if (!lineToken.trim()) return
+    setLineLoading(true)
+    try {
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'checkin', lineToken,
+          name: CREATOR.name, weekNo: CREATOR.weekNo,
+        }),
+      })
+      const json = await res.json()
+      if (json.success) { setLineConnected(true); setShowLineSetup(false) }
+    } finally { setLineLoading(false) }
+  }
 
   return (
     <div style={{ background: COLORS.bg, minHeight: '100vh', maxWidth: '480px', margin: '0 auto', paddingBottom: '80px' }}>
@@ -339,6 +364,124 @@ export default function StarterPage() {
           <StatPill icon={<Star size={14} style={{ color: '#FF9F1C' }} />} label="ระดับ" value="เริ่มต้น" color="#FF9F1C" />
         </motion.div>
 
+        {/* ── LINE NOTIFICATION BANNER ─────────────── */}
+        {!lineConnected && !showLineSetup && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowLineSetup(true)}
+            style={{
+              width: '100%', marginBottom: '16px', padding: '12px 14px',
+              background: 'rgba(6,199,85,0.08)', border: '1px solid rgba(6,199,85,0.25)',
+              borderRadius: '14px', cursor: 'pointer', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: '10px',
+            }}
+          >
+            <span style={{ fontSize: '22px', flexShrink: 0 }}>💬</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#06C755' }}>เชื่อม LINE รับแจ้งเตือนทุกสัปดาห์</p>
+              <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>โค้ชจะ ping ตรง LINE ของคุณเลยค่ะ — กันลืม</p>
+            </div>
+            <ChevronRight size={14} style={{ color: '#06C755', flexShrink: 0 }} />
+          </motion.button>
+        )}
+
+        {lineConnected && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            style={{
+              marginBottom: '16px', padding: '12px 14px',
+              background: 'rgba(6,199,85,0.06)', border: '1px solid rgba(6,199,85,0.2)',
+              borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '10px',
+            }}
+          >
+            <span style={{ fontSize: '22px' }}>✅</span>
+            <div>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#06C755' }}>เชื่อม LINE แล้วค่ะ!</p>
+              <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>โค้ชจะแจ้งเตือนทุกอาทิตย์ผ่าน LINE ค่ะ</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* LINE Setup Modal */}
+        {showLineSetup && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            style={{
+              marginBottom: '16px', padding: '16px',
+              background: 'rgba(6,199,85,0.06)', border: '1px solid rgba(6,199,85,0.2)',
+              borderRadius: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#06C755' }}>💬 เชื่อม LINE Notify</p>
+              <button onClick={() => setShowLineSetup(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: '18px' }}>×</button>
+            </div>
+
+            {/* Steps */}
+            {[
+              { n: '1', text: 'ไปที่ notify-bot.line.me/th แล้ว Login' },
+              { n: '2', text: 'กด "Generate token" → ตั้งชื่อว่า "MITA+"' },
+              { n: '3', text: 'Copy token มาวางด้านล่างนี้ค่ะ' },
+            ].map(s => (
+              <div key={s.n} style={{ display: 'flex', gap: '10px', marginBottom: '8px', alignItems: 'flex-start' }}>
+                <span style={{
+                  width: '20px', height: '20px', borderRadius: '99px', flexShrink: 0,
+                  background: 'rgba(6,199,85,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '11px', fontWeight: 700, color: '#06C755',
+                }}>
+                  {s.n}
+                </span>
+                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{s.text}</p>
+              </div>
+            ))}
+
+            <a
+              href="https://notify-bot.line.me/th"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'block', textAlign: 'center', padding: '10px',
+                background: '#06C755', color: '#fff',
+                borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                textDecoration: 'none', marginBottom: '12px', marginTop: '4px',
+              }}
+            >
+              ไปหน้า LINE Notify →
+            </a>
+
+            <input
+              value={lineToken}
+              onChange={e => setLineToken(e.target.value)}
+              placeholder="วาง Token ที่นี่ค่ะ..."
+              style={{
+                width: '100%', padding: '12px 14px', marginBottom: '10px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '12px', fontSize: '13px', color: '#fff',
+                outline: 'none', boxSizing: 'border-box',
+                fontFamily: 'monospace',
+              }}
+            />
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={connectLine}
+              disabled={!lineToken.trim() || lineLoading}
+              style={{
+                width: '100%', padding: '12px',
+                background: lineToken.trim() ? '#06C755' : 'rgba(255,255,255,0.06)',
+                color: lineToken.trim() ? '#fff' : 'rgba(255,255,255,0.2)',
+                border: 'none', borderRadius: '12px',
+                fontSize: '14px', fontWeight: 700, cursor: lineToken.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {lineLoading ? 'กำลังทดสอบ...' : 'ยืนยัน + รับแจ้งเตือนทันที'}
+            </motion.button>
+          </motion.div>
+        )}
+
         {/* ── TABS ────────────────────────────────── */}
         <div style={{
           display: 'flex', gap: '6px', marginBottom: '16px',
@@ -369,30 +512,52 @@ export default function StarterPage() {
         {tab === 'plan' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
 
-            {/* Coach nudge */}
-            <motion.div
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px',
-                padding: '12px 14px',
-                background: 'rgba(255,159,28,0.08)', border: '1px solid rgba(255,159,28,0.2)',
-                borderRadius: '14px',
-              }}
-            >
-              <span style={{ fontSize: '24px', flexShrink: 0 }}>🔔</span>
-              <div>
-                <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#FF9F1C' }}>โค้ช MITA+ รอฟังผลงานคุณอยู่</p>
-                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>กดอัพเดทผล → รับ feedback ทันทีค่ะ</p>
-              </div>
-            </motion.div>
+            {/* Coach nudge / reply */}
+            {coachReply ? (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '14px',
+                  padding: '14px',
+                  background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.25)',
+                  borderRadius: '14px',
+                }}
+              >
+                <span style={{ fontSize: '20px', flexShrink: 0 }}>💬</span>
+                <div>
+                  <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#7B61FF' }}>โค้ช MITA+ พูดว่า</p>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65 }}>{coachReply}</p>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.button
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCheckInOpen(true)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px',
+                  padding: '12px 14px', cursor: 'pointer',
+                  background: 'rgba(255,159,28,0.08)', border: '1px solid rgba(255,159,28,0.2)',
+                  borderRadius: '14px', textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: '24px', flexShrink: 0 }}>🔔</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#FF9F1C' }}>โค้ช MITA+ รอฟังผลงานคุณอยู่</p>
+                  <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>กดเช็คอิน → รับ feedback ทันทีค่ะ</p>
+                </div>
+                <ChevronRight size={14} style={{ color: '#FF9F1C', flexShrink: 0 }} />
+              </motion.button>
+            )}
 
             {/* Week cards */}
             {WEEKS.map((week, i) => (
               <div key={i}>
                 <WeekCard week={week} isActive={activeWeek === i} onClick={() => setActiveWeek(i)} />
                 {activeWeek === i && (
-                  <TaskList week={week} />
+                  <TaskList week={week} onCheckIn={() => setCheckInOpen(true)} />
                 )}
               </div>
             ))}
@@ -550,6 +715,21 @@ export default function StarterPage() {
           </motion.div>
         )}
       </div>
+
+      {/* ── CHECK-IN MODAL ───────────────────────── */}
+      <CheckInModal
+        isOpen={checkInOpen}
+        onClose={() => setCheckInOpen(false)}
+        onComplete={(msg) => {
+          setCoachReply(msg)
+          setCheckInOpen(false)
+        }}
+        weekNo={CREATOR.weekNo}
+        creatorName={CREATOR.name}
+        niche="food"
+        platform={CREATOR.platform.toLowerCase()}
+        targetIncome={CREATOR.targetIncome}
+      />
     </div>
   )
 }
