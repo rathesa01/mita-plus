@@ -50,7 +50,7 @@ export async function generateInsights(
     const raw = '{' + (response.content[0]?.type === 'text' ? response.content[0].text : '')
     const parsed = JSON.parse(raw)
 
-    // Validate all 4 fields exist
+    // Validate required string fields
     const required = ['shock', 'whyItHappens', 'topActions', 'upside']
     const missing = required.filter((k) => !parsed[k] || typeof parsed[k] !== 'string')
 
@@ -59,10 +59,20 @@ export async function generateInsights(
       return generateMockInsights(data, leaks, revenue)
     }
 
+    // Parse actionSteps — fallback to empty array if missing/malformed
+    const actionSteps = Array.isArray(parsed.actionSteps)
+      ? parsed.actionSteps.filter((s: unknown) =>
+          s && typeof s === 'object' &&
+          typeof (s as Record<string, unknown>).day === 'string' &&
+          typeof (s as Record<string, unknown>).title === 'string'
+        )
+      : []
+
     return {
       shock: parsed.shock,
       whyItHappens: parsed.whyItHappens,
       topActions: parsed.topActions,
+      actionSteps,
       upside: parsed.upside,
     }
   } catch (err) {

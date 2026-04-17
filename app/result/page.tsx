@@ -169,6 +169,61 @@ function AIBlock({ text }: { text: string }) {
   )
 }
 
+// ── Step Card ──────────────────────────────────
+function StepCard({ step, index }: { step: { day: string; time: string; title: string; detail: string; earn: string | null }; index: number }) {
+  const colors = ['#7B61FF', '#FF9F1C', '#22C55E']
+  const color = colors[index % colors.length]
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08 }}
+      style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: `1px solid ${color}33`,
+        borderLeft: `3px solid ${color}`,
+        borderRadius: '14px',
+        padding: '14px 16px',
+        marginBottom: '10px',
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+        <span style={{
+          background: `${color}22`, color, fontSize: '11px', fontWeight: 900,
+          padding: '3px 10px', borderRadius: '99px', whiteSpace: 'nowrap',
+        }}>
+          {step.day}
+        </span>
+        <span style={{
+          background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)',
+          fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '99px', whiteSpace: 'nowrap',
+        }}>
+          ⏱ {step.time}
+        </span>
+        {step.earn && (
+          <span style={{
+            marginLeft: 'auto', color: '#22C55E', fontSize: '12px', fontWeight: 900, whiteSpace: 'nowrap',
+          }}>
+            {step.earn}
+          </span>
+        )}
+      </div>
+
+      {/* Title */}
+      <p style={{ fontWeight: 800, fontSize: '14px', color: '#fff', marginBottom: '6px' }}>
+        {step.title}
+      </p>
+
+      {/* Detail */}
+      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.60)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
+        {step.detail}
+      </p>
+    </motion.div>
+  )
+}
+
 // ── Phase Card ─────────────────────────────────
 function PhaseCard({ label, items, color, accent }: {
   label: string
@@ -484,7 +539,21 @@ export default function ResultPage() {
       ══════════════════════════════════════ */}
       <SectionWrapper>
         <SectionLabel n="③" label="ทำอะไรก่อนได้เงินเร็วที่สุด" />
-        <AIBlock text={aiInsights.topActions} />
+
+        {/* Summary */}
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.50)', marginBottom: '14px', lineHeight: 1.6 }}>
+          {aiInsights.topActions}
+        </p>
+
+        {/* Step cards — show if Claude returned structured steps */}
+        {aiInsights.actionSteps && aiInsights.actionSteps.length > 0 && (
+          <div style={{ marginBottom: '12px' }}>
+            {aiInsights.actionSteps.map((step, i) => (
+              <StepCard key={i} step={step} index={i} />
+            ))}
+          </div>
+        )}
+
         <div style={{ marginTop: '8px' }}>
           {/* Rec 1 — free */}
           {recommendations[0] && <ActionCard key={recommendations[0].type} rec={recommendations[0]} index={0} />}

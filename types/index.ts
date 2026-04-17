@@ -174,10 +174,19 @@ export interface ActionPlan {
 
 // ── AI INSIGHTS — 4-Part Framework ───────────
 // SHOCK → WHY IT HAPPENS → WHAT FIRST → UPSIDE
+export interface ActionStep {
+  day: string      // "วันที่ 1"
+  time: string     // "15 นาที"
+  title: string    // "สมัคร TikTok Shop Affiliate"
+  detail: string   // ขั้นตอนละเอียด
+  earn: string | null  // "฿50-200 ใน 7 วัน" หรือ null
+}
+
 export interface AIInsights {
   shock: string          // 1–2 sentences: เงินที่เสียอยู่ตอนนี้ ฿X/เดือน
   whyItHappens: string   // biggest leak — ทำไมถึงเสียเงิน root cause
-  topActions: string     // 1–2 high-impact actions ทำได้เลยวันนี้
+  topActions: string     // summary 1 ประโยค
+  actionSteps: ActionStep[]  // structured steps สำหรับ render เป็น cards
   upside: string         // ถ้าแก้แล้วจะได้เงินเท่าไหร่ เฉพาะตัวเขา
 }
 

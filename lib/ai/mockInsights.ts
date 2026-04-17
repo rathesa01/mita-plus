@@ -92,5 +92,5 @@ export function generateMockInsights(
   const future = NICHE_FUTURE[data.niche] ?? NICHE_FUTURE.other
   const upside = `ถ้า ${data.name} แก้ "${topLeak?.title ?? 'จุดหลัก'}" ได้ก่อน รายได้จะขึ้นมาที่ ฿${fmt(revenue.realistic)}/เดือน ซึ่งสูงกว่าตอนนี้ ฿${fmt(revenue.totalMissed)}/เดือน — ${future} ภายใน 90 วัน เป้าหมาย ฿${fmt(revenue.aggressive)}/เดือน ทำได้ถ้าเริ่มตอนนี้ ไม่ใช่แค่ฝัน`
 
-  return { shock, whyItHappens, topActions, upside }
+  return { shock, whyItHappens, topActions, actionSteps: [], upside }
 }
