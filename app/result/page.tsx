@@ -400,9 +400,8 @@ export default function ResultPage() {
           }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#FF4D4F', flexShrink: 0 }} />
             <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
-              วันนี้คุณเสียไปแล้ว{' '}
+              วันนี้คุณพลาดรายได้ไปแล้ว{' '}
               <span style={{ color: '#FF4D4F', fontWeight: 900 }}>฿{fmt(dailyLoss)}</span>
-              {' '}โดยไม่รู้ตัว
             </span>
           </div>
         </motion.div>
@@ -412,7 +411,7 @@ export default function ResultPage() {
           ① เงินที่เสีย
       ══════════════════════════════════════ */}
       <SectionWrapper>
-        <SectionLabel n="①" label="ตอนนี้คุณกำลังเสียเงินอยู่" />
+        <SectionLabel n="①" label="รายได้ที่หลุดมือทุกวัน" />
         <MoneyHero
           perMonth={totalLeakPerMonth}
           label="รายได้ที่คุณเพิ่มได้ทันที ถ้าทำตามแผนนี้"
