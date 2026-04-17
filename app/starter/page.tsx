@@ -268,12 +268,14 @@ export default function StarterPage() {
     if (!supabase) { setAuthState('ok'); return } // dev mode
 
     const checkProfile = async (userId: string) => {
+      const { data: userData } = await supabase.auth.getUser()
       await supabase.from('user_profiles').upsert(
         {
           id: userId,
-          email: (await supabase.auth.getUser()).data.user?.email,
-          name: (await supabase.auth.getUser()).data.user?.user_metadata?.full_name
-            ?? (await supabase.auth.getUser()).data.user?.email?.split('@')[0],
+          email: userData.user?.email,
+          name: userData.user?.user_metadata?.full_name
+            ?? userData.user?.user_metadata?.name
+            ?? userData.user?.email?.split('@')[0],
           plan: 'none',
         } as never,
         { onConflict: 'id', ignoreDuplicates: true }
@@ -285,17 +287,29 @@ export default function StarterPage() {
       setAuthState(p.plan === 'starter' || p.plan === 'pro' ? 'ok' : 'no_plan')
     }
 
-    // ใช้ onAuthStateChange อย่างเดียว — รองรับ Google OAuth hash token
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    let sub: { unsubscribe: () => void } | null = null
+
+    const init = async () => {
+      // 1️⃣ getSession() ก่อน — ดึงจาก localStorage (รองรับ PKCE หลัง exchangeCodeForSession)
+      const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         await checkProfile(session.user.id)
-      } else if (event === 'INITIAL_SESSION') {
-        // ไม่มี session จริงๆ (ไม่ใช่แค่ยังไม่โหลด)
-        setAuthState('no_auth')
+        return
       }
-    })
 
-    return () => subscription.unsubscribe()
+      // 2️⃣ ถ้าไม่มี session — ฟัง onAuthStateChange (รองรับ magic link hash token)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sess) => {
+        if (sess?.user) {
+          await checkProfile(sess.user.id)
+        } else if (event === 'INITIAL_SESSION') {
+          setAuthState('no_auth')
+        }
+      })
+      sub = subscription
+    }
+
+    init()
+    return () => sub?.unsubscribe()
   }, [])
 
   // ── Loading ──────────────────────────────────────

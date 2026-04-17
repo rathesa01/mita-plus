@@ -13,7 +13,7 @@ export function getSupabaseClient() {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null
   _client = createClient(url, key, {
-    auth: { flowType: 'pkce' }
+    auth: { flowType: 'pkce' },
   })
   return _client
 }
