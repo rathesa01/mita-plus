@@ -4,11 +4,45 @@ function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
 // ── Platform monetization context ────────────────────────────
 const PLATFORM_MONETIZATION: Record<string, string> = {
-  tiktok: 'TikTok Shop ทำเงินได้เร็วที่สุด (commission 3-8%) + Affiliate ผ่าน TikTok Creator Marketplace + Live selling ได้ทันที แต่ TikTok Ads revenue ในไทยยังน้อยมาก (ต้องมีแฟน 10K+)',
-  instagram: 'Reels ดึง traffic ได้ดี แต่ Instagram เองไม่จ่าย ads revenue → ต้องขายผ่าน affiliate link ใน bio/stories + brand deal + ขายสินค้าตรง DM ได้เลย',
-  youtube: 'YouTube AdSense เป็นรายได้ passive ที่ดี (ต้องมี 1,000 sub + 4,000h watchtime) + memberships + Super Thanks + Sponsorship แต่ต้องใช้เวลาสร้างก่อน',
-  facebook: 'Facebook Watch monetization (ต้องมี 10K followers + 600,000 นาที view) + Facebook Groups สร้าง community + Marketplace ขายตรง',
-  multi: 'มีหลาย platform → ต้อง identify ว่า platform ไหน convert เป็นเงินได้เร็วที่สุด แล้วโฟกัสที่นั้นก่อน 90 วัน ก่อนขยาย',
+  tiktok: `TikTok — สิ่งที่คนส่วนใหญ่ไม่รู้:
+• TikTok Shop Affiliate ≠ TikTok Creator Marketplace — คนละโปรแกรม คนละ commission สมัครผิดได้น้อยกว่าครึ่ง
+• Algorithm TikTok Shop ดัน product video ให้คนที่ "อยากซื้อ" โดยเฉพาะ — creator 2,000 followers ขายได้มากกว่า 100K followers ถ้า niche match
+• video ที่ขายดีใน TikTok Shop ≠ video ที่ view เยอะ — video สั้น 15-30 วิที่โชว์ product ชัดๆ ขายได้กว่า viral content
+• TikTok Live algorithm ดันหนักมากใน 2 ชั่วโมงแรก ถ้าไม่ Live คู่แข่งที่ Live อยู่กิน traffic ไปหมด
+• Commission rate ใน TikTok Shop ไทย: แฟชั่น 5-15% / อาหาร 3-8% / beauty 8-20% / gadget 3-6%
+• ห้ามพลาด: สมัคร TikTok Shop Affiliate ที่ seller.tiktok.com/th ไม่ใช่ creator.tiktok.com`,
+
+  instagram: `Instagram — สิ่งที่คนส่วนใหญ่ไม่รู้:
+• Instagram ไม่จ่าย ad revenue ให้ creator ในไทย (Reels Bonus ปิดไปแล้ว) — ทุกบาทต้องมาจาก affiliate/brand deal/ขายตรง
+• Story poll + DM automation คือ funnel ที่ convert ดีที่สุดใน Instagram ในไทย — คนคลิก link ใน bio น้อยมาก แต่ตอบ DM เยอะ
+• Collab post กับ brand ขนาดเล็ก-กลาง ได้ง่ายกว่า brand ใหญ่ 10 เท่า และ brief ง่ายกว่ามาก
+• Instagram Shopping ในไทยต้อง connect กับ Facebook Catalog — ถ้าไม่ทำ ขายผ่าน IG ไม่ได้เลย
+• Reels ที่ดึง follower ใหม่ ≠ Reels ที่ขายของ — ต้องแยก content strategy ออกจากกัน
+• Affiliate ที่ work บน IG ไทยสูงสุด: Shopee Affiliate + Agoda + Lazada (ใส่ link ใน stories ได้ทันที ไม่ต้องรอ 10K)`,
+
+  youtube: `YouTube — สิ่งที่คนส่วนใหญ่ไม่รู้:
+• AdSense เฉลี่ยในไทยอยู่ที่ ฿30-80 ต่อ 1,000 view (RPM ต่ำกว่า US 5-10 เท่า) — ถ้ารอแค่ AdSense จะไม่พอใช้จ่าย
+• YouTube Search traffic มีค่ากว่า YouTube Suggested traffic มาก — คนที่ search หา "วิธี X" พร้อมซื้อมากกว่าคนที่ได้ video โผล่มาเอง 3-5 เท่า
+• Membership ฿59/เดือน ถ้ามี subscriber 1,000 คน แค่ 2% join = ฿1,180/เดือน passive — คนมักไม่เปิด
+• Super Thanks และ Super Chat คือ tip ที่คนพร้อมจ่าย ถ้า creator build community ได้ดี
+• Description box ใส่ affiliate link ได้ทุก video — คนไทยส่วนใหญ่ไม่ใส่ ทิ้งรายได้ทุก video
+• YouTube Shorts ดึง subscriber แต่ RPM ต่ำมาก — ใช้ Shorts ดึงคนมาดู Long-form ที่ทำเงินได้จริง`,
+
+  facebook: `Facebook — สิ่งที่คนส่วนใหญ่ไม่รู้:
+• Facebook In-Stream Ads (ต้องมี 10K followers + 600K นาที/60 วัน) จ่ายดีกว่า TikTok ใน niche อาหาร/ครอบครัว/สุขภาพ เพราะ audience อายุมากกว่า
+• Facebook Group ที่ active มีมูลค่าสูงมาก — สร้าง group ที่มีคนถามตอบกัน แล้วขาย course/product ใน group ได้เลย
+• Facebook Live algorithm ยังดันอยู่ โดยเฉพาะในช่วงเย็น 18:00-21:00 — คู่แข่งน้อยกว่า TikTok Live มาก
+• Marketplace ขายของได้โดยไม่ต้องมี follower — แต่ต้องมีรูปดีและราคาแข่งได้
+• Reels บน Facebook ดึง reach organic ได้มากกว่า post ธรรมดา 3-5 เท่า แต่คนไทยยังใช้น้อย
+• Facebook Stars (ระหว่าง Live) = เงินโดยตรง ฿0.035/star — ถ้ามี fan base ที่ engaged ดี`,
+
+  multi: `หลายแพลตฟอร์ม — สิ่งที่คนส่วนใหญ่ไม่รู้:
+• ปัญหาจริงของคนที่อยู่หลาย platform: ไม่มี platform ไหนที่ "รู้จัก" creator นี้ดีพอ algorithm ไม่ดันให้
+• วิธีที่ถูก: เลือก 1 platform เป็น "เงิน" อีก platform เป็น "traffic feeder" เท่านั้น
+• Cross-platform ที่ work จริง: TikTok ดึง traffic → YouTube Long-form ทำเงิน AdSense + affiliate
+• หรือ: Instagram Reels ดึง follower → Link in bio ไป Shopee/Lazada affiliate
+• ห้ามทำ: post เหมือนกันทุก platform — algorithm แต่ละที่ต้องการ format ต่างกัน
+• เป้าหมาย 30 วันแรก: identify ว่า platform ไหน engagement ต่อ follower สูงที่สุด แล้ว all-in ที่นั้น`,
 }
 
 // ── Niche monetization blueprint ─────────────────────────────
