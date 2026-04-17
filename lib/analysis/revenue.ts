@@ -252,7 +252,15 @@ export function estimateRevenue(data: AuditFormData): RevenueEstimation & { brea
   )
 
   const currentIncome = INCOME_MIDPOINT[data.monthlyIncome] ?? 0
-  const totalMissed   = Math.max(realistic - currentIncome, 0)
+
+  // totalMissed = gap ไปถึง aggressive เสมอ
+  // ถ้า aggressive ต่ำกว่า current → ใช้ 50% ของ current เป็น floor
+  // เพื่อให้มี gap เสมอ ไม่มีทางแสดง +฿0
+  const totalMissed = Math.max(
+    aggressive - currentIncome,
+    Math.round(currentIncome * 0.5),
+    500, // minimum floor ฿500 เสมอ
+  )
 
   const postsPerMonth = FREQ_POSTS_PER_MONTH[data.postingFrequency] ?? 6
   const monthlyViews  = data.avgViews * postsPerMonth

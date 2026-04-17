@@ -381,6 +381,12 @@ export default function ResultPage() {
   const revenueGap        = revenueEstimation.realistic - revenueEstimation.currentIncome
   const dailyLoss         = Math.round(totalLeakPerMonth / 30)
 
+  // High earner = คนที่รายได้ปัจจุบัน >= realistic estimate
+  const isHighEarner      = revenueEstimation.currentIncome >= revenueEstimation.realistic
+  // สำหรับ high earner ใช้ aggressive เป็นเป้าหมาย
+  const displayTarget     = isHighEarner ? revenueEstimation.aggressive : revenueEstimation.realistic
+  const displayGap        = displayTarget - revenueEstimation.currentIncome
+
   const scrollToUpgrade = () => document.getElementById('upgrade')?.scrollIntoView({ behavior: 'smooth' })
 
   return (
@@ -446,19 +452,36 @@ export default function ResultPage() {
           </p>
 
           {/* Daily loss pill */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            background: 'rgba(255,77,79,0.10)',
-            border: '1px solid rgba(255,77,79,0.25)',
-            borderRadius: '99px',
-            padding: '8px 18px',
-          }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#FF4D4F', flexShrink: 0 }} />
-            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
-              วันนี้คุณพลาดรายได้ไปแล้ว{' '}
-              <span style={{ color: '#FF4D4F', fontWeight: 900 }}>฿{fmt(dailyLoss)}</span>
-            </span>
-          </div>
+          {isHighEarner ? (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(255,159,28,0.10)',
+              border: '1px solid rgba(255,159,28,0.25)',
+              borderRadius: '99px',
+              padding: '8px 18px',
+            }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#FF9F1C', flexShrink: 0 }} />
+              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
+                ยังเติบโตได้อีก{' '}
+                <span style={{ color: '#FF9F1C', fontWeight: 900 }}>฿{fmt(Math.round(displayGap / 30))}</span>
+                {' '}ต่อวัน
+              </span>
+            </div>
+          ) : (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(255,77,79,0.10)',
+              border: '1px solid rgba(255,77,79,0.25)',
+              borderRadius: '99px',
+              padding: '8px 18px',
+            }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#FF4D4F', flexShrink: 0 }} />
+              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
+                วันนี้คุณพลาดรายได้ไปแล้ว{' '}
+                <span style={{ color: '#FF4D4F', fontWeight: 900 }}>฿{fmt(dailyLoss)}</span>
+              </span>
+            </div>
+          )}
         </motion.div>
       </SectionWrapper>
 
@@ -480,21 +503,50 @@ export default function ResultPage() {
               ปัจจุบัน ฿{fmt(revenueEstimation.currentIncome)}/เดือน
             </span>
             <span style={{ fontSize: '12px', color: COLORS.success, fontWeight: 700 }}>
-              เป้าหมาย ฿{fmt(revenueEstimation.realistic)}/เดือน
+              {isHighEarner ? 'ศักยภาพสูงสุด' : 'เป้าหมาย'} ฿{fmt(displayTarget)}/เดือน
             </span>
           </div>
           <div style={{ height: '6px', borderRadius: '99px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
             <motion.div
               style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(to right, #7B61FF, #FF9F1C)' }}
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min((revenueEstimation.currentIncome / Math.max(revenueEstimation.realistic, 1)) * 100, 100)}%` }}
+              animate={{ width: `${Math.min((revenueEstimation.currentIncome / Math.max(displayTarget, 1)) * 100, 95)}%` }}
               transition={{ duration: 1.5, delay: 0.3 }}
             />
           </div>
-          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '6px' }}>
-            ยังมีโอกาสเพิ่มรายได้อีก {Math.round((1 - revenueEstimation.currentIncome / Math.max(revenueEstimation.realistic, 1)) * 100)}% จากที่มีอยู่
-          </p>
+          {isHighEarner ? (
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '6px' }}>
+              รายได้คุณดีแล้ว — แต่ยังโตได้อีก {Math.round((displayGap / Math.max(revenueEstimation.currentIncome, 1)) * 100)}% ด้วยระบบที่ถูกต้อง
+            </p>
+          ) : (
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '6px' }}>
+              ยังมีโอกาสเพิ่มรายได้อีก {Math.round((displayGap / Math.max(displayTarget, 1)) * 100)}% จากที่มีอยู่
+            </p>
+          )}
         </div>
+
+        {/* Risk warning สำหรับ high earner */}
+        {isHighEarner && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            style={{
+              marginTop: '12px', padding: '14px 16px',
+              background: 'rgba(255,159,28,0.06)',
+              border: '1px solid rgba(255,159,28,0.20)',
+              borderRadius: RADIUS.card,
+            }}
+          >
+            <p style={{ fontSize: '13px', color: '#FF9F1C', fontWeight: 700, marginBottom: '6px' }}>
+              ⚠️ รายได้คุณดี แต่มีความเสี่ยงที่คนมองข้าม
+            </p>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.60)', lineHeight: 1.65, margin: 0 }}>
+              รายได้ส่วนใหญ่มาจากแหล่งเดียว — ถ้า platform เปลี่ยน algorithm วันพรุ่งนี้ รายได้จะหายทันที
+              MITA+ จะช่วยกระจายรายได้ออกเป็นหลายช่องทาง ให้ปลอดภัยและโตต่อได้ค่ะ
+            </p>
+          </motion.div>
+        )}
 
         {/* AI Shock */}
         <div style={{ marginTop: '16px' }}>
