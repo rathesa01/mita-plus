@@ -14,7 +14,7 @@ export async function GET() {
       const { default: Anthropic } = await import('@anthropic-ai/sdk')
       const client = new Anthropic({ apiKey: key })
       const res = await client.messages.create({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 10,
         messages: [{ role: 'user', content: 'say hi' }],
       })
