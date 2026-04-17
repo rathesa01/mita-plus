@@ -287,29 +287,17 @@ export default function StarterPage() {
       setAuthState(p.plan === 'starter' || p.plan === 'pro' ? 'ok' : 'no_plan')
     }
 
-    let sub: { unsubscribe: () => void } | null = null
-
-    const init = async () => {
-      // 1️⃣ getSession() ก่อน — ดึงจาก localStorage (รองรับ PKCE หลัง exchangeCodeForSession)
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        await checkProfile(session.user.id)
-        return
+    // ฟัง onAuthStateChange ก่อน — จับได้ทั้ง implicit hash token และ existing session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sess) => {
+      if (sess?.user) {
+        await checkProfile(sess.user.id)
+      } else if (event === 'INITIAL_SESSION') {
+        // INITIAL_SESSION + no session = ไม่มี login จริงๆ
+        setAuthState('no_auth')
       }
+    })
 
-      // 2️⃣ ถ้าไม่มี session — ฟัง onAuthStateChange (รองรับ magic link hash token)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sess) => {
-        if (sess?.user) {
-          await checkProfile(sess.user.id)
-        } else if (event === 'INITIAL_SESSION') {
-          setAuthState('no_auth')
-        }
-      })
-      sub = subscription
-    }
-
-    init()
-    return () => sub?.unsubscribe()
+    return () => subscription.unsubscribe()
   }, [])
 
   // ── Loading ──────────────────────────────────────
