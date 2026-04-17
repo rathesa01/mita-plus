@@ -145,10 +145,26 @@ function UpgradeGate({ lockedCount, lockedLossTotal, variant = 'leaks' }: {
 }
 
 // ── AI Block ───────────────────────────────────
-function AIBlock({ text, accent = COLORS.textSecondary }: { text: string; accent?: string }) {
+function AIBlock({ text }: { text: string }) {
   return (
-    <div style={{ ...CARD.base, padding: '16px', marginBottom: '12px' }}>
-      <p style={{ fontSize: '14px', color: COLORS.textSecondary, lineHeight: 1.7 }}>{text}</p>
+    <div style={{
+      background: 'rgba(123,97,255,0.06)',
+      border: '1px solid rgba(123,97,255,0.18)',
+      borderRadius: '14px',
+      padding: '16px',
+      marginBottom: '12px',
+    }}>
+      {/* AI badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+        <Sparkles size={11} style={{ color: '#a78bfa' }} />
+        <span style={{ fontSize: '10px', color: '#a78bfa', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          AI วิเคราะห์เฉพาะคุณ
+        </span>
+      </div>
+      {/* render newlines properly */}
+      <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
+        {text}
+      </p>
     </div>
   )
 }
@@ -370,9 +386,25 @@ export default function ResultPage() {
               <p style={{ fontSize: '13px', color: COLORS.textSecondary, marginTop: '4px' }}>{stage.emoji} {stage.label}</p>
             </div>
           </div>
-          <p style={{ fontSize: '14px', color: COLORS.textSecondary, lineHeight: 1.6, maxWidth: '320px', margin: '0 auto' }}>
+          <p style={{ fontSize: '14px', color: COLORS.textSecondary, lineHeight: 1.6, maxWidth: '320px', margin: '0 auto 16px' }}>
             {stage.shockLine}
           </p>
+
+          {/* Daily loss pill */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            background: 'rgba(255,77,79,0.10)',
+            border: '1px solid rgba(255,77,79,0.25)',
+            borderRadius: '99px',
+            padding: '8px 18px',
+          }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#FF4D4F', flexShrink: 0 }} />
+            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
+              วันนี้คุณเสียไปแล้ว{' '}
+              <span style={{ color: '#FF4D4F', fontWeight: 900 }}>฿{fmt(dailyLoss)}</span>
+              {' '}โดยไม่รู้ตัว
+            </span>
+          </div>
         </motion.div>
       </SectionWrapper>
 
@@ -380,7 +412,7 @@ export default function ResultPage() {
           ① เงินที่เสีย
       ══════════════════════════════════════ */}
       <SectionWrapper>
-        <SectionLabel n="①" label="โอกาสรายได้ของคุณ" />
+        <SectionLabel n="①" label="ตอนนี้คุณกำลังเสียเงินอยู่" />
         <MoneyHero
           perMonth={totalLeakPerMonth}
           label="รายได้ที่คุณเพิ่มได้ทันที ถ้าทำตามแผนนี้"
@@ -420,7 +452,7 @@ export default function ResultPage() {
           ② สาเหตุ
       ══════════════════════════════════════ */}
       <SectionWrapper>
-        <SectionLabel n="②" label="สาเหตุ" />
+        <SectionLabel n="②" label="ทำไมถึงยังไม่มีเงิน?" />
         <AIBlock text={aiInsights.whyItHappens} />
         <div style={{ marginTop: '8px' }}>
           {/* Leak 1 — free, fully visible */}
@@ -452,7 +484,7 @@ export default function ResultPage() {
           ③ วิธีแก้
       ══════════════════════════════════════ */}
       <SectionWrapper>
-        <SectionLabel n="③" label="วิธีแก้" />
+        <SectionLabel n="③" label="ทำอะไรก่อนได้เงินเร็วที่สุด" />
         <AIBlock text={aiInsights.topActions} />
         <div style={{ marginTop: '8px' }}>
           {/* Rec 1 — free */}
@@ -482,7 +514,7 @@ export default function ResultPage() {
           ④ โอกาส
       ══════════════════════════════════════ */}
       <SectionWrapper>
-        <SectionLabel n="④" label="โอกาส" />
+        <SectionLabel n="④" label="ถ้าแก้แล้วจะได้เท่าไหร่?" />
 
         {/* Revenue gap hero */}
         <MoneyHero perMonth={revenueGap} label="รายได้ที่ควรได้เพิ่มต่อเดือน" type="gain" />
@@ -602,11 +634,11 @@ export default function ResultPage() {
               style={{ marginTop: '8px', ...CARD.base, padding: '16px' }}
             >
               {[
-                { label: 'Reach & Audience',    val: score.breakdown.reach,        max: 25 },
-                { label: 'Monetization Setup',  val: score.breakdown.monetization,  max: 25 },
-                { label: 'Funnel & System',     val: score.breakdown.funnel,        max: 25 },
-                { label: 'Closing & Affiliate', val: score.breakdown.conversion,    max: 15 },
-                { label: 'Product Quality',     val: score.breakdown.product,       max: 10 },
+                { label: '👥 ขนาดและคุณภาพผู้ติดตาม',  val: score.breakdown.reach,        max: 25 },
+                { label: '💰 ระบบทำรายได้',             val: score.breakdown.monetization,  max: 25 },
+                { label: '🔄 ระบบดักลูกค้า',            val: score.breakdown.funnel,        max: 25 },
+                { label: '🤝 ระบบปิดการขาย',            val: score.breakdown.conversion,    max: 15 },
+                { label: '📦 สินค้า/บริการ',            val: score.breakdown.product,       max: 10 },
               ].map((item) => {
                 const pct = (item.val / item.max) * 100
                 const barColor = pct >= 75 ? COLORS.success : pct >= 50 ? COLORS.ctaOrange : COLORS.accentPurple
