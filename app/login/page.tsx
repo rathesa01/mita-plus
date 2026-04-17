@@ -1,31 +1,35 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react'
+import { Mail, Loader2, ArrowLeft } from 'lucide-react'
 import { COLORS } from '@/lib/tokens'
 import { getSupabaseClient } from '@/lib/db/supabaseClient'
 
-type Step = 'email' | 'sent' | 'checking'
+type Step = 'email' | 'sent'
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') ?? '/starter'
-
+  const [redirectTo, setRedirectTo] = useState('/starter')
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // ── ตรวจ session เมื่อกลับมาจาก magic link ──
+  // อ่าน redirect param จาก window.location แทน useSearchParams
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const r = params.get('redirect')
+    if (r) setRedirectTo(r)
+  }, [])
+
+  // ตรวจ session เมื่อกลับมาจาก magic link
   useEffect(() => {
     const supabase = getSupabaseClient()
     if (!supabase) return
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        // Upsert user profile
         await supabase.from('user_profiles').upsert(
           {
             id: session.user.id,
@@ -35,10 +39,11 @@ export default function LoginPage() {
           } as never,
           { onConflict: 'id', ignoreDuplicates: true }
         )
-
         router.replace(redirectTo)
       }
     })
+
+    return () => subscription.unsubscribe()
   }, [router, redirectTo])
 
   const sendMagicLink = async () => {
@@ -62,7 +67,6 @@ export default function LoginPage() {
     })
 
     setLoading(false)
-
     if (err) {
       setError('ส่งลิงก์ไม่ได้ค่ะ กรุณาลองใหม่')
     } else {
