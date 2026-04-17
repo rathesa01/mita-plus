@@ -1,14 +1,14 @@
-import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 import type { AuditFormData, AIInsights, RevenueLeak, RevenueEstimation, MonetizationScore, CreatorStage } from '@/types'
 import { generateMockInsights } from './mockInsights'
 import { buildSystemPrompt, buildUserPrompt } from './prompts'
 
-let client: OpenAI | null = null
+let client: Anthropic | null = null
 
-function getClient(): OpenAI | null {
-  const key = process.env.OPENAI_API_KEY
-  if (!key || key === 'sk-your-key-here' || key.trim() === '') return null
-  if (!client) client = new OpenAI({ apiKey: key })
+function getClient(): Anthropic | null {
+  const key = process.env.ANTHROPIC_API_KEY
+  if (!key || key.trim() === '') return null
+  if (!client) client = new Anthropic({ apiKey: key })
   return client
 }
 
@@ -19,27 +19,35 @@ export async function generateInsights(
   score: MonetizationScore,
   stage: CreatorStage,
 ): Promise<AIInsights> {
-  const openai = getClient()
+  const anthropic = getClient()
 
   // ── No API key → fall back to mock ──────────────────────
-  if (!openai) {
-    console.log('[MITA+] No OpenAI key — using mock insights')
+  if (!anthropic) {
+    console.log('[MITA+] No Anthropic key — using mock insights')
     return generateMockInsights(data, leaks, revenue)
   }
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      temperature: 0.7,
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 1200,
-      response_format: { type: 'json_object' },
+      temperature: 0.7,
+      system: buildSystemPrompt(),
       messages: [
-        { role: 'system', content: buildSystemPrompt() },
-        { role: 'user', content: buildUserPrompt(data, leaks, revenue, score, stage) },
+        {
+          role: 'user',
+          content: buildUserPrompt(data, leaks, revenue, score, stage),
+        },
+        {
+          // prefill เพื่อบังคับ JSON output
+          role: 'assistant',
+          content: '{',
+        },
       ],
     })
 
-    const raw = completion.choices[0]?.message?.content ?? '{}'
+    // รวม prefill กลับเข้าไป
+    const raw = '{' + (response.content[0]?.type === 'text' ? response.content[0].text : '')
     const parsed = JSON.parse(raw)
 
     // Validate all 4 fields exist
@@ -47,7 +55,7 @@ export async function generateInsights(
     const missing = required.filter((k) => !parsed[k] || typeof parsed[k] !== 'string')
 
     if (missing.length > 0) {
-      console.warn('[MITA+] OpenAI response missing fields:', missing, '— using mock fallback')
+      console.warn('[MITA+] Claude response missing fields:', missing, '— using mock fallback')
       return generateMockInsights(data, leaks, revenue)
     }
 
@@ -58,7 +66,7 @@ export async function generateInsights(
       upside: parsed.upside,
     }
   } catch (err) {
-    console.error('[MITA+] OpenAI error — falling back to mock:', err)
+    console.error('[MITA+] Claude error — falling back to mock:', err)
     return generateMockInsights(data, leaks, revenue)
   }
 }
