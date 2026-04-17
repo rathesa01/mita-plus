@@ -43,7 +43,7 @@ function AnalyzingScreen({ name, done }: { name: string; done: boolean }) {
   const displayText = done
     ? '✅ วิเคราะห์เสร็จแล้ว!'
     : longWait
-    ? 'ยังวิเคราะห์อยู่... AI กำลังทำงานค่ะ'
+    ? 'MITA+ กำลังวิเคราะห์คุณอยู่...'
     : LOADING_STEPS[stepIdx]?.text
 
   return (
