@@ -268,41 +268,31 @@ export default function StarterPage() {
     if (!supabase) { setAuthState('ok'); return } // dev mode
 
     const checkProfile = async (userId: string) => {
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
+      await supabase.from('user_profiles').upsert(
+        {
+          id: userId,
+          email: (await supabase.auth.getUser()).data.user?.email,
+          name: (await supabase.auth.getUser()).data.user?.user_metadata?.full_name
+            ?? (await supabase.auth.getUser()).data.user?.email?.split('@')[0],
+          plan: 'none',
+        } as never,
+        { onConflict: 'id', ignoreDuplicates: true }
+      )
+      const { data } = await supabase.from('user_profiles').select('*').eq('id', userId).single()
       if (!data) { setAuthState('no_plan'); return }
       const p = data as UserProfile
       setProfile(p)
       setAuthState(p.plan === 'starter' || p.plan === 'pro' ? 'ok' : 'no_plan')
     }
 
-    // ฟัง auth state — รองรับทั้ง magic link และ Google OAuth
+    // ใช้ onAuthStateChange อย่างเดียว — รองรับ Google OAuth hash token
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        // upsert profile เผื่อ user ใหม่จาก Google
-        await supabase.from('user_profiles').upsert(
-          {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.user_metadata?.full_name ?? session.user.user_metadata?.name ?? session.user.email?.split('@')[0],
-            plan: 'none',
-          } as never,
-          { onConflict: 'id', ignoreDuplicates: true }
-        )
         await checkProfile(session.user.id)
-      } else {
+      } else if (event === 'INITIAL_SESSION') {
+        // ไม่มี session จริงๆ (ไม่ใช่แค่ยังไม่โหลด)
         setAuthState('no_auth')
       }
-    })
-
-    // check session ปัจจุบันด้วย (กรณี refresh)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) setAuthState('no_auth')
-      // ถ้ามี session onAuthStateChange จะจัดการให้
     })
 
     return () => subscription.unsubscribe()
