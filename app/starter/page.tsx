@@ -1,9 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { CheckCircle2, Circle, Lock, ChevronRight, Flame, Target, TrendingUp, Star, Bell } from 'lucide-react'
+import { CheckCircle2, Circle, Lock, ChevronRight, Flame, Target, TrendingUp, Star, Bell, Loader2 } from 'lucide-react'
 import { COLORS, CARD, RADIUS, GLOW } from '@/lib/tokens'
 import CheckInModal from './CheckInModal'
+import { getSupabaseClient, type UserProfile } from '@/lib/db/supabaseClient'
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
@@ -247,6 +249,10 @@ function TaskList({ week, onCheckIn }: { week: typeof WEEKS[0]; onCheckIn?: () =
 
 // ── Main Page ───────────────────────────────────
 export default function StarterPage() {
+  const router = useRouter()
+  const [authState, setAuthState] = useState<'loading' | 'no_auth' | 'no_plan' | 'ok'>('loading')
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+
   const [activeWeek, setActiveWeek] = useState(CREATOR.weekNo - 1)
   const [tab, setTab] = useState<'plan' | 'products' | 'milestones'>('plan')
   const [checkInOpen, setCheckInOpen] = useState(false)
@@ -255,6 +261,99 @@ export default function StarterPage() {
   const [showLineSetup, setShowLineSetup] = useState(false)
   const [lineToken, setLineToken] = useState('')
   const [lineLoading, setLineLoading] = useState(false)
+
+  // ── Auth check ──────────────────────────────────
+  useEffect(() => {
+    const check = async () => {
+      const supabase = getSupabaseClient()
+      if (!supabase) { setAuthState('ok'); return } // dev mode: ข้ามเลย
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { setAuthState('no_auth'); return }
+
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
+
+      if (!data) { setAuthState('no_plan'); return }
+
+      const p = data as UserProfile
+      setProfile(p)
+      if (p.plan === 'starter' || p.plan === 'pro') {
+        setAuthState('ok')
+      } else {
+        setAuthState('no_plan')
+      }
+    }
+    check()
+  }, [])
+
+  // ── Loading ──────────────────────────────────────
+  if (authState === 'loading') {
+    return (
+      <div style={{ background: COLORS.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 size={28} style={{ color: '#7B61FF', animation: 'spin 1s linear infinite' }} />
+      </div>
+    )
+  }
+
+  // ── ยังไม่ login ─────────────────────────────────
+  if (authState === 'no_auth') {
+    return (
+      <div style={{ background: COLORS.bg, minHeight: '100vh', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <span style={{ fontSize: '48px', marginBottom: '16px' }}>🔐</span>
+        <h2 style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>เข้าสู่ระบบก่อนนะคะ</h2>
+        <p style={{ margin: '0 0 24px', fontSize: '14px', color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 1.7 }}>
+          ต้อง login ก่อนเพื่อเข้าดูแผนของคุณค่ะ
+        </p>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => router.push('/login?redirect=/starter')}
+          style={{
+            padding: '14px 32px', background: '#7B61FF', color: '#fff',
+            border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 700, cursor: 'pointer',
+          }}
+        >
+          เข้าสู่ระบบ →
+        </motion.button>
+      </div>
+    )
+  }
+
+  // ── รอ approve ───────────────────────────────────
+  if (authState === 'no_plan') {
+    return (
+      <div style={{ background: COLORS.bg, minHeight: '100vh', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <motion.div
+          animate={{ rotate: [0, 10, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+          style={{ fontSize: '56px', marginBottom: '20px' }}
+        >
+          ⏳
+        </motion.div>
+        <h2 style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>รอยืนยันการชำระเงินอยู่ค่ะ</h2>
+        <p style={{ margin: '0 0 20px', fontSize: '14px', color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.75 }}>
+          ทีม MITA+ จะเปิด access ให้ภายใน 24 ชั่วโมงค่ะ<br />
+          ถ้าจ่ายแล้วยังไม่ได้รับ กรุณาทักที่ LINE OA ค่ะ
+        </p>
+        <div style={{
+          padding: '14px 20px', width: '100%',
+          background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.2)',
+          borderRadius: '14px', textAlign: 'center',
+        }}>
+          <p style={{ margin: '0 0 4px', fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Login ด้วย</p>
+          <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#7B61FF' }}>
+            {profile?.email ?? '—'}
+          </p>
+        </div>
+        <p style={{ margin: '20px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.2)' }}>
+          ยังไม่ได้สมัคร? <a href="/" style={{ color: '#7B61FF' }}>กลับไปดูแผนค่ะ</a>
+        </p>
+      </div>
+    )
+  }
 
   const progressPct = Math.min((CREATOR.currentEarned / CREATOR.targetIncome) * 100, 100)
 
