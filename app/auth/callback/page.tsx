@@ -15,31 +15,60 @@ export default function AuthCallback() {
 
       if (!supabase) { router.replace(next); return }
 
-      // Parse hash fragment manually (#access_token=...&refresh_token=...)
+      // ── 1. PKCE flow: ?code=xxx ────────────────────────────────────────
+      const code = params.get('code')
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error) {
+          router.replace(next)
+        } else {
+          router.replace('/login')
+        }
+        return
+      }
+
+      // ── 2. Implicit flow: #access_token=...&refresh_token=... ──────────
       const hash = window.location.hash.substring(1)
       const hashParams = new URLSearchParams(hash)
       const access_token = hashParams.get('access_token')
       const refresh_token = hashParams.get('refresh_token')
 
       if (access_token && refresh_token) {
-        // ตั้ง session โดยตรง — ข้าม auto-detection ทั้งหมด
-        await supabase.auth.setSession({ access_token, refresh_token })
-        router.replace(next)
+        const { error } = await supabase.auth.setSession({ access_token, refresh_token })
+        if (!error) {
+          router.replace(next)
+        } else {
+          router.replace('/login')
+        }
         return
       }
 
-      // fallback: ฟัง onAuthStateChange
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session) {
-          subscription.unsubscribe()
-          router.replace(next)
-        } else if (event === 'INITIAL_SESSION') {
+      // ── 3. Fallback: magic link หรือ session ที่มีอยู่แล้ว ─────────────
+      // ⚠️ อย่า redirect ไป /login ใน INITIAL_SESSION เพราะหน้านี้คือ callback!
+      // รอ SIGNED_IN แล้วค่อย redirect — ถ้า 6 วินาทียังไม่มี ให้ไป /login
+      let redirected = false
+      const timer = setTimeout(() => {
+        if (!redirected) {
+          redirected = true
           subscription.unsubscribe()
           router.replace('/login')
         }
+      }, 6000)
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session && !redirected) {
+          redirected = true
+          clearTimeout(timer)
+          subscription.unsubscribe()
+          router.replace(next)
+        }
+        // ❌ ไม่ redirect ไป /login ใน INITIAL_SESSION — ให้รอ timer แทน
       })
 
-      return () => subscription.unsubscribe()
+      return () => {
+        clearTimeout(timer)
+        subscription.unsubscribe()
+      }
     }
 
     handle()
