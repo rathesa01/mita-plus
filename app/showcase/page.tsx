@@ -13,7 +13,13 @@ interface NonSubResult {
   stage: { label: string; emoji: string; shockLine: string }
   score: { total: number }
   pricing: { tier: string; reportPrice: number; urgencyMessage: string }
-  aiInsights?: { summary: string; topOpportunity: string; urgentWarning: string }
+  aiInsights?: {
+    shock: string
+    whyItHappens: string
+    topActions: string
+    upside: string
+    actionSteps?: Array<{ day: string; time: string; title: string; detail: string; earn: string | null }>
+  }
 }
 
 interface SubResult {
@@ -203,18 +209,38 @@ function NonSubCard({ persona, index }: { persona: typeof NON_SUBSCRIBERS[0]; in
                       borderRadius: '12px',
                     }}
                   >
-                    <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 700, color: '#7B61FF' }}>📝 สรุปภาพรวม</p>
-                    <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.65 }}>
-                      {result.aiInsights.summary}
-                    </p>
-                    <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#22C55E' }}>🚀 โอกาสที่ดีที่สุด</p>
-                    <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.65 }}>
-                      {result.aiInsights.topOpportunity}
-                    </p>
-                    <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#FF9F1C' }}>⚠️ ต้องแก้ด่วน</p>
-                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.65 }}>
-                      {result.aiInsights.urgentWarning}
-                    </p>
+                    {result.aiInsights.shock && (
+                      <>
+                        <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#FF4D4F' }}>⚡ เงินที่เสียอยู่ตอนนี้</p>
+                        <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65 }}>
+                          {result.aiInsights.shock}
+                        </p>
+                      </>
+                    )}
+                    {result.aiInsights.whyItHappens && (
+                      <>
+                        <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#FF9F1C' }}>🔍 ทำไมถึงเสียเงิน</p>
+                        <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65 }}>
+                          {result.aiInsights.whyItHappens}
+                        </p>
+                      </>
+                    )}
+                    {result.aiInsights.topActions && (
+                      <>
+                        <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#22C55E' }}>🚀 ทำอะไรก่อน</p>
+                        <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65 }}>
+                          {result.aiInsights.topActions}
+                        </p>
+                      </>
+                    )}
+                    {result.aiInsights.upside && (
+                      <>
+                        <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#7B61FF' }}>💰 ถ้าแก้แล้วจะได้</p>
+                        <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65 }}>
+                          {result.aiInsights.upside}
+                        </p>
+                      </>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
