@@ -192,11 +192,12 @@ export function buildUserPrompt(
   const niche = data.niche ?? 'other'
   const platform = data.platform ?? 'tiktok'
   // Use type assertion for new fields that may not be in old schema yet
-  const d = data as AuditFormData & { audienceBuyingPower?: string; contentDuration?: string; triedAndFailed?: string[]; subNiche?: string }
+  const d = data as AuditFormData & { audienceBuyingPower?: string; contentDuration?: string; triedAndFailed?: string[]; subNiche?: string; contentDescription?: string }
   const audienceBuyingPower = d.audienceBuyingPower ?? 'mixed'
   const contentDuration = d.contentDuration ?? '3-12months'
   const triedAndFailed: string[] = d.triedAndFailed ?? ['none_tried']
   const subNiche = d.subNiche ?? ''
+  const contentDescription = d.contentDescription ?? ''
 
   const blueprint = NICHE_BLUEPRINT[niche] ?? NICHE_BLUEPRINT.other
   const platformCtx = PLATFORM_MONETIZATION[platform] ?? ''
@@ -218,6 +219,7 @@ export function buildUserPrompt(
   return `=== CREATOR PROFILE ===
 ชื่อ: ${data.name}
 Platform: ${platformTH} | Niche: ${nicheTH}${subNiche ? ` → ${subNiche}` : ''}
+ทำ Content เกี่ยวกับ: ${contentDescription || subNiche || nicheTH} ← ใช้ข้อมูลนี้เพื่อระบุสินค้า/วิธีที่ตรงกับ content จริงๆ ของเขา
 ทำมาแล้ว: ${durationTH}
 Followers: ${data.followers.toLocaleString('th-TH')} | ยอดวิวเฉลี่ย/โพสต์: ${data.avgViews.toLocaleString('th-TH')}
 วิวรวม/เดือน: ${fmt(monthlyViews)} | Engagement: ${data.engagementRate}%

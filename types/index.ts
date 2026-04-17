@@ -65,6 +65,7 @@ export interface AuditFormData {
   triedAndFailed: TriedAndFailed[]
   audienceBuyingPower: AudienceBuyingPower
   subNiche: string
+  contentDescription: string   // free-text: "สอนทำขนมไทย ขายออนไลน์"
   biggestProblem: string
   goalIn90Days: string
 }

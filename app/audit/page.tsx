@@ -281,6 +281,7 @@ const defaultForm: AuditFormData = {
   triedAndFailed: ['none_tried'] as TriedAndFailed[],
   audienceBuyingPower: 'mixed' as AudienceBuyingPower,
   subNiche: '',
+  contentDescription: '',
   biggestProblem: '',
   goalIn90Days: '',
 }
@@ -525,6 +526,21 @@ export default function AuditPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Content description — free text สำหรับ personalization */}
+                  <div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-1 block">
+                      บอกให้ละเอียดขึ้นอีกนิด <span className="text-white/20 normal-case font-normal">(ไม่บังคับ)</span>
+                    </label>
+                    <p className="text-white/25 text-xs mb-2">ยิ่งบอกละเอียด ผลวิเคราะห์ยิ่งตรงกับช่องคุณมากขึ้น</p>
+                    <textarea
+                      value={(form as any).contentDescription ?? ''}
+                      onChange={(e) => update('contentDescription' as any, e.target.value)}
+                      placeholder={'เช่น:\n• สอนทำขนมไทย แนะนำอุปกรณ์ทำขนม\n• รีวิวร้านก๋วยเตี๋ยวทั่วกรุงเทพ\n• เลี้ยงแมว 3 ตัว ทำคลิปตลกๆ\n• สอนภาษาอังกฤษสำหรับวัยทำงาน'}
+                      rows={3}
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all resize-none text-sm"
+                    />
+                  </div>
                 </div>
               </motion.div>
             )}

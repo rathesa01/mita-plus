@@ -29,6 +29,7 @@ export const AuditFormSchema = z.object({
   triedAndFailed: z.array(z.enum(['affiliate', 'sponsorship', 'own_product', 'coaching', 'live_selling', 'none_tried'])).min(1).max(6).default(['none_tried']),
   audienceBuyingPower: z.enum(['student', 'worker', 'homemaker', 'business_owner', 'mixed']).default('mixed'),
   subNiche: z.string().max(100).default(''),
+  contentDescription: z.string().max(500).optional().default(''),
 })
 
 // ── Contact form schema ────────────────────────
