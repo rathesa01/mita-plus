@@ -227,10 +227,34 @@ function CodeBlock({ code, onCopy, copied }: { code: string; onCopy: () => void;
 }
 
 // ── Lead Row ──────────────────────────────────────────────
-function LeadRow({ lead }: { lead: Lead }) {
+function LeadRow({ lead, showApprove }: { lead: Lead; showApprove?: boolean }) {
   const plan = lead.plan ?? 'free'
   const color = PLAN_COLOR[plan] ?? '#9CA3AF'
   const emoji = PLAN_EMOJI[plan] ?? '📋'
+  const [approving, setApproving] = useState<string | null>(null)
+  const [approveResult, setApproveResult] = useState<'ok' | 'not_found' | null>(null)
+
+  const approve = async (targetPlan: 'starter' | 'pro') => {
+    if (!lead.email) return
+    setApproving(targetPlan)
+    setApproveResult(null)
+    try {
+      const res = await fetch('/api/admin/approve-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: lead.email, plan: targetPlan }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setApproveResult('ok')
+      } else if (json.error === 'not_found') {
+        setApproveResult('not_found')
+      }
+    } finally {
+      setApproving(null)
+      setTimeout(() => setApproveResult(null), 4000)
+    }
+  }
 
   return (
     <motion.div
@@ -241,58 +265,98 @@ function LeadRow({ lead }: { lead: Lead }) {
         border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: '12px',
         padding: '14px 16px',
-        display: 'grid',
-        gridTemplateColumns: '1fr auto',
-        gap: '12px',
-        alignItems: 'center',
       }}
     >
-      <div>
-        {/* Name + plan */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-          <p style={{ fontWeight: 700, fontSize: '14px', color: '#fff' }}>
-            {lead.name ?? '—'}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center' }}>
+        <div>
+          {/* Name + plan */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <p style={{ fontWeight: 700, fontSize: '14px', color: '#fff' }}>
+              {lead.name ?? '—'}
+            </p>
+            <span style={{
+              fontSize: '10px', fontWeight: 700, color, textTransform: 'uppercase',
+              padding: '2px 8px', borderRadius: '20px',
+              background: `${color}18`, border: `1px solid ${color}40`,
+            }}>
+              {emoji} {plan}
+            </span>
+          </div>
+
+          {/* Email */}
+          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginBottom: '6px' }}>
+            {lead.email ?? '—'}{lead.phone ? ` · ${lead.phone}` : ''}
           </p>
-          <span style={{
-            fontSize: '10px', fontWeight: 700, color, textTransform: 'uppercase',
-            padding: '2px 8px', borderRadius: '20px',
-            background: `${color}18`, border: `1px solid ${color}40`,
-          }}>
-            {emoji} {plan}
-          </span>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {lead.score !== undefined && (
+              <Tag label="Score" value={`${lead.score}/100`} color="#a78bfa" />
+            )}
+            {lead.revenue_gap !== undefined && (
+              <Tag label="Gap" value={`-฿${fmt(lead.revenue_gap)}/เดือน`} color="#FF4D4F" />
+            )}
+            {lead.platform && (
+              <Tag label="Platform" value={lead.platform} color="#9CA3AF" />
+            )}
+            {lead.followers && (
+              <Tag label="Followers" value={fmt(lead.followers)} color="#9CA3AF" />
+            )}
+          </div>
         </div>
 
-        {/* Email */}
-        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginBottom: '6px' }}>
-          {lead.email ?? '—'}{lead.phone ? ` · ${lead.phone}` : ''}
-        </p>
-
-        {/* Stats row */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {lead.score !== undefined && (
-            <Tag label="Score" value={`${lead.score}/100`} color="#a78bfa" />
-          )}
-          {lead.revenue_gap !== undefined && (
-            <Tag label="Gap" value={`-฿${fmt(lead.revenue_gap)}/เดือน`} color="#FF4D4F" />
-          )}
-          {lead.platform && (
-            <Tag label="Platform" value={lead.platform} color="#9CA3AF" />
-          )}
-          {lead.followers && (
-            <Tag label="Followers" value={fmt(lead.followers)} color="#9CA3AF" />
-          )}
+        {/* Time + type */}
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.30)', marginBottom: '4px' }}>
+            {timeAgo(lead.created_at)}
+          </p>
+          <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.20)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {lead.type}
+          </p>
         </div>
       </div>
 
-      {/* Time + type */}
-      <div style={{ textAlign: 'right' }}>
-        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.30)', marginBottom: '4px' }}>
-          {timeAgo(lead.created_at)}
-        </p>
-        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.20)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          {lead.type}
-        </p>
-      </div>
+      {/* Approve buttons (contact leads only) */}
+      {showApprove && (
+        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          {approveResult === 'ok' && (
+            <p style={{ fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>✅ Approve สำเร็จแล้วค่ะ!</p>
+          )}
+          {approveResult === 'not_found' && (
+            <p style={{ fontSize: '12px', color: '#FF9F1C' }}>⚠️ ยังไม่ได้ login เข้าระบบค่ะ — ส่ง magic link ให้ก่อนนะคะ</p>
+          )}
+          {!approveResult && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => approve('starter')}
+                disabled={!!approving}
+                style={{
+                  padding: '7px 16px', background: '#7B61FF', color: '#fff',
+                  border: 'none', borderRadius: '8px', fontSize: '12px',
+                  fontWeight: 700, cursor: approving ? 'not-allowed' : 'pointer',
+                  opacity: approving === 'pro' ? 0.5 : 1,
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                }}
+              >
+                {approving === 'starter' ? '⏳' : '⭐'} Approve Starter
+              </button>
+              <button
+                onClick={() => approve('pro')}
+                disabled={!!approving}
+                style={{
+                  padding: '7px 16px', background: '#FF9F1C', color: '#fff',
+                  border: 'none', borderRadius: '8px', fontSize: '12px',
+                  fontWeight: 700, cursor: approving ? 'not-allowed' : 'pointer',
+                  opacity: approving === 'starter' ? 0.5 : 1,
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                }}
+              >
+                {approving === 'pro' ? '⏳' : '👑'} Approve Pro
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </motion.div>
   )
 }
@@ -713,9 +777,9 @@ export default function AdminPage() {
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {contactLeads.map(l => (
-                <LeadRow key={l.id} lead={{
+                <LeadRow key={l.id} showApprove={canSeeContact} lead={{
                   ...l,
-                  email: maskEmail(l.email),
+                  email: canSeeContact ? l.email : maskEmail(l.email),
                   phone: maskPhone(l.phone) ?? undefined,
                 }} />
               ))}
