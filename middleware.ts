@@ -7,6 +7,14 @@ const SECRET = () => new TextEncoder().encode(
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const host = req.headers.get('host') ?? ''
+
+  // Redirect non-www to www (ensures consistent localStorage for Supabase auth)
+  if (host === 'mitaplus.com') {
+    const url = req.nextUrl.clone()
+    url.host = 'www.mitaplus.com'
+    return NextResponse.redirect(url, { status: 301 })
+  }
 
   // Only guard /admin routes
   if (!pathname.startsWith('/admin')) return NextResponse.next()
@@ -30,5 +38,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
