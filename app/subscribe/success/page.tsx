@@ -19,9 +19,10 @@ export default function SubscribeSuccess() {
           const userId = session?.user?.id
 
           if (userId && supabase) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await supabase.from('user_profiles').update({
               audit_data: JSON.parse(auditRaw),
-            }).eq('id', userId)
+            } as any).eq('id', userId)
             localStorage.removeItem('mitaplus_audit')
           }
         }
