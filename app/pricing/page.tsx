@@ -265,12 +265,18 @@ export default function PricingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId, userId: user.id, email: user.email, plan }),
       })
-      const { url, error } = await res.json()
-      if (error || !url) throw new Error(error ?? 'No URL')
-      window.location.href = url
+      let data: { url?: string; error?: string } = {}
+      try {
+        data = await res.json()
+      } catch {
+        const text = await res.text().catch(() => '(no body)')
+        throw new Error(`HTTP ${res.status} — response not JSON: ${text.slice(0, 200)}`)
+      }
+      if (data.error || !data.url) throw new Error(data.error ?? 'No URL returned')
+      window.location.href = data.url
     } catch (err) {
-      console.error(err)
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งค่ะ')
+      console.error('[checkout error]', err)
+      alert(`เกิดข้อผิดพลาดค่ะ:\n${err instanceof Error ? err.message : String(err)}`)
       setLoadingPlan(null)
     }
   }
