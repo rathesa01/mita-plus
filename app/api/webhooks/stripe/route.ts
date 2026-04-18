@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       // ✅ Payment success → activate plan
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.CheckoutSession
+        const session = event.data.object as Stripe.Checkout.Session
         const uid = session.metadata?.supabase_uid
         const plan = (session.metadata?.plan ?? 'starter') as 'starter' | 'pro'
 
@@ -43,23 +43,24 @@ export async function POST(req: NextRequest) {
       // ✅ Subscription renewed
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice
-        const sub = await stripe.subscriptions.retrieve(invoice.subscription as string)
-        const uid = sub.metadata?.supabase_uid
-
-        if (uid) {
-          await supabaseAdmin.from('user_profiles').update({
-            approved_at: new Date().toISOString(),
-          }).eq('id', uid)
-          console.log(`✅ Subscription renewed: ${uid}`)
+        const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
+        if (subId) {
+          const sub = await stripe.subscriptions.retrieve(subId)
+          const uid = sub.metadata?.supabase_uid
+          if (uid) {
+            await supabaseAdmin.from('user_profiles').update({
+              approved_at: new Date().toISOString(),
+            }).eq('id', uid)
+            console.log(`✅ Subscription renewed: ${uid}`)
+          }
         }
         break
       }
 
-      // ❌ Payment failed / subscription cancelled → revoke plan
+      // ❌ Subscription cancelled → revoke plan
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
         const uid = sub.metadata?.supabase_uid
-
         if (uid) {
           await supabaseAdmin.from('user_profiles').update({
             plan: 'none',
@@ -72,10 +73,8 @@ export async function POST(req: NextRequest) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        const sub = await stripe.subscriptions.retrieve(invoice.subscription as string)
-        const uid = sub.metadata?.supabase_uid
-        console.warn(`⚠️ Payment failed for user: ${uid}`)
-        // ยังไม่ revoke ทันที — รอ Stripe retry ก่อน
+        const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
+        console.warn(`⚠️ Payment failed for subscription: ${subId}`)
         break
       }
     }
