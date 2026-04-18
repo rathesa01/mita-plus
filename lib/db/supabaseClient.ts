@@ -34,5 +34,6 @@ export interface UserProfile {
   platform: string | null
   line_id: string | null
   created_at: string
+  stripe_customer_id: string | null
   audit_data: Record<string, unknown> | null
 }

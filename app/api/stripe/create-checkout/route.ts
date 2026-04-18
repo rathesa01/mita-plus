@@ -6,14 +6,24 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  // Init inside handler — env vars not available at module eval during build
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-03-25.dahlia' })
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    (process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!
-  )
-
   try {
+    // Init inside try — env vars not available at module eval during build
+    const secretKey = process.env.STRIPE_SECRET_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    console.log('[create-checkout] env check:', {
+      hasStripeKey: !!secretKey,
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!serviceKey,
+    })
+
+    if (!secretKey) throw new Error('STRIPE_SECRET_KEY is not set')
+    if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set')
+    if (!serviceKey) throw new Error('SUPABASE_SERVICE_KEY is not set')
+
+    const stripe = new Stripe(secretKey, { apiVersion: '2026-03-25.dahlia' })
+    const supabaseAdmin = createClient(supabaseUrl, serviceKey)
     const { priceId, userId, email, plan } = await req.json()
 
     if (!priceId || !userId || !email) {
