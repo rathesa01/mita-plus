@@ -359,7 +359,20 @@ export default function StarterPage() {
   // Use real user name from Supabase profile, fallback to mock
   const displayName = profile?.name ?? profile?.email?.split('@')[0] ?? CREATOR.name
 
-  const progressPct = Math.min((CREATOR.currentEarned / CREATOR.targetIncome) * 100, 100)
+  // Use real audit data if available, else fall back to mock
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const audit = profile?.audit_data as any
+  const liveCreator = audit ? {
+    name: displayName,
+    platform: audit.input?.platform ?? CREATOR.platform,
+    followers: audit.input?.followers ?? CREATOR.followers,
+    targetIncome: Math.round(audit.revenueEstimation?.realistic ?? CREATOR.targetIncome),
+    currentEarned: Math.round(audit.revenueEstimation?.currentIncome ?? CREATOR.currentEarned),
+    streak: CREATOR.streak,
+    weekNo: CREATOR.weekNo,
+  } : { ...CREATOR, name: displayName }
+
+  const progressPct = Math.min((liveCreator.currentEarned / liveCreator.targetIncome) * 100, 100)
 
   const connectLine = async () => {
     if (!lineToken.trim()) return
@@ -370,7 +383,7 @@ export default function StarterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'checkin', lineToken,
-          name: CREATOR.name, weekNo: CREATOR.weekNo,
+          name: displayName, weekNo: liveCreator.weekNo,
         }),
       })
       const json = await res.json()
@@ -397,7 +410,7 @@ export default function StarterPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Flame size={14} style={{ color: '#FF9F1C' }} />
-          <span style={{ fontSize: '13px', fontWeight: 900, color: '#FF9F1C' }}>{CREATOR.streak} วันติด</span>
+          <span style={{ fontSize: '13px', fontWeight: 900, color: '#FF9F1C' }}>{liveCreator.streak} วันติด</span>
         </div>
       </nav>
 
@@ -406,7 +419,7 @@ export default function StarterPage() {
         {/* ── HEADER ──────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <p style={{ margin: '0 0 2px', fontSize: '12px', color: COLORS.textSecondary }}>
-            สัปดาห์ที่ {CREATOR.weekNo} · เดือน 1
+            สัปดาห์ที่ {liveCreator.weekNo} · เดือน 1
           </p>
           <h1 style={{ margin: '0 0 16px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>
             แผนของ{displayName} 🎯
@@ -427,13 +440,13 @@ export default function StarterPage() {
             <div>
               <p style={{ margin: '0 0 2px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>รายได้เดือนนี้</p>
               <p style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#22C55E', lineHeight: 1 }}>
-                ฿{fmt(CREATOR.currentEarned)}
+                ฿{fmt(liveCreator.currentEarned)}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
               <p style={{ margin: '0 0 2px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>เป้าหมาย</p>
               <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
-                ฿{fmt(CREATOR.targetIncome)}
+                ฿{fmt(liveCreator.targetIncome)}
               </p>
             </div>
           </div>
@@ -452,7 +465,7 @@ export default function StarterPage() {
               {Math.round(progressPct)}% ของเป้าหมาย
             </p>
             <p style={{ margin: 0, fontSize: '11px', color: '#22C55E', fontWeight: 700 }}>
-              ยังขาดอีก ฿{fmt(CREATOR.targetIncome - CREATOR.currentEarned)}
+              ยังขาดอีก ฿{fmt(liveCreator.targetIncome - liveCreator.currentEarned)}
             </p>
           </div>
         </motion.div>
@@ -827,11 +840,11 @@ export default function StarterPage() {
           setCoachReply(msg)
           setCheckInOpen(false)
         }}
-        weekNo={CREATOR.weekNo}
-        creatorName={CREATOR.name}
-        niche="food"
-        platform={CREATOR.platform.toLowerCase()}
-        targetIncome={CREATOR.targetIncome}
+        weekNo={liveCreator.weekNo}
+        creatorName={displayName}
+        niche={(audit?.input?.niche ?? 'food') as string}
+        platform={(audit?.input?.platform ?? liveCreator.platform).toLowerCase() as string}
+        targetIncome={liveCreator.targetIncome}
       />
     </div>
   )

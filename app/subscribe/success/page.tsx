@@ -1,14 +1,40 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { getSupabaseClient } from '@/lib/db/supabaseClient'
 
 export default function SubscribeSuccess() {
   const router = useRouter()
+  const [statusText, setStatusText] = useState('กำลังเตรียมแผนของคุณ...')
 
   useEffect(() => {
-    // รอ webhook ประมวลผล แล้ว redirect ไป starter
-    const t = setTimeout(() => router.replace('/starter'), 3000)
+    const run = async () => {
+      try {
+        // Link audit data to user account if available in localStorage
+        const auditRaw = localStorage.getItem('mitaplus_audit')
+        if (auditRaw) {
+          const supabase = getSupabaseClient()
+          const { data: { session } } = await (supabase?.auth.getSession() ?? Promise.resolve({ data: { session: null } }))
+          const userId = session?.user?.id
+
+          if (userId && supabase) {
+            await supabase.from('user_profiles').update({
+              audit_data: JSON.parse(auditRaw),
+            }).eq('id', userId)
+            localStorage.removeItem('mitaplus_audit')
+          }
+        }
+      } catch (e) {
+        console.error('Failed to save audit data:', e)
+      }
+
+      setStatusText('พร้อมแล้ว! กำลังพาไปหน้าแผนของคุณ...')
+      setTimeout(() => router.replace('/starter'), 1500)
+    }
+
+    // Give webhook a moment to process payment first
+    const t = setTimeout(run, 1500)
     return () => clearTimeout(t)
   }, [router])
 
@@ -42,7 +68,7 @@ export default function SubscribeSuccess() {
         style={{ margin: 0, fontSize: '15px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.7 }}
       >
         ชำระเงินสำเร็จค่ะ ✅<br />
-        กำลังพาไปหน้าแผนของคุณ...
+        {statusText}
       </motion.p>
       <motion.div
         initial={{ opacity: 0 }}

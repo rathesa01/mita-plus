@@ -116,7 +116,7 @@ function UpgradeGate({ lockedCount, lockedLossTotal, variant = 'leaks' }: {
 
       {/* Primary CTA → contact form (ไม่ต้องตั้ง LINE OA ก็ใช้ได้) */}
       <a
-        href="/contact?plan=starter"
+        href="/pricing"
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           height: '48px', borderRadius: '14px',
@@ -361,7 +361,10 @@ export default function ResultPage() {
   useEffect(() => {
     const raw = sessionStorage.getItem('mita_result')
     if (!raw) { router.push('/audit'); return }
-    setResult(JSON.parse(raw))
+    const parsed = JSON.parse(raw)
+    setResult(parsed)
+    // Save to localStorage so it survives across pages (for linking to account after payment)
+    localStorage.setItem('mitaplus_audit', raw)
   }, [router])
 
   useEffect(() => {

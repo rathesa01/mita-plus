@@ -34,4 +34,5 @@ export interface UserProfile {
   platform: string | null
   line_id: string | null
   created_at: string
+  audit_data: Record<string, unknown> | null
 }
