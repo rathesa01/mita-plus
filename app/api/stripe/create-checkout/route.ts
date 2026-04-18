@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
 
     const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mitaplus.com'
 
-    const session = await stripe.checkout.sessions.create({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const session = await (stripe.checkout.sessions.create as any)({
       customer: customerId,
       mode: 'subscription',
       automatic_payment_methods: { enabled: true },
