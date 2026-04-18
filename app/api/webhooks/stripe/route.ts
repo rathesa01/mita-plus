@@ -22,18 +22,19 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const obj = event.data.object as any
+
     switch (event.type) {
       // ✅ Payment success → activate plan
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        const uid = session.metadata?.supabase_uid
-        const plan = (session.metadata?.plan ?? 'starter') as 'starter' | 'pro'
-
+        const uid = obj.metadata?.supabase_uid
+        const plan = (obj.metadata?.plan ?? 'starter') as 'starter' | 'pro'
         if (uid) {
           await supabaseAdmin.from('user_profiles').update({
             plan,
             approved_at: new Date().toISOString(),
-            stripe_customer_id: session.customer as string,
+            stripe_customer_id: obj.customer,
           }).eq('id', uid)
           console.log(`✅ Plan activated: ${uid} → ${plan}`)
         }
@@ -42,8 +43,7 @@ export async function POST(req: NextRequest) {
 
       // ✅ Subscription renewed
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice
-        const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
+        const subId = obj.subscription ?? obj.parent?.subscription_details?.subscription
         if (subId) {
           const sub = await stripe.subscriptions.retrieve(subId)
           const uid = sub.metadata?.supabase_uid
@@ -59,8 +59,7 @@ export async function POST(req: NextRequest) {
 
       // ❌ Subscription cancelled → revoke plan
       case 'customer.subscription.deleted': {
-        const sub = event.data.object as Stripe.Subscription
-        const uid = sub.metadata?.supabase_uid
+        const uid = obj.metadata?.supabase_uid
         if (uid) {
           await supabaseAdmin.from('user_profiles').update({
             plan: 'none',
@@ -72,8 +71,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice
-        const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
+        const subId = obj.subscription ?? obj.parent?.subscription_details?.subscription
         console.warn(`⚠️ Payment failed for subscription: ${subId}`)
         break
       }
