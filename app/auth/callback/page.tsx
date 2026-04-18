@@ -8,70 +8,54 @@ export default function AuthCallback() {
   const router = useRouter()
 
   useEffect(() => {
+    const supabase = getSupabaseClient()
+    const params = new URLSearchParams(window.location.search)
+    const next = params.get('next') ?? '/starter'
+
+    if (!supabase) { router.replace(next); return }
+
+    let done = false
+    let sub: { unsubscribe: () => void } | null = null
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    const cleanup = () => {
+      done = true
+      if (timer) clearTimeout(timer)
+      sub?.unsubscribe()
+    }
+
     const handle = async () => {
-      const supabase = getSupabaseClient()
-      const params = new URLSearchParams(window.location.search)
-      const next = params.get('next') ?? '/starter'
+      // ── getSession() awaits initializePromise ──────────────────────────────
+      // Supabase auto-detects hash tokens (#access_token=...) during init.
+      // Calling getSession() AFTER init guarantees we get the session.
+      const { data: { session } } = await supabase.auth.getSession()
 
-      if (!supabase) { router.replace(next); return }
+      if (done) return
 
-      // ── 1. PKCE flow: ?code=xxx ────────────────────────────────────────
-      const code = params.get('code')
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
-          router.replace(next)
-        } else {
-          router.replace('/login')
-        }
+      if (session) {
+        cleanup()
+        router.replace(next)
         return
       }
 
-      // ── 2. Implicit flow: #access_token=...&refresh_token=... ──────────
-      const hash = window.location.hash.substring(1)
-      const hashParams = new URLSearchParams(hash)
-      const access_token = hashParams.get('access_token')
-      const refresh_token = hashParams.get('refresh_token')
+      // ── Fallback: listen for SIGNED_IN (magic link / delayed detection) ───
+      timer = setTimeout(() => {
+        if (!done) { cleanup(); router.replace('/login') }
+      }, 8000)
 
-      if (access_token && refresh_token) {
-        const { error } = await supabase.auth.setSession({ access_token, refresh_token })
-        if (!error) {
-          router.replace(next)
-        } else {
-          router.replace('/login')
-        }
-        return
-      }
-
-      // ── 3. Fallback: magic link หรือ session ที่มีอยู่แล้ว ─────────────
-      // ⚠️ อย่า redirect ไป /login ใน INITIAL_SESSION เพราะหน้านี้คือ callback!
-      // รอ SIGNED_IN แล้วค่อย redirect — ถ้า 6 วินาทียังไม่มี ให้ไป /login
-      let redirected = false
-      const timer = setTimeout(() => {
-        if (!redirected) {
-          redirected = true
-          subscription.unsubscribe()
-          router.replace('/login')
-        }
-      }, 6000)
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session && !redirected) {
-          redirected = true
-          clearTimeout(timer)
-          subscription.unsubscribe()
+      const { data } = supabase.auth.onAuthStateChange((event, sess) => {
+        if (done) return
+        if (sess || event === 'SIGNED_IN') {
+          cleanup()
           router.replace(next)
         }
-        // ❌ ไม่ redirect ไป /login ใน INITIAL_SESSION — ให้รอ timer แทน
+        // ❌ Don't redirect to /login on INITIAL_SESSION
       })
-
-      return () => {
-        clearTimeout(timer)
-        subscription.unsubscribe()
-      }
+      sub = data.subscription
     }
 
     handle()
+    return cleanup
   }, [router])
 
   return (
