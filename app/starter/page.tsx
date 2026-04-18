@@ -356,6 +356,9 @@ export default function StarterPage() {
     )
   }
 
+  // Use real user name from Supabase profile, fallback to mock
+  const displayName = profile?.name ?? profile?.email?.split('@')[0] ?? CREATOR.name
+
   const progressPct = Math.min((CREATOR.currentEarned / CREATOR.targetIncome) * 100, 100)
 
   const connectLine = async () => {
@@ -406,7 +409,7 @@ export default function StarterPage() {
             สัปดาห์ที่ {CREATOR.weekNo} · เดือน 1
           </p>
           <h1 style={{ margin: '0 0 16px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>
-            แผนของ{CREATOR.name} 🎯
+            แผนของ{displayName} 🎯
           </h1>
         </motion.div>
 
