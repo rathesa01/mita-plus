@@ -873,7 +873,7 @@ export default function ResultPage() {
             </div>
           ))}
           <div style={{ marginTop: '16px' }}>
-            <CTAButton label="สมัคร Starter — ฿199/เดือน" variant="primary" href="/contact?plan=starter" />
+            <CTAButton label="สมัคร Starter — ฿199/เดือน" variant="primary" href="/pricing" />
           </div>
           <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '10px' }}>
             ฿199 vs เสีย ฿{fmt(dailyLoss)} ทุกวัน — คุ้มมากค่ะ
@@ -895,7 +895,7 @@ export default function ResultPage() {
             </div>
           ))}
           <div style={{ marginTop: '16px' }}>
-            <CTAButton label="สมัคร Pro — ฿499/เดือน" variant="secondary" href="/contact?plan=pro" />
+            <CTAButton label="สมัคร Pro — ฿499/เดือน" variant="secondary" href="/pricing" />
           </div>
         </div>
 
@@ -933,7 +933,7 @@ export default function ResultPage() {
             className="sm:hidden safe-bottom"
           >
             <div style={{ maxWidth: '420px', margin: '0 auto' }}>
-              <CTAButton label="สมัคร Starter ฿199/เดือน" href="/contact?plan=starter" />
+              <CTAButton label="สมัคร Starter ฿199/เดือน" href="/pricing" />
             </div>
           </motion.div>
         )}
