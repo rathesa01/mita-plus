@@ -347,33 +347,11 @@ export default function StarterPage() {
 
   // ── รอ approve ───────────────────────────────────
   if (authState === 'no_plan') {
+    // Redirect ไป pricing page — standard SaaS flow
+    router.replace('/pricing')
     return (
-      <div style={{ background: COLORS.bg, minHeight: '100vh', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <motion.div
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-          style={{ fontSize: '56px', marginBottom: '20px' }}
-        >
-          ⏳
-        </motion.div>
-        <h2 style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>รอยืนยันการชำระเงินอยู่ค่ะ</h2>
-        <p style={{ margin: '0 0 20px', fontSize: '14px', color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.75 }}>
-          ทีม MITA+ จะเปิด access ให้ภายใน 24 ชั่วโมงค่ะ<br />
-          ถ้าจ่ายแล้วยังไม่ได้รับ กรุณาทักที่ LINE OA ค่ะ
-        </p>
-        <div style={{
-          padding: '14px 20px', width: '100%',
-          background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.2)',
-          borderRadius: '14px', textAlign: 'center',
-        }}>
-          <p style={{ margin: '0 0 4px', fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Login ด้วย</p>
-          <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#7B61FF' }}>
-            {profile?.email ?? '—'}
-          </p>
-        </div>
-        <p style={{ margin: '20px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.2)' }}>
-          ยังไม่ได้สมัคร? <a href="/" style={{ color: '#7B61FF' }}>กลับไปดูแผนค่ะ</a>
-        </p>
+      <div style={{ background: COLORS.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 size={28} style={{ color: '#7B61FF', animation: 'spin 1s linear infinite' }} />
       </div>
     )
   }
