@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const session = await (stripe.checkout.sessions.create as any)({
       customer: customerId,
       mode: 'subscription',
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card', 'promptpay'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
