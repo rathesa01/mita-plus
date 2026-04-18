@@ -16,58 +16,68 @@ export default function AuthCallback() {
     if (!supabase) { router.replace(next); return }
 
     let done = false
-    let sub: { unsubscribe: () => void } | null = null
-    let timer: ReturnType<typeof setTimeout> | null = null
 
-    const cleanup = () => {
+    const go = (path: string) => {
+      if (done) return
       done = true
-      if (timer) clearTimeout(timer)
-      sub?.unsubscribe()
+      router.replace(path)
     }
 
     const handle = async () => {
-      setDebugMsg('กำลังตรวจสอบ session...')
+      // Step 1: parse hash manually
+      const hash = window.location.hash.substring(1)
+      const hp = new URLSearchParams(hash)
+      const at = hp.get('access_token')
+      const rt = hp.get('refresh_token')
+      const hashError = hp.get('error_description') ?? hp.get('error')
 
-      // getSession() awaits initializePromise which includes detectSessionFromUrl()
+      if (hashError) {
+        setDebugMsg(`hash error: ${hashError}`)
+        setTimeout(() => go('/login'), 3000)
+        return
+      }
+
+      setDebugMsg(`hash: AT=${at ? 'YES' : 'NO'} RT=${rt ? 'YES' : 'NO'}`)
+
+      // Step 2: if tokens in hash → setSession directly
+      if (at && rt) {
+        setDebugMsg('กำลัง setSession...')
+        const { data, error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt })
+        if (done) return
+        if (error) {
+          setDebugMsg(`setSession error: ${error.message}`)
+          setTimeout(() => go('/login'), 4000)
+          return
+        }
+        if (data.session) {
+          setDebugMsg(`setSession OK ✅ → ${next}`)
+          setTimeout(() => go(next), 500)
+          return
+        }
+        setDebugMsg('setSession: session null??')
+        setTimeout(() => go('/login'), 3000)
+        return
+      }
+
+      // Step 3: no hash tokens → try getSession (handles PKCE code in ?code=)
+      setDebugMsg('ไม่มี hash tokens → getSession...')
       const { data: { session }, error } = await supabase.auth.getSession()
-
       if (done) return
-
       if (error) {
         setDebugMsg(`getSession error: ${error.message}`)
-        setTimeout(() => { cleanup(); router.replace('/login') }, 3000)
+        setTimeout(() => go('/login'), 3000)
         return
       }
-
       if (session) {
-        setDebugMsg(`มี session แล้ว! → ไป ${next}`)
-        setTimeout(() => { cleanup(); router.replace(next) }, 500)
+        setDebugMsg(`getSession OK ✅ → ${next}`)
+        setTimeout(() => go(next), 500)
         return
       }
-
-      // No session yet — wait for SIGNED_IN via onAuthStateChange
-      setDebugMsg('รอ SIGNED_IN event...')
-
-      timer = setTimeout(() => {
-        if (!done) {
-          setDebugMsg('timeout 8s — ไม่พบ session → ไป /login')
-          setTimeout(() => { cleanup(); router.replace('/login') }, 2000)
-        }
-      }, 8000)
-
-      const { data } = supabase.auth.onAuthStateChange((event, sess) => {
-        if (done) return
-        setDebugMsg(`event: ${event} | session: ${sess ? 'YES' : 'NO'}`)
-        if (sess || event === 'SIGNED_IN') {
-          cleanup()
-          router.replace(next)
-        }
-      })
-      sub = data.subscription
+      setDebugMsg('ไม่มี session เลย → /login')
+      setTimeout(() => go('/login'), 2000)
     }
 
     handle()
-    return cleanup
   }, [router])
 
   return (
