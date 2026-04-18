@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      payment_method_types: ['card', 'promptpay'],
+      automatic_payment_methods: { enabled: true },
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
           plan: plan ?? 'starter',
         },
       },
-      locale: 'th',
     })
 
     return NextResponse.json({ url: session.url })
