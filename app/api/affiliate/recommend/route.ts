@@ -38,15 +38,28 @@ export async function POST(req: NextRequest) {
     if (!anthropicKey) throw new Error('ANTHROPIC_API_KEY not set')
     if (!supabaseUrl || !serviceKey) throw new Error('Supabase env missing')
 
-    const { userId } = await req.json()
+    const { userId, force } = await req.json()
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
     const supabase = createClient(supabaseUrl, serviceKey)
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('audit_data, channel_data, monetization_plan')
+      .select('audit_data, channel_data, monetization_plan, affiliate_products')
       .eq('id', userId)
       .single()
+
+    // ── Rate limit: 1 refresh per day (Thai timezone UTC+7) ──
+    const lastGen = (profile?.affiliate_products as any)?.generated_at as string | undefined
+    if (lastGen) {
+      const offset = 7 * 60 * 60 * 1000
+      const lastDay = new Date(new Date(lastGen).getTime() + offset).toISOString().slice(0, 10)
+      const today   = new Date(Date.now() + offset).toISOString().slice(0, 10)
+      if (lastDay === today) {
+        if (force) return NextResponse.json({ rateLimited: true, message: 'รีเฟรชได้วันละ 1 ครั้งค่ะ มาใหม่พรุ่งนี้' })
+        // ไม่ force → return cached
+        return NextResponse.json({ success: true, data: profile!.affiliate_products, cached: true })
+      }
+    }
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 

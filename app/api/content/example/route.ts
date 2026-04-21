@@ -118,8 +118,21 @@ export async function POST(req: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    // ── Cache check: ถ้าสร้างไปแล้วไม่เกิน 7 วัน → return cached (ยกเว้นกด force refresh) ──
+    // ── Cache check ──
     const cached = profile.content_example as ContentExample | null
+
+    // Rate limit: force refresh จำกัด 1 ครั้ง/วัน (Thai timezone UTC+7)
+    if (force && cached?.generated_at) {
+      const offset = 7 * 60 * 60 * 1000
+      const lastDay = new Date(new Date(cached.generated_at).getTime() + offset).toISOString().slice(0, 10)
+      const today   = new Date(Date.now() + offset).toISOString().slice(0, 10)
+      if (lastDay === today) {
+        console.log('[content/example] rate limited — already refreshed today')
+        return NextResponse.json({ rateLimited: true, message: 'รีเฟรชได้วันละ 1 ครั้งค่ะ มาใหม่พรุ่งนี้' })
+      }
+    }
+
+    // ถ้าไม่ force และ cache ยังไม่เกิน 7 วัน → return cached
     if (!force && cached?.generated_at) {
       const age = Date.now() - new Date(cached.generated_at).getTime()
       const sevenDays = 7 * 24 * 60 * 60 * 1000

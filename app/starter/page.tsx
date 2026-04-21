@@ -9,6 +9,14 @@ import { getSupabaseClient, type UserProfile } from '@/lib/db/supabaseClient'
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
+function isToday(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false
+  const offset = 7 * 60 * 60 * 1000 // UTC+7 Thai timezone
+  const d = new Date(new Date(dateStr).getTime() + offset)
+  const n = new Date(Date.now() + offset)
+  return d.toISOString().slice(0, 10) === n.toISOString().slice(0, 10)
+}
+
 // ── Mock fallbacks (used only when no real data) ─────────
 const MOCK_CREATOR = {
   name: 'คุณ',
@@ -262,6 +270,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
+  const [refreshedToday, setRefreshedToday] = useState(() => isToday(affiliateData?.generated_at))
 
   function timeAgo(date: Date): string {
     const diff = Math.floor((Date.now() - date.getTime()) / 1000)
@@ -271,20 +280,20 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
   }
 
   const generate = async () => {
-    if (!userId) return
+    if (!userId || refreshedToday) return
     setGenerating(true)
     setGenError(null)
     try {
       const res = await fetch('/api/affiliate/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, force: true }),
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? `API error ${res.status}`)
-      }
+      const json = await res.json().catch(() => ({}))
+      if (json.rateLimited) { setRefreshedToday(true); return }
+      if (!res.ok) throw new Error(json.error ?? `API error ${res.status}`)
       setLastRefreshed(new Date())
+      setRefreshedToday(true)
       await onRefresh()
     } catch (err) {
       setGenError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด ลองใหม่อีกครั้งค่ะ')
@@ -367,25 +376,31 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-          {lastRefreshed && (
+          {lastRefreshed && !refreshedToday && (
             <p style={{ margin: 0, fontSize: '9px', color: 'rgba(34,197,94,0.7)', fontWeight: 600 }}>
               ✨ อัปเดต{timeAgo(lastRefreshed)}
             </p>
           )}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={generate}
-            disabled={generating}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '5px',
-              padding: '7px 12px', background: generating ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${generating ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '10px',
-              color: generating ? '#22C55E' : 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
-            }}
-          >
-            <RefreshCw size={11} style={{ animation: generating ? 'spin 1s linear infinite' : 'none' }} />
-            {generating ? 'กำลังอัปเดต...' : 'รีเฟรช'}
-          </motion.button>
+          {refreshedToday ? (
+            <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.3)', textAlign: 'right', lineHeight: 1.4 }}>
+              🔒 รีเฟรชแล้ววันนี้<br/>มาใหม่พรุ่งนี้ค่ะ
+            </p>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={generate}
+              disabled={generating}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                padding: '7px 12px', background: generating ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${generating ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '10px',
+                color: generating ? '#22C55E' : 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+              }}
+            >
+              <RefreshCw size={11} style={{ animation: generating ? 'spin 1s linear infinite' : 'none' }} />
+              {generating ? 'กำลังอัปเดต...' : 'รีเฟรช'}
+            </motion.button>
+          )}
         </div>
       </div>
 
@@ -655,6 +670,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
+  const [refreshedToday, setRefreshedToday] = useState(() => isToday(cachedData?.generated_at))
 
   function timeAgo(date: Date): string {
     const diff = Math.floor((Date.now() - date.getTime()) / 1000)
@@ -665,6 +681,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
 
   const generate = async (force = false) => {
     if (!userId) return
+    if (force && refreshedToday) return
     setLoading(true)
     setError(null)
     try {
@@ -674,9 +691,10 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
         body: JSON.stringify({ userId, force }),
       })
       const json = await res.json()
+      if (json.rateLimited) { setRefreshedToday(true); setLoading(false); return }
       if (!res.ok) throw new Error(json.error ?? 'เกิดข้อผิดพลาด')
       setData(json)
-      if (force) setLastRefreshed(new Date())
+      if (force) { setLastRefreshed(new Date()); setRefreshedToday(true) }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'เกิดข้อผิดพลาด')
     } finally {
@@ -763,22 +781,28 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-          {lastRefreshed && (
+          {lastRefreshed && !refreshedToday && (
             <p style={{ margin: 0, fontSize: '9px', color: 'rgba(62,207,255,0.8)', fontWeight: 600 }}>
               ✨ อัปเดต{timeAgo(lastRefreshed)}
             </p>
           )}
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => generate(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '4px',
-              padding: '6px 12px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer',
-              background: loading ? 'rgba(62,207,255,0.1)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${loading ? 'rgba(62,207,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
-              color: loading ? '#3ECFFF' : 'rgba(255,255,255,0.5)',
-            }}>
-            <RefreshCw size={11} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
-            {loading ? 'กำลังอัปเดต...' : 'รีเฟรช'}
-          </motion.button>
+          {refreshedToday ? (
+            <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.3)', textAlign: 'right', lineHeight: 1.4 }}>
+              🔒 รีเฟรชแล้ววันนี้<br/>มาใหม่พรุ่งนี้ค่ะ
+            </p>
+          ) : (
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => generate(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '6px 12px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer',
+                background: loading ? 'rgba(62,207,255,0.1)' : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${loading ? 'rgba(62,207,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                color: loading ? '#3ECFFF' : 'rgba(255,255,255,0.5)',
+              }}>
+              <RefreshCw size={11} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+              {loading ? 'กำลังอัปเดต...' : 'รีเฟรช'}
+            </motion.button>
+          )}
         </div>
       </div>
 
