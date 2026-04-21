@@ -1513,7 +1513,7 @@ export default function StarterPage() {
               {/* Blurred preview cards */}
               <div style={{ position: 'relative', marginBottom: '16px' }}>
                 {[1,2,3].map(i => (
-                  <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '14px', marginBottom: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', filter: 'blur(3px)', userSelect: 'none' }}>
+                  <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '14px', marginBottom: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', filter: 'blur(3px)', userSelect: 'none', pointerEvents: 'none' }}>
                     <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(34,197,94,0.2)', flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ height: '12px', width: '70%', background: 'rgba(255,255,255,0.15)', borderRadius: '4px', marginBottom: '6px' }} />
@@ -1523,13 +1523,13 @@ export default function StarterPage() {
                   </div>
                 ))}
                 {/* Overlay lock */}
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '14px', background: 'linear-gradient(to bottom, transparent 0%, rgba(11,11,15,0.85) 50%)' }}>
-                  <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
+                <div style={{ position: 'absolute', inset: 0, zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '14px', background: 'linear-gradient(to bottom, transparent 0%, rgba(11,11,15,0.85) 50%)' }}>
+                  <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)', position: 'relative', zIndex: 3 }}>
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🛍️</div>
                     <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>สินค้า AI คัด 5 ชิ้น</p>
                     <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>Creator แนวนี้ทำ ฿2,400–฿8,000/เดือน</p>
                     <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>ทำ Audit เพื่อให้ AI เลือกสินค้า<br/>ที่ตรงกับช่องของคุณจริงๆ</p>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #22C55E, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #22C55E, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 4 }}>
                       ทำ Audit เพื่อ unlock →
                     </motion.button>
                   </div>
@@ -1553,7 +1553,7 @@ export default function StarterPage() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div style={{ position: 'relative', marginBottom: '16px' }}>
                 {/* Blurred script preview */}
-                <div style={{ padding: '16px', background: 'rgba(62,207,255,0.07)', border: '1px solid rgba(62,207,255,0.15)', borderRadius: '14px', filter: 'blur(3px)', userSelect: 'none' }}>
+                <div style={{ padding: '16px', background: 'rgba(62,207,255,0.07)', border: '1px solid rgba(62,207,255,0.15)', borderRadius: '14px', filter: 'blur(3px)', userSelect: 'none', pointerEvents: 'none' }}>
                   <div style={{ height: '11px', width: '40%', background: 'rgba(255,159,28,0.3)', borderRadius: '4px', marginBottom: '10px' }} />
                   <div style={{ height: '14px', width: '90%', background: 'rgba(255,255,255,0.12)', borderRadius: '4px', marginBottom: '6px' }} />
                   <div style={{ height: '14px', width: '75%', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', marginBottom: '14px' }} />
@@ -1561,13 +1561,13 @@ export default function StarterPage() {
                   {[85, 70, 90].map((w, i) => <div key={i} style={{ height: '11px', width: `${w}%`, background: 'rgba(255,255,255,0.06)', borderRadius: '4px', marginBottom: '5px' }} />)}
                 </div>
                 {/* Overlay lock */}
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom, transparent 0%, rgba(11,11,15,0.88) 45%)' }}>
-                  <div style={{ background: 'rgba(62,207,255,0.10)', border: '1px solid rgba(62,207,255,0.25)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
+                <div style={{ position: 'absolute', inset: 0, zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom, transparent 0%, rgba(11,11,15,0.88) 45%)' }}>
+                  <div style={{ background: 'rgba(62,207,255,0.10)', border: '1px solid rgba(62,207,255,0.25)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)', position: 'relative', zIndex: 3 }}>
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎬</div>
                     <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>Script คลิปส่วนตัว</p>
                     <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#3ECFFF', fontWeight: 700 }}>Hook + เนื้อหา + CTA ที่ตรงช่องคุณ</p>
                     <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>AI จะเขียน script จากคลิป viral<br/>ในแนวช่องของคุณโดยเฉพาะ</p>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #3ECFFF, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #3ECFFF, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 4 }}>
                       ทำ Audit เพื่อ unlock →
                     </motion.button>
                   </div>
