@@ -9,6 +9,35 @@ import { getSupabaseClient, type UserProfile } from '@/lib/db/supabaseClient'
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
+function categoryEmoji(category: string): string {
+  const map: Record<string, string> = {
+    beauty: '💄', skincare: '🌿', health: '💊', fitness: '💪',
+    food: '🍳', kitchen: '🍽️', electronics: '📱', tech: '📷',
+    fashion: '👗', home: '🏠', pets: '🐾', lifestyle: '✨',
+    travel: '✈️', education: '📚', sports: '⚽',
+  }
+  const key = (category ?? '').toLowerCase()
+  const match = Object.keys(map).find(k => key.includes(k))
+  return match ? map[match] : '🛍️'
+}
+
+function ProductImage({ imageUrl, category, name }: { imageUrl: string; category: string; name: string }) {
+  const [failed, setFailed] = useState(false)
+  return (
+    <div style={{
+      width: '52px', height: '52px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
+      background: 'linear-gradient(135deg, rgba(123,97,255,0.15), rgba(34,197,94,0.08))',
+      border: '1px solid rgba(255,255,255,0.08)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {imageUrl && !failed
+        ? <img src={imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setFailed(true)} />
+        : <span style={{ fontSize: '26px' }}>{categoryEmoji(category)}</span>
+      }
+    </div>
+  )
+}
+
 function isToday(dateStr: string | null | undefined): boolean {
   if (!dateStr) return false
   const offset = 7 * 60 * 60 * 1000 // UTC+7 Thai timezone
@@ -429,16 +458,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
             {/* Rank badge + product image */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{
-                width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden',
-                background: 'rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {p.image_url
-                  ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                  : <span style={{ fontSize: '22px' }}>🛍️</span>
-                }
-              </div>
+              <ProductImage imageUrl={p.image_url} category={p.category ?? ''} name={p.name} />
               <span style={{
                 position: 'absolute', top: -5, left: -5,
                 width: '18px', height: '18px', borderRadius: '99px',
