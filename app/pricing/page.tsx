@@ -32,7 +32,7 @@ const TIERS = [
       'Monetization Score 0–100',
       'Revenue Blocker ที่ใหญ่ที่สุด 1 ตัว',
       '1 วิธีแก้ที่เริ่มได้เลยวันนี้',
-      'Affiliate ที่เหมาะกับ niche ของคุณ',
+      'Affiliate ที่เหมาะกับแนวช่องของคุณ',
       'Revenue Gap โดยประมาณ',
     ],
     locked: ['Revenue Blocker ทั้งหมด', 'แผน 90 วัน'],
@@ -55,12 +55,13 @@ const TIERS = [
     popular: false,
     features: [
       'ทุกอย่างใน Free +',
-      'Revenue Blocker ทั้งหมด (2–5 ตัว)',
-      'วิธีแก้ทุกจุด พร้อม action ชัดเจน',
-      'แผน 90 วัน แบบเต็ม',
-      'Revenue Breakdown ทุกช่องทาง',
-      'รายงานรายเดือน (ส่งทาง LINE)',
-      'Milestone unlock ตาม progress',
+      '🔗 เชื่อมช่อง TikTok / YouTube / IG / FB / X / Lemon8',
+      '🤖 AI วิเคราะห์ช่องจริง — demographics, peak hours',
+      '💰 แผนหาเงินส่วนตัว สร้างจากข้อมูลช่องจริง',
+      '📅 Roadmap รายสัปดาห์ เดือนแรก',
+      '🛍 สินค้า Affiliate คัดตามแนวช่อง พร้อม link',
+      '💬 Weekly Coach 4 ครั้ง/เดือน',
+      '🏆 Progress tracker + milestones',
     ],
     locked: [],
   },
@@ -82,12 +83,12 @@ const TIERS = [
     popular: true,
     features: [
       'ทุกอย่างใน Starter +',
-      'แผน 30 วัน ปรับใหม่ทุกเดือน',
-      'Priority LINE Support ตลอดเดือน',
-      'Strategy Call 1 ครั้ง/เดือน',
-      'Template Funnel + Script ปิดการขาย',
-      'ติดตาม Revenue Gap รายสัปดาห์',
-      'รับก่อนเมื่อ feature ใหม่ออก',
+      '🔄 แผนหาเงิน ปรับใหม่ทุกเดือนตามผลจริง',
+      '📞 Strategy Call 1 ครั้ง/เดือน กับทีม MITA+',
+      '💬 Priority LINE Support ตลอดเดือน',
+      '📝 Template Script + Funnel ปิดการขาย',
+      '📊 ติดตาม Revenue Gap รายสัปดาห์',
+      '⚡ รับ feature ใหม่ก่อนใคร',
     ],
     locked: [],
   },
@@ -351,23 +352,25 @@ export default function PricingPage() {
               <span style={{ fontSize: '12px', color: '#FF9F1C', fontWeight: 700, textAlign: 'center' }}>Pro</span>
             </div>
             {[
-              { label: 'Monetization Score',            free: true,  starter: true,  pro: true  },
-              { label: 'Revenue Blocker ที่ 1',         free: true,  starter: true,  pro: true  },
-              { label: 'Revenue Blocker ทั้งหมด (2–5)', free: false, starter: true,  pro: true  },
-              { label: 'วิธีแก้แบบเต็ม',               free: false, starter: true,  pro: true  },
-              { label: 'แผน 90 วัน',                    free: false, starter: true,  pro: true  },
-              { label: 'Revenue Breakdown ทุกช่องทาง',  free: false, starter: true,  pro: true  },
-              { label: 'รายงานรายเดือน (LINE)',         free: false, starter: true,  pro: true  },
-              { label: 'แผน 30 วัน ปรับใหม่ทุกเดือน',  free: false, starter: false, pro: true  },
-              { label: 'Priority LINE Support',         free: false, starter: false, pro: true  },
-              { label: 'Strategy Call 1 ครั้ง/เดือน',  free: false, starter: false, pro: true  },
-              { label: 'Template Funnel + Script',      free: false, starter: false, pro: true  },
+              { label: 'Monetization Score 0–100',           free: true,  starter: true,  pro: true  },
+              { label: 'Revenue Blocker ที่ 1',              free: true,  starter: true,  pro: true  },
+              { label: 'Revenue Blocker ทั้งหมด',            free: false, starter: true,  pro: true  },
+              { label: 'เชื่อมช่อง 6 platforms (AI วิเคราะห์)', free: false, starter: true,  pro: true  },
+              { label: 'แผนหาเงินส่วนตัว (จากข้อมูลจริง)',  free: false, starter: true,  pro: true  },
+              { label: 'Roadmap รายสัปดาห์',                 free: false, starter: true,  pro: true  },
+              { label: 'สินค้า Affiliate พร้อม link',        free: false, starter: true,  pro: true  },
+              { label: 'Weekly Coach 4 ครั้ง/เดือน',         free: false, starter: true,  pro: true  },
+              { label: 'Progress tracker + milestones',      free: false, starter: true,  pro: true  },
+              { label: 'แผนหาเงิน ปรับใหม่ทุกเดือน',        free: false, starter: false, pro: true  },
+              { label: 'Strategy Call 1 ครั้ง/เดือน',        free: false, starter: false, pro: true  },
+              { label: 'Priority LINE Support',              free: false, starter: false, pro: true  },
+              { label: 'Template Script + Funnel',           free: false, starter: false, pro: true  },
             ].map((row, i) => (
               <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px', padding: '13px 20px', borderBottom: i < 10 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
                 <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.60)' }}>{row.label}</span>
-                <span style={{ textAlign: 'center', fontSize: '15px' }}>{row.free ? '✓' : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}</span>
-                <span style={{ textAlign: 'center', fontSize: '15px', color: row.starter ? '#a78bfa' : undefined }}>{row.starter ? '✓' : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}</span>
-                <span style={{ textAlign: 'center', fontSize: '15px', color: row.pro ? '#FF9F1C' : undefined }}>{row.pro ? '✓' : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}</span>
+                <span style={{ textAlign: 'center', fontSize: '15px' }}>{row.free ? <span style={{ color: '#9CA3AF' }}>✓</span> : <span style={{ color: 'rgba(255,255,255,0.12)' }}>—</span>}</span>
+                <span style={{ textAlign: 'center', fontSize: '15px' }}>{row.starter ? <span style={{ color: '#a78bfa' }}>✓</span> : <span style={{ color: 'rgba(255,255,255,0.12)' }}>—</span>}</span>
+                <span style={{ textAlign: 'center', fontSize: '15px' }}>{row.pro ? <span style={{ color: '#FF9F1C' }}>✓</span> : <span style={{ color: 'rgba(255,255,255,0.12)' }}>—</span>}</span>
               </div>
             ))}
           </div>

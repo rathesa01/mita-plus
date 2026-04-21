@@ -41,9 +41,9 @@ function AnalyzingScreen({ name, done }: { name: string; done: boolean }) {
   }, [done])
 
   const displayText = done
-    ? '✅ วิเคราะห์เสร็จแล้ว!'
+    ? '✅ แผนของคุณพร้อมแล้วค่ะ!'
     : longWait
-    ? 'MITA+ กำลังวิเคราะห์คุณอยู่...'
+    ? 'MITA+ กำลังสร้างแผนให้คุณอยู่...'
     : LOADING_STEPS[stepIdx]?.text
 
   return (
@@ -67,12 +67,12 @@ function AnalyzingScreen({ name, done }: { name: string; done: boolean }) {
         </div>
 
         <h2 className="text-xl font-black mb-1.5">
-          {done ? 'ผลวิเคราะห์พร้อมแล้ว!' : `กำลังวิเคราะห์ ${name}`}
+          {done ? 'แผนของคุณพร้อมแล้ว!' : `กำลังสร้างแผนให้ ${name}`}
         </h2>
         <p className="text-white/35 text-sm mb-10">
           {done
-            ? 'กำลังพาคุณไปดูผลค่ะ...'
-            : 'MITA+ กำลังประเมิน Score และ Revenue Gap ของคุณ'}
+            ? 'กำลังพาคุณไปดูแผนค่ะ...'
+            : 'MITA+ กำลังวิเคราะห์ช่องและสร้างแผนเฉพาะตัวให้คุณ'}
         </p>
 
         {/* Progress bar */}
@@ -335,7 +335,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   )
 }
 
-const STEP_LABELS = ['Profile', 'Performance', 'Monetization', 'Goals']
+const STEP_LABELS = ['ตัวคุณ', 'ช่องของคุณ', 'รายได้', 'เป้าหมาย']
 
 export default function AuditPage() {
   const router = useRouter()
@@ -449,8 +449,8 @@ export default function AuditPage() {
             {/* ── STEP 1: PROFILE ── */}
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">เริ่มต้นที่ตัวคุณ</h1>
-                <p className="text-white/38 text-sm mb-8">บอกเราว่าคุณเป็น Creator แบบไหน</p>
+                <h1 className="text-2xl font-black mb-1">ตั้งค่าช่องของคุณ</h1>
+                <p className="text-white/38 text-sm mb-8">บอกเราแค่นี้ — AI จะสร้างแผนเฉพาะคุณค่ะ</p>
 
                 <div className="space-y-5">
                   <div>
@@ -489,7 +489,7 @@ export default function AuditPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">Niche / หมวดหมู่</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">แนวช่อง / ประเภทคอนเทนต์</label>
                     <div className="grid grid-cols-2 gap-2">
                       {NICHES.map((n) => (
                         <Chip

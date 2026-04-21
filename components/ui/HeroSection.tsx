@@ -47,7 +47,7 @@ export function HeroSection() {
           </p>
 
           {/* CTA */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+          <div className="flex flex-col items-center lg:items-start gap-3 w-full lg:w-auto">
             <Link href="/audit" className="w-full sm:w-auto">
               <button
                 className="w-full sm:w-auto h-12 px-6 rounded-full text-base font-bold transition-all hover:scale-105 hover:brightness-110 active:scale-95"
@@ -57,13 +57,18 @@ export function HeroSection() {
                   boxShadow: '0 0 32px rgba(123,97,255,0.4)',
                 }}
               >
-                เช็กตัวเลขของฉัน →
+                เริ่มต้นฟรี — วิเคราะห์ช่องของฉัน →
               </button>
             </Link>
-            <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ boxShadow: '0 0 6px #22c55e' }} />
-              ฟรี 100% · ไม่ต้องสมัคร
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ boxShadow: '0 0 6px #22c55e' }} />
+                ฟรี 100% · ไม่ต้องสมัคร
+              </p>
+              <Link href="/login" className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                มีบัญชีแล้ว? <span style={{ color: '#7B61FF', textDecoration: 'underline' }}>เข้าสู่ระบบ</span>
+              </Link>
+            </div>
           </div>
 
           {/* Stats — desktop only */}

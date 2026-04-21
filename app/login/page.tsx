@@ -2,329 +2,259 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Loader2, ArrowLeft } from 'lucide-react'
-import { COLORS } from '@/lib/tokens'
+import { ArrowRight, Mail, CheckCircle2, Loader2 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/db/supabaseClient'
-
-type Step = 'choose' | 'email' | 'sent'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [redirectTo, setRedirectTo] = useState('/starter')
-  const [step, setStep] = useState<Step>('choose')
+  const supabase = getSupabaseClient()
+
+  const [mode, setMode] = useState<'choose' | 'magic' | 'sent'>('choose')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
+  // ── ถ้า login อยู่แล้ว redirect ─────────────────
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const r = params.get('redirect')
-    if (r) setRedirectTo(r)
+    if (!supabase) return
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) redirectAfterLogin(data.session.user.id)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    const supabase = getSupabaseClient()
-    if (!supabase) return
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        await supabase.from('user_profiles').upsert(
-          {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.user_metadata?.full_name ?? session.user.user_metadata?.name ?? session.user.email?.split('@')[0],
-            plan: 'none',
-          } as never,
-          { onConflict: 'id', ignoreDuplicates: true }
-        )
-        router.replace(redirectTo)
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [router, redirectTo])
-
-  const signInWithGoogle = async () => {
-    const supabase = getSupabaseClient()
-    if (!supabase) return
-    setGoogleLoading(true)
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
-      },
-    })
+  const redirectAfterLogin = async (userId: string) => {
+    if (!supabase) { router.replace('/starter'); return }
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('plan')
+      .eq('id', userId)
+      .single()
+    if (data?.plan === 'starter' || data?.plan === 'pro') {
+      router.replace('/starter')
+    } else {
+      router.replace('/pricing')
+    }
   }
 
-  const sendMagicLink = async () => {
-    if (!email.trim()) return
+  // ── Google OAuth ──────────────────────────────
+  const loginWithGoogle = async () => {
+    if (!supabase) return
     setLoading(true)
-    setError('')
-    const supabase = getSupabaseClient()
-    if (!supabase) {
-      setError('ระบบยังไม่พร้อมค่ะ กรุณาลองใหม่อีกครั้ง')
-      setLoading(false)
-      return
-    }
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
+    setError(null)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
       options: {
-        emailRedirectTo: `${window.location.origin}${redirectTo}`,
-        shouldCreateUser: true,
+        redirectTo: `${window.location.origin}/api/auth/callback`,
       },
     })
-    setLoading(false)
-    if (err) {
-      setError('ส่งลิงก์ไม่ได้ค่ะ กรุณาลองใหม่')
+    if (error) { setError(error.message); setLoading(false) }
+  }
+
+  // ── Magic Link ────────────────────────────────
+  const sendMagicLink = async () => {
+    if (!supabase || !email.trim()) return
+    setLoading(true)
+    setError(null)
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+      },
+    })
+    if (error) {
+      setError(error.message)
+      setLoading(false)
     } else {
-      setStep('sent')
+      setMode('sent')
+      setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      background: COLORS.bg, minHeight: '100vh',
-      maxWidth: '480px', margin: '0 auto',
-      display: 'flex', flexDirection: 'column',
-      justifyContent: 'center', padding: '24px 20px',
+    <main style={{
+      minHeight: '100vh', background: '#0B0B0F',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px',
     }}>
-      {/* Logo */}
       <motion.div
-        initial={{ opacity: 0, y: -16 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        style={{ textAlign: 'center', marginBottom: '40px' }}
+        style={{ width: '100%', maxWidth: '400px' }}
       >
-        <span style={{
-          fontSize: '40px', fontWeight: 900,
-          background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        }}>
-          MITA+
-        </span>
-        <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>
-          เข้าสู่ระบบเพื่อดูแผนของคุณค่ะ
-        </p>
-      </motion.div>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <a href="/" style={{ textDecoration: 'none' }}>
+            <span style={{
+              fontSize: '24px', fontWeight: 900,
+              background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            }}>MITA+</span>
+          </a>
+          <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
+            เข้าสู่ระบบเพื่อดู dashboard ของคุณ
+          </p>
+        </div>
 
-      <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait">
 
-        {/* Step: เลือกวิธี login */}
-        {step === 'choose' && (
-          <motion.div
-            key="choose"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-          >
-            <div style={{
-              padding: '28px 24px',
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '20px',
-            }}>
-              <p style={{ margin: '0 0 20px', fontSize: '16px', fontWeight: 900, color: '#fff', textAlign: 'center' }}>
-                เลือกวิธีเข้าสู่ระบบค่ะ
+          {/* ── SENT ─────────────────────────── */}
+          {mode === 'sent' && (
+            <motion.div
+              key="sent"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{
+                padding: '32px 24px', borderRadius: '20px', textAlign: 'center',
+                background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)',
+              }}
+            >
+              <CheckCircle2 size={40} style={{ color: '#22C55E', margin: '0 auto 16px' }} />
+              <p style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 800, color: '#fff' }}>
+                ส่ง Link ไปแล้วค่ะ!
               </p>
+              <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
+                เช็กอีเมล <strong style={{ color: '#fff' }}>{email}</strong><br />
+                กด Link ในเมลเพื่อเข้าสู่ระบบได้เลยค่ะ
+              </p>
+              <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>
+                ไม่เจอ? เช็ก Spam หรือ{' '}
+                <button
+                  onClick={() => setMode('magic')}
+                  style={{ background: 'none', border: 'none', color: '#7B61FF', cursor: 'pointer', fontSize: '11px', padding: 0, textDecoration: 'underline' }}
+                >
+                  ส่งใหม่
+                </button>
+              </p>
+            </motion.div>
+          )}
 
+          {/* ── CHOOSE / MAGIC ───────────────── */}
+          {mode !== 'sent' && (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{
+                padding: '28px 24px', borderRadius: '20px',
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
               {/* Google */}
               <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={signInWithGoogle}
-                disabled={googleLoading}
+                whileTap={{ scale: 0.98 }}
+                onClick={loginWithGoogle}
+                disabled={loading}
                 style={{
-                  width: '100%', padding: '14px 16px', marginBottom: '12px',
-                  background: '#fff', color: '#1a1a1a',
-                  border: 'none', borderRadius: '14px',
-                  fontSize: '15px', fontWeight: 700,
-                  cursor: 'pointer',
+                  width: '100%', padding: '14px', marginBottom: '12px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                  background: '#fff', border: 'none', borderRadius: '12px',
+                  cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
                 }}
               >
-                {googleLoading ? (
-                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 48 48">
-                    <path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.4 5.6-5 7.3v6h8.1c4.8-4.4 7.2-10.9 7.2-17.4z"/>
-                    <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-8.1-6c-2.1 1.4-4.8 2.2-7.8 2.2-6 0-11.1-4-12.9-9.5H2.8v6.2C6.8 42.8 14.9 48 24 48z"/>
-                    <path fill="#FBBC05" d="M11.1 28.9c-.5-1.4-.7-2.9-.7-4.4s.3-3 .7-4.4v-6.2H2.8C1 17.5 0 20.6 0 24s1 6.5 2.8 9.1l8.3-4.2z"/>
-                    <path fill="#EA4335" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.5-6.5C35.9 2.4 30.4 0 24 0 14.9 0 6.8 5.2 2.8 12.9l8.3 6.2c1.8-5.5 6.9-9.6 12.9-9.6z"/>
-                  </svg>
-                )}
-                เข้าสู่ระบบด้วย Google
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                  <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                  <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                  <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+                  <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+                </svg>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#111' }}>
+                  เข้าสู่ระบบด้วย Google
+                </span>
               </motion.button>
 
               {/* Divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '16px 0' }}>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>หรือ</p>
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>หรือ</span>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
               </div>
 
-              {/* Email magic link */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setStep('email')}
-                style={{
-                  width: '100%', padding: '14px 16px',
-                  background: 'rgba(123,97,255,0.12)',
-                  border: '1.5px solid rgba(123,97,255,0.3)',
-                  borderRadius: '14px',
-                  fontSize: '15px', fontWeight: 700, color: '#a78bfa',
-                  cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                }}
-              >
-                <Mail size={18} />
-                เข้าสู่ระบบด้วย Email
-              </motion.button>
-
-              <p style={{ margin: '16px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.2)', textAlign: 'center' }}>
-                ไม่ต้องจำรหัสผ่านค่ะ ✨
-              </p>
-            </div>
-
-            <button
-              onClick={() => router.back()}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.25)', fontSize: '13px',
-                display: 'flex', alignItems: 'center', gap: '6px',
-                margin: '16px auto 0', padding: '8px',
-              }}
-            >
-              <ArrowLeft size={14} /> กลับ
-            </button>
-          </motion.div>
-        )}
-
-        {/* Step: กรอก email */}
-        {step === 'email' && (
-          <motion.div
-            key="email"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-          >
-            <div style={{
-              padding: '28px 24px',
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '20px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                <div style={{
-                  width: '44px', height: '44px', borderRadius: '14px',
-                  background: 'rgba(123,97,255,0.12)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Mail size={20} style={{ color: '#7B61FF' }} />
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: '16px', fontWeight: 900, color: '#fff' }}>Magic Link</p>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>ไม่ต้องจำรหัสผ่านค่ะ</p>
-                </div>
-              </div>
-
-              <p style={{ margin: '0 0 10px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
-                อีเมลของคุณ
-              </p>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && sendMagicLink()}
-                placeholder="you@email.com"
-                autoFocus
-                style={{
-                  width: '100%', padding: '14px 16px', marginBottom: '16px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: email ? '1.5px solid #7B61FF' : '1.5px solid rgba(255,255,255,0.1)',
-                  borderRadius: '14px', fontSize: '16px', color: '#fff',
-                  outline: 'none', boxSizing: 'border-box',
-                }}
-              />
+              {/* Magic Link */}
+              <AnimatePresence mode="wait">
+                {mode === 'choose' ? (
+                  <motion.button
+                    key="magic-btn"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setMode('magic')}
+                    style={{
+                      width: '100%', padding: '14px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px', cursor: 'pointer',
+                    }}
+                  >
+                    <Mail size={16} style={{ color: 'rgba(255,255,255,0.5)' }} />
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>
+                      เข้าด้วย Email (Magic Link)
+                    </span>
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="magic-form"
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  >
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && sendMagicLink()}
+                      placeholder="อีเมลของคุณ"
+                      autoFocus
+                      style={{
+                        width: '100%', padding: '13px 14px', marginBottom: '10px',
+                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '12px', fontSize: '14px', color: '#fff', outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={sendMagicLink}
+                      disabled={loading || !email.trim()}
+                      style={{
+                        width: '100%', padding: '13px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        background: email.trim() ? 'linear-gradient(135deg, #7B61FF, #3ECFFF)' : 'rgba(255,255,255,0.06)',
+                        border: 'none', borderRadius: '12px',
+                        cursor: email.trim() && !loading ? 'pointer' : 'not-allowed',
+                        color: email.trim() ? '#fff' : 'rgba(255,255,255,0.25)',
+                        fontSize: '14px', fontWeight: 700,
+                      }}
+                    >
+                      {loading
+                        ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                        : <><Mail size={15} />&nbsp;ส่ง Magic Link <ArrowRight size={14} /></>
+                      }
+                    </motion.button>
+                    <button
+                      onClick={() => setMode('choose')}
+                      style={{ display: 'block', margin: '10px auto 0', background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: '12px' }}
+                    >
+                      ← ย้อนกลับ
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {error && (
-                <p style={{ margin: '-8px 0 12px', fontSize: '12px', color: '#FF4D4F' }}>{error}</p>
+                <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#FF6B6B', textAlign: 'center' }}>
+                  {error}
+                </p>
               )}
-
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={sendMagicLink}
-                disabled={loading || !email.trim()}
-                style={{
-                  width: '100%', padding: '15px',
-                  background: email.trim() ? 'linear-gradient(135deg, #7B61FF, #3ECFFF)' : 'rgba(255,255,255,0.06)',
-                  color: email.trim() ? '#fff' : 'rgba(255,255,255,0.2)',
-                  border: 'none', borderRadius: '14px',
-                  fontSize: '15px', fontWeight: 700,
-                  cursor: email.trim() && !loading ? 'pointer' : 'not-allowed',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                }}
-              >
-                {loading
-                  ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> กำลังส่ง...</>
-                  : '📩 ส่ง Magic Link ให้ฉัน'
-                }
-              </motion.button>
-            </div>
-
-            <button
-              onClick={() => setStep('choose')}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.25)', fontSize: '13px',
-                display: 'flex', alignItems: 'center', gap: '6px',
-                margin: '16px auto 0', padding: '8px',
-              }}
-            >
-              <ArrowLeft size={14} /> เลือกวิธีอื่น
-            </button>
-          </motion.div>
-        )}
-
-        {/* Step: ส่งแล้ว */}
-        {step === 'sent' && (
-          <motion.div
-            key="sent"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            style={{ textAlign: 'center' }}
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
-              style={{ fontSize: '64px', lineHeight: 1, marginBottom: '20px' }}
-            >
-              📩
             </motion.div>
-            <h2 style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>
-              เช็คอีเมลได้เลยค่ะ!
-            </h2>
-            <p style={{ margin: '0 0 24px', fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>
-              ส่ง Magic Link ไปที่<br />
-              <span style={{ color: '#7B61FF', fontWeight: 700 }}>{email}</span><br />
-              แล้วค่ะ
-            </p>
-            <div style={{
-              padding: '16px 20px',
-              background: 'rgba(123,97,255,0.06)',
-              border: '1px solid rgba(123,97,255,0.2)',
-              borderRadius: '16px', marginBottom: '20px', textAlign: 'left',
-            }}>
-              {['1. เปิดอีเมลของคุณ', '2. หาเมลจาก MITA+', '3. กด "เข้าสู่ระบบ" ในเมล', '4. กลับมาที่นี่โดยอัตโนมัติค่ะ ✨'].map((s, i) => (
-                <p key={i} style={{ margin: i === 3 ? '0' : '0 0 8px', fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>{s}</p>
-              ))}
-            </div>
-            <button
-              onClick={() => { setStep('choose'); setEmail('') }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}
-            >
-              กลับหน้าหลัก
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          )}
+        </AnimatePresence>
+
+        {/* Footer */}
+        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.2)' }}>
+          ยังไม่มีบัญชี?{' '}
+          <a href="/audit" style={{ color: '#7B61FF', textDecoration: 'none' }}>
+            เริ่มต้นฟรีที่นี่ →
+          </a>
+        </p>
+      </motion.div>
+    </main>
   )
 }

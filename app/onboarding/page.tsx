@@ -117,7 +117,7 @@ function StepWelcome({ onNext }: { onNext: () => void }) {
       {[
         { emoji: '📋', title: 'แผนรายอาทิตย์', desc: 'รู้เลยว่าต้องทำอะไรแต่ละวัน' },
         { emoji: '🤖', title: 'โค้ช AI 24/7',   desc: 'feedback + ไอเดียคลิปทุกสัปดาห์' },
-        { emoji: '🛍', title: 'สินค้า trending', desc: 'คัดมาเฉพาะสำหรับ niche ของคุณ' },
+        { emoji: '🛍', title: 'สินค้า trending', desc: 'คัดมาเฉพาะตามแนวช่องของคุณ' },
         { emoji: '⏰', title: 'เวลาที่ดีสุด',   desc: 'โพสต์ถูกเวลา view เพิ่มขึ้นได้เลย' },
       ].map((item, i) => (
         <motion.div
@@ -212,7 +212,7 @@ function StepNiche({
       <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 700, color: '#7B61FF' }}>ขั้นที่ 2/4</p>
       <h2 style={{ margin: '0 0 6px', fontSize: '24px', fontWeight: 900, color: '#fff' }}>คอนเทนต์ของคุณเกี่ยวกับอะไร?</h2>
       <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
-        MITA+ จะคัดสินค้าและ script ให้ตรง niche ค่ะ
+        MITA+ จะคัดสินค้าและ script ให้ตรงแนวช่องค่ะ
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '28px' }}>
         {NICHES.map(n => (
@@ -463,7 +463,7 @@ function StepLaunching({ name, niche, platform, targetIncome }: {
   const platformLabel = PLATFORMS.find(p => p.key === platform)?.label ?? platform
 
   const items = [
-    '✅ วิเคราะห์ niche ของคุณ',
+    '✅ วิเคราะห์แนวช่องของคุณ',
     '✅ คัดสินค้าที่เหมาะกับ audience',
     '✅ วางแผน 4 อาทิตย์แรก',
     '✅ ตั้งเวลาโค้ชประจำสัปดาห์',

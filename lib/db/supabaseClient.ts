@@ -36,4 +36,8 @@ export interface UserProfile {
   created_at: string
   stripe_customer_id: string | null
   audit_data: Record<string, unknown> | null
+  channel_data: Record<string, unknown> | null
+  monetization_plan: Record<string, unknown> | null
+  affiliate_products: Record<string, unknown> | null
+  content_example: Record<string, unknown> | null
 }

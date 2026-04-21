@@ -42,7 +42,7 @@ export default function PrivacyPage() {
           <p style={{ marginBottom: '8px' }}>MITA+ เก็บข้อมูลที่คุณกรอกในแบบฟอร์มวิเคราะห์ ได้แก่:</p>
           <ul style={{ paddingLeft: '20px', listStyle: 'disc' }}>
             <li style={{ marginBottom: '4px' }}>ชื่อ และอีเมล (ถ้ากรอก)</li>
-            <li style={{ marginBottom: '4px' }}>ข้อมูล Platform: จำนวน Followers, ยอดวิว, Niche</li>
+            <li style={{ marginBottom: '4px' }}>ข้อมูล Platform: จำนวน Followers, ยอดวิว, แนวช่อง</li>
             <li style={{ marginBottom: '4px' }}>ข้อมูลรายได้ปัจจุบัน และเป้าหมาย</li>
             <li style={{ marginBottom: '4px' }}>ข้อมูลการใช้งานเว็บไซต์ทั่วไป (เช่น browser type)</li>
           </ul>

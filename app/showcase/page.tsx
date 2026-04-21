@@ -444,7 +444,7 @@ export default function ShowcasePage() {
           <div>
             <span style={{ fontSize: '16px', fontWeight: 900, color: '#fff' }}>Beauty Showcase</span>
             <span style={{ marginLeft: '8px', fontSize: '10px', color: '#FF4D4F', background: 'rgba(255,77,79,0.12)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700 }}>
-              💄 beauty niche
+              💄 แนว beauty
             </span>
           </div>
           <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>20 personas · real Claude</span>
@@ -487,7 +487,7 @@ export default function ShowcasePage() {
         }}>
           <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
             {tab === 'nonsub'
-              ? '🔓 ทั้ง 10 คนอยู่ใน niche beauty เหมือนกัน แต่ต่าง stage, platform, follower — กด "วิเคราะห์" เพื่อดู AI output จริงจาก Claude ค่ะ'
+              ? '🔓 ทั้ง 10 คนอยู่ในแนวช่อง beauty เหมือนกัน แต่ต่าง stage, platform, follower — กด "วิเคราะห์" เพื่อดู AI output จริงจาก Claude ค่ะ'
               : '⭐ ทั้ง 10 คนสมัคร Starter แล้ว แต่ต่างกันที่ week, mood, รายได้, และปัญหา — กด "โค้ช" เพื่อดู coaching + script จาก Claude จริงๆ ค่ะ'
             }
           </p>

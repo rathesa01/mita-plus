@@ -50,18 +50,26 @@ export default function LandingPage() {
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#08080f]/80 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
           <span className="text-lg font-black gradient-brand tracking-tight">MITA+</span>
-          <Link
-            href="/pricing"
-            className="text-white/45 hover:text-white/70 text-sm font-medium transition-colors hidden sm:block"
-          >
-            ราคา
-          </Link>
-          <Link
-            href="/audit"
-            className="flex items-center gap-1.5 bg-white text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-all"
-          >
-            เช็กฟรี <ArrowRight size={13} />
-          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/pricing"
+              className="text-white/45 hover:text-white/70 text-sm font-medium transition-colors hidden sm:block"
+            >
+              ราคา
+            </Link>
+            <Link
+              href="/login"
+              className="text-white/55 hover:text-white/80 text-xs sm:text-sm font-medium transition-colors"
+            >
+              เข้าสู่ระบบ
+            </Link>
+            <Link
+              href="/audit"
+              className="flex items-center gap-1.5 bg-white text-black text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 rounded-full hover:bg-white/90 transition-all"
+            >
+              เริ่มฟรี <ArrowRight size={12} />
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -136,7 +144,7 @@ export default function LandingPage() {
                 <span className="gradient-brand">ไม่ใช่คำแนะนำกว้างๆ</span>
               </h2>
               <p className="text-white/45 text-sm leading-relaxed mb-6">
-                ทุกอย่างอ้างอิงจากข้อมูลของคุณ — Platform, Niche, Followers
+                ทุกอย่างอ้างอิงจากข้อมูลของคุณ — Platform, แนวช่อง, Followers
                 และรายได้ที่มีอยู่ ผลที่ได้จะไม่เหมือนกับใคร
               </p>
               <div className="flex flex-col gap-2.5">
@@ -259,13 +267,21 @@ export default function LandingPage() {
                 className="group w-full flex items-center justify-center gap-2 text-black font-black text-lg h-14 rounded-2xl transition-all"
                 style={{ background: 'linear-gradient(135deg, #fbbf24, #f97316)', boxShadow: '0 0 40px rgba(251,191,36,0.25)' }}
               >
-                เช็กตัวเลขของฉัน
+                เริ่มต้นฟรี — วิเคราะห์ช่องของฉัน
                 <ArrowRight className="group-hover:translate-x-0.5 transition-transform" size={18} />
               </Link>
               <div className="mt-5 flex items-center justify-center gap-4 text-white/25 text-xs">
                 <span>✓ ฟรี 100%</span>
                 <span>✓ 3 นาที</span>
                 <span>✓ แผนเฉพาะตัว</span>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/8">
+                <Link
+                  href="/login"
+                  className="text-white/35 hover:text-white/60 text-sm transition-colors"
+                >
+                  มีบัญชีอยู่แล้ว? <span className="underline underline-offset-2">เข้าสู่ระบบ →</span>
+                </Link>
               </div>
             </div>
           </div>
