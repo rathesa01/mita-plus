@@ -1081,87 +1081,148 @@ export default function StarterPage() {
             สวัสดี {displayName} 👋 · สัปดาห์ที่ {liveCreator.weekNo}
           </p>
           <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
-            {monPlan ? monPlan.headline ?? 'แผนหาเงินของคุณพร้อมแล้ว' : 'เริ่มสร้างรายได้จากช่องของคุณ'}
+            {audit ? (monPlan ? monPlan.headline ?? 'แผนหาเงินของคุณพร้อมแล้ว' : 'เริ่มสร้างรายได้จากช่องของคุณ') : 'ยินดีต้อนรับสู่ MITA+! 🎉'}
           </h1>
         </motion.div>
 
         {/* ── REVENUE HERO CARD ───────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-          style={{
-            position: 'relative', overflow: 'hidden',
-            padding: '20px 18px 18px',
-            marginBottom: '12px',
-            background: 'linear-gradient(135deg, rgba(123,97,255,0.15) 0%, rgba(34,197,94,0.07) 100%)',
-            border: '1px solid rgba(123,97,255,0.28)',
-            borderRadius: RADIUS.card,
-          }}
-        >
-          {/* Glow orb background */}
-          <div style={{
-            position: 'absolute', top: '-30px', right: '-20px',
-            width: '120px', height: '120px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(123,97,255,0.25) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }} />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
-            {/* Left: current income */}
-            <div>
-              <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                รายได้เดือนนี้
-              </p>
-              <p style={{ margin: 0, fontSize: '38px', fontWeight: 900, color: '#22C55E', lineHeight: 1, letterSpacing: '-0.02em' }}>
-                ฿{fmt(liveCreator.currentEarned)}
+        {audit ? (
+          /* ── มี audit: แสดง revenue progress จริง ── */
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+            style={{
+              position: 'relative', overflow: 'hidden',
+              padding: '20px 18px 18px', marginBottom: '12px',
+              background: 'linear-gradient(135deg, rgba(123,97,255,0.15) 0%, rgba(34,197,94,0.07) 100%)',
+              border: '1px solid rgba(123,97,255,0.28)', borderRadius: RADIUS.card,
+            }}
+          >
+            <div style={{ position: 'absolute', top: '-30px', right: '-20px', width: '120px', height: '120px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,97,255,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+              <div>
+                <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>รายได้เดือนนี้</p>
+                <p style={{ margin: 0, fontSize: '38px', fontWeight: 900, color: '#22C55E', lineHeight: 1, letterSpacing: '-0.02em' }}>฿{fmt(liveCreator.currentEarned)}</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>เป้า/เดือน</p>
+                <p style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: 800, color: 'rgba(255,255,255,0.55)' }}>฿{fmt(liveCreator.targetIncome)}</p>
+                {monPlan && <span style={{ fontSize: '10px', color: '#7B61FF', background: 'rgba(123,97,255,0.12)', padding: '1px 8px', borderRadius: '99px', fontWeight: 700 }}>สูงสุด ฿{fmt(monPlan.total_potential_max)}/เดือน</span>}
+              </div>
+            </div>
+            <div style={{ height: '7px', borderRadius: '99px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: '8px' }}>
+              <motion.div initial={{ width: 0 }} animate={{ width: `${progressPct}%` }} transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }} style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(to right, #7B61FF, #22C55E)' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>{Math.round(progressPct)}% ของเป้า</p>
+              <p style={{ margin: 0, fontSize: '11px', color: liveCreator.currentEarned > 0 ? '#22C55E' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
+                {liveCreator.currentEarned > 0 ? `ขาดอีก ฿${fmt(liveCreator.targetIncome - liveCreator.currentEarned)}` : 'ยังไม่มีรายได้ — เริ่มเลยค่ะ 🚀'}
               </p>
             </div>
-            {/* Right: target + potential */}
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>เป้า/เดือน</p>
-              <p style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: 800, color: 'rgba(255,255,255,0.55)' }}>
-                ฿{fmt(liveCreator.targetIncome)}
-              </p>
-              {monPlan && (
-                <span style={{ fontSize: '10px', color: '#7B61FF', background: 'rgba(123,97,255,0.12)', padding: '1px 8px', borderRadius: '99px', fontWeight: 700 }}>
-                  สูงสุด ฿{fmt(monPlan.total_potential_max)}/เดือน
-                </span>
-              )}
+          </motion.div>
+        ) : (
+          /* ── ไม่มี audit: Hero locked — แสดง potential ── */
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+            style={{
+              position: 'relative', overflow: 'hidden',
+              padding: '20px 18px 18px', marginBottom: '12px',
+              background: 'linear-gradient(135deg, rgba(123,97,255,0.18) 0%, rgba(255,159,28,0.08) 100%)',
+              border: '1px solid rgba(123,97,255,0.35)', borderRadius: RADIUS.card,
+            }}
+          >
+            {/* Glow */}
+            <div style={{ position: 'absolute', top: '-20px', right: '-10px', width: '140px', height: '140px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,97,255,0.3) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            {/* Lock badge */}
+            <div style={{ position: 'absolute', top: '14px', right: '14px', background: 'rgba(255,159,28,0.15)', border: '1px solid rgba(255,159,28,0.3)', borderRadius: '99px', padding: '3px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FF9F1C" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <span style={{ fontSize: '10px', fontWeight: 700, color: '#FF9F1C' }}>รอปลดล็อก</span>
             </div>
-          </div>
 
-          {/* Progress bar */}
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ height: '7px', borderRadius: '99px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPct}%` }}
-                transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-                style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(to right, #7B61FF, #22C55E)' }}
-              />
+            <p style={{ margin: '0 0 6px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>ศักยภาพช่องของคุณ</p>
+            {/* Blurred potential numbers */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
+              <p style={{ margin: 0, fontSize: '38px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.02em', filter: 'blur(8px)', userSelect: 'none', color: '#22C55E' }}>฿X,XXX</p>
+              <p style={{ margin: '0 0 6px', fontSize: '16px', color: 'rgba(255,255,255,0.4)' }}>–</p>
+              <p style={{ margin: '0 0 6px', fontSize: '24px', fontWeight: 800, filter: 'blur(8px)', userSelect: 'none', color: 'rgba(255,255,255,0.5)' }}>฿XX,XXX</p>
+              <p style={{ margin: '0 0 6px', fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>/เดือน</p>
             </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-              {Math.round(progressPct)}% ของเป้า
-            </p>
-            <p style={{ margin: 0, fontSize: '11px', color: liveCreator.currentEarned > 0 ? '#22C55E' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
-              {liveCreator.currentEarned > 0
-                ? `ขาดอีก ฿${fmt(liveCreator.targetIncome - liveCreator.currentEarned)}`
-                : 'ยังไม่มีรายได้ — เริ่มเลยค่ะ 🚀'
-              }
-            </p>
-          </div>
-        </motion.div>
 
-        {/* ── STATS ROW ────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.16 }}
-          style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}
-        >
-          <StatPill icon={<Target size={13} style={{ color: '#7B61FF' }} />} label="แหล่งรายได้" value={`${monPlan?.revenue_streams?.length ?? 0}`} color="#7B61FF" />
-          <StatPill icon={<TrendingUp size={13} style={{ color: '#22C55E' }} />} label="สินค้า AI คัด" value={`${affiliateData?.products?.length ?? 0}`} color="#22C55E" />
-          <StatPill icon={<Star size={13} style={{ color: '#FF9F1C' }} />} label="Platforms" value={`${connectedPlatforms.length}/6`} color="#FF9F1C" />
-        </motion.div>
+            {/* Fake progress bar (half-filled, blurred) */}
+            <div style={{ height: '7px', borderRadius: '99px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: '14px' }}>
+              <div style={{ width: '45%', height: '100%', borderRadius: '99px', background: 'linear-gradient(to right, #7B61FF80, #22C55E80)', filter: 'blur(2px)' }} />
+            </div>
+
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => router.push('/audit')}
+              style={{
+                width: '100%', padding: '13px', border: 'none', borderRadius: '12px', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)',
+                color: '#fff', fontSize: '14px', fontWeight: 800, letterSpacing: '0.01em',
+              }}
+            >
+              ✨ ทำ Audit เพื่อดูตัวเลขจริงของคุณ
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* ── ONBOARDING CHECKLIST (เฉพาะเมื่อไม่มี audit) ── */}
+        {!audit && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
+            style={{
+              padding: '16px', marginBottom: '16px',
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: RADIUS.card,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>🔓 ปลดล็อก 2 ขั้นตอน</p>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '99px' }}>0/2</span>
+            </div>
+
+            {/* Step 1 */}
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push('/audit')}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '12px 14px', marginBottom: '8px',
+                background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(62,207,255,0.06))',
+                border: '1px solid rgba(123,97,255,0.3)', borderRadius: '12px', cursor: 'pointer',
+              }}
+            >
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, background: 'rgba(123,97,255,0.15)', border: '1.5px solid rgba(123,97,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>📋</div>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: 800, color: '#fff' }}>ทำ Audit (2 นาที)</p>
+                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>unlock แผนหาเงิน 4 สัปดาห์ + Script คลิป AI</p>
+              </div>
+              <div style={{ background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>เริ่ม →</div>
+            </motion.button>
+
+            {/* Step 2 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', opacity: 0.6 }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, background: 'rgba(34,197,94,0.10)', border: '1.5px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>📊</div>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: 800, color: 'rgba(255,255,255,0.5)' }}>เชื่อม Social Media</p>
+                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>unlock สินค้า AI คัด + Analytics จริง</p>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── STATS ROW (เฉพาะเมื่อมี audit) ────────── */}
+        {audit && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.16 }}
+            style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}
+          >
+            <StatPill icon={<Target size={13} style={{ color: '#7B61FF' }} />} label="แหล่งรายได้" value={`${monPlan?.revenue_streams?.length ?? 0}`} color="#7B61FF" />
+            <StatPill icon={<TrendingUp size={13} style={{ color: '#22C55E' }} />} label="สินค้า AI คัด" value={`${affiliateData?.products?.length ?? 0}`} color="#22C55E" />
+            <StatPill icon={<Star size={13} style={{ color: '#FF9F1C' }} />} label="Platforms" value={`${connectedPlatforms.length}/6`} color="#FF9F1C" />
+          </motion.div>
+        )}
 
         {/* ── FEATURE #2: แผนหาเงิน CTA ──────────── */}
         <motion.button
@@ -1446,21 +1507,80 @@ export default function StarterPage() {
         )}
 
         {tab === 'products' && (
-          <ProductsTab
-            affiliateData={affiliateData}
-            userId={userId}
-            niche={niche}
-            platform={liveCreator.platform}
-            onRefresh={refreshProfile}
-          />
+          !audit ? (
+            /* ── Feature Gate: สินค้า ── */
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              {/* Blurred preview cards */}
+              <div style={{ position: 'relative', marginBottom: '16px' }}>
+                {[1,2,3].map(i => (
+                  <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '14px', marginBottom: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', filter: 'blur(3px)', userSelect: 'none' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(34,197,94,0.2)', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ height: '12px', width: '70%', background: 'rgba(255,255,255,0.15)', borderRadius: '4px', marginBottom: '6px' }} />
+                      <div style={{ height: '10px', width: '45%', background: 'rgba(34,197,94,0.2)', borderRadius: '4px' }} />
+                    </div>
+                    <div style={{ height: '28px', width: '60px', background: 'rgba(34,197,94,0.15)', borderRadius: '8px' }} />
+                  </div>
+                ))}
+                {/* Overlay lock */}
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '14px', background: 'linear-gradient(to bottom, transparent 0%, rgba(11,11,15,0.85) 50%)' }}>
+                  <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🛍️</div>
+                    <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>สินค้า AI คัด 5 ชิ้น</p>
+                    <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>Creator แนวนี้ทำ ฿2,400–฿8,000/เดือน</p>
+                    <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>ทำ Audit เพื่อให้ AI เลือกสินค้า<br/>ที่ตรงกับช่องของคุณจริงๆ</p>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #22C55E, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                      ทำ Audit เพื่อ unlock →
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <ProductsTab
+              affiliateData={affiliateData}
+              userId={userId}
+              niche={niche}
+              platform={liveCreator.platform}
+              onRefresh={refreshProfile}
+            />
+          )
         )}
 
         {tab === 'clips' && (
-          <ContentExampleTab
-            userId={userId}
-            cachedData={profile?.content_example as ContentExampleData | null}
-            niche={niche}
-          />
+          !audit ? (
+            /* ── Feature Gate: คลิป ── */
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div style={{ position: 'relative', marginBottom: '16px' }}>
+                {/* Blurred script preview */}
+                <div style={{ padding: '16px', background: 'rgba(62,207,255,0.07)', border: '1px solid rgba(62,207,255,0.15)', borderRadius: '14px', filter: 'blur(3px)', userSelect: 'none' }}>
+                  <div style={{ height: '11px', width: '40%', background: 'rgba(255,159,28,0.3)', borderRadius: '4px', marginBottom: '10px' }} />
+                  <div style={{ height: '14px', width: '90%', background: 'rgba(255,255,255,0.12)', borderRadius: '4px', marginBottom: '6px' }} />
+                  <div style={{ height: '14px', width: '75%', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', marginBottom: '14px' }} />
+                  <div style={{ height: '11px', width: '30%', background: 'rgba(62,207,255,0.3)', borderRadius: '4px', marginBottom: '8px' }} />
+                  {[85, 70, 90].map((w, i) => <div key={i} style={{ height: '11px', width: `${w}%`, background: 'rgba(255,255,255,0.06)', borderRadius: '4px', marginBottom: '5px' }} />)}
+                </div>
+                {/* Overlay lock */}
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom, transparent 0%, rgba(11,11,15,0.88) 45%)' }}>
+                  <div style={{ background: 'rgba(62,207,255,0.10)', border: '1px solid rgba(62,207,255,0.25)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎬</div>
+                    <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>Script คลิปส่วนตัว</p>
+                    <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#3ECFFF', fontWeight: 700 }}>Hook + เนื้อหา + CTA ที่ตรงช่องคุณ</p>
+                    <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>AI จะเขียน script จากคลิป viral<br/>ในแนวช่องของคุณโดยเฉพาะ</p>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #3ECFFF, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                      ทำ Audit เพื่อ unlock →
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <ContentExampleTab
+              userId={userId}
+              cachedData={profile?.content_example as ContentExampleData | null}
+              niche={niche}
+            />
+          )
         )}
 
         {tab === 'milestones' && (
