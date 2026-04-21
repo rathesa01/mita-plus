@@ -134,17 +134,27 @@ Return ONLY valid JSON:
     const client = new Anthropic({ apiKey: anthropicKey })
     const response = await client.messages.create({
       model: 'claude-haiku-4-5',
-      max_tokens: 800,
+      max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })
 
     const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
-    let aiResult: any
+    console.log('[affiliate/recommend] raw AI response:', rawText.slice(0, 500))
+
+    let aiResult: any = {}
     try {
-      const match = rawText.match(/\{[\s\S]*\}/)
-      aiResult = match ? JSON.parse(match[0]) : {}
-    } catch {
-      throw new Error('Failed to parse AI recommendation JSON')
+      // Strip markdown code fences if present
+      const stripped = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
+      // Extract first JSON object
+      const match = stripped.match(/\{[\s\S]*\}/)
+      if (match) {
+        aiResult = JSON.parse(match[0])
+      } else {
+        console.warn('[affiliate/recommend] No JSON found in response, using empty result')
+      }
+    } catch (parseErr) {
+      console.error('[affiliate/recommend] JSON parse failed:', parseErr, '| raw:', rawText.slice(0, 300))
+      // Don't throw — fall through with empty aiResult, will use fallback products below
     }
 
     // ── Step 3: Build enriched result ───────────────────
@@ -152,7 +162,7 @@ Return ONLY valid JSON:
     const selectedIds: string[] = aiResult.selected_ids ?? []
     const rankings: Record<string, any> = aiResult.rankings ?? {}
 
-    const enrichedProducts = selectedIds
+    let enrichedProducts = selectedIds
       .map(id => {
         const product = productMap[id]
         if (!product) return null
@@ -166,6 +176,14 @@ Return ONLY valid JSON:
       })
       .filter(Boolean)
       .sort((a, b) => a.rank - b.rank)
+
+    // Fallback: if AI returned no valid IDs, take top 5 from pool
+    if (enrichedProducts.length === 0 && productPool.length > 0) {
+      console.warn('[affiliate/recommend] AI selected no valid products — using top 5 from pool')
+      enrichedProducts = productPool.slice(0, 5).map((p, i) => ({
+        ...p, rank: i + 1, why_fits: 'เหมาะกับช่องของคุณค่ะ', content_idea: 'ลองรีวิวสินค้านี้ใน content ของคุณค่ะ'
+      }))
+    }
 
     const result = {
       products: enrichedProducts,
