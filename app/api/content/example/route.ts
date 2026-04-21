@@ -96,10 +96,9 @@ ${videoTitles}
 export async function POST(req: NextRequest) {
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!supabaseKey) return NextResponse.json({ error: 'ระบบยังไม่พร้อมค่ะ' }, { status: 500 })
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, supabaseKey)
 
     const { userId } = await req.json()
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })

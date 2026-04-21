@@ -1021,9 +1021,37 @@ export default function StarterPage() {
             Starter
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Flame size={14} style={{ color: '#FF9F1C' }} />
           <span style={{ fontSize: '13px', fontWeight: 900, color: '#FF9F1C' }}>{liveCreator.streak} วันติด</span>
+          {/* LINE Admin */}
+          <a
+            href="https://line.me/ti/p/~@mitaplus"
+            target="_blank" rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '4px',
+              background: 'rgba(6,199,85,0.12)', border: '1px solid rgba(6,199,85,0.25)',
+              borderRadius: '99px', padding: '4px 10px', textDecoration: 'none',
+              fontSize: '11px', fontWeight: 700, color: '#06C755',
+            }}
+          >
+            💬 แอดมิน
+          </a>
+          {/* Logout */}
+          <button
+            onClick={async () => {
+              if (supabase) await supabase.auth.signOut()
+              router.replace('/login')
+            }}
+            style={{
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '99px', padding: '4px 10px',
+              fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)',
+              cursor: 'pointer',
+            }}
+          >
+            ออกจากระบบ
+          </button>
         </div>
       </nav>
 
