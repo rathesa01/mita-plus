@@ -1,6 +1,5 @@
 'use client'
-export const dynamic = 'force-dynamic'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Upload, CheckCircle2, ArrowLeft, Loader2, X, ChevronRight, Zap, Camera, Info } from 'lucide-react'
@@ -107,7 +106,7 @@ type ConnectMethod = 'api' | 'upload'
 
 interface UploadedFile { stepId: string; file: File; preview: string }
 
-export default function ConnectPage() {
+function ConnectContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -541,5 +540,13 @@ export default function ConnectPage() {
         </AnimatePresence>
       </div>
     </div>
+  )
+}
+
+export default function ConnectPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0B0B0F' }} />}>
+      <ConnectContent />
+    </Suspense>
   )
 }
