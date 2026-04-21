@@ -298,7 +298,7 @@ function ResultScreen({ result, platform, niche, onClose }: {
             <div style={{ padding: '16px', background: 'rgba(62,207,255,0.06)', border: '1px solid rgba(62,207,255,0.2)', borderRadius: '16px', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                 <Video size={14} style={{ color: '#3ECFFF' }} />
-                <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: '#3ECFFF' }}>ไอเดียคลิปถัดไปจาก AI</p>
+                <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: '#3ECFFF' }}>ไอเดียคลิปถัดไปจาก MITA+</p>
               </div>
               <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
                 {result.script}
@@ -365,7 +365,7 @@ function ResultScreen({ result, platform, niche, onClose }: {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                 <TrendingUp size={14} style={{ color: '#FF9F1C' }} />
                 <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: '#FF9F1C' }}>
-                  สินค้าที่ AI แนะนำสำหรับช่องคุณ
+                  สินค้าที่ MITA+ แนะนำสำหรับช่องคุณ
                 </p>
               </div>
 
@@ -411,7 +411,7 @@ function ResultScreen({ result, platform, niche, onClose }: {
                     ยังไม่มีสินค้าแนะนำค่ะ
                   </p>
                   <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>
-                    ไปที่ tab 🛍 สินค้า แล้วกด "ให้ AI เลือกสินค้าให้" ก่อนนะคะ
+                    ไปที่ tab 🛍 สินค้า แล้วกด "ให้ MITA+ เลือกสินค้าให้" ก่อนนะคะ
                   </p>
                 </div>
               )}

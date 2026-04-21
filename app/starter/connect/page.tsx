@@ -219,9 +219,9 @@ function ConnectContent() {
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{ fontSize: 44, marginBottom: 8 }}>🤖</div>
-          <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}>MITA+ AI วิเคราะห์ช่องของคุณ</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}>MITA+ วิเคราะห์ช่องของคุณ</h1>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>
-            เลือก platform แล้วเชื่อมต่อเพื่อให้ AI อ่านข้อมูลค่ะ
+            เลือก platform แล้วเชื่อมต่อเพื่อให้ MITA+ อ่านข้อมูลค่ะ
           </p>
         </motion.div>
 
@@ -526,8 +526,8 @@ function ConnectContent() {
                   }}
                 >
                   {analyzing
-                    ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> AI กำลังวิเคราะห์...</>
-                    : <><span>🤖</span> วิเคราะห์ช่อง {selectedPlatform.name} ของฉัน <ChevronRight size={14} /></>
+                    ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> MITA+ กำลังวิเคราะห์...</>
+                    : <><span>🤖</span> ให้ MITA+ วิเคราะห์ช่อง {selectedPlatform.name} ของฉัน <ChevronRight size={14} /></>
                   }
                 </motion.button>
 

@@ -63,7 +63,7 @@ function PlanTab({ monPlan, displayName, onCheckIn, coachReply }: { monPlan: any
             ยังไม่มีแผนรายสัปดาห์
           </p>
           <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>
-            ไปสร้างแผนหาเงินก่อน แล้ว AI จะสร้าง Roadmap 4 สัปดาห์ให้คุณค่ะ
+            ไปสร้างแผนหาเงินก่อน แล้ว MITA+ จะสร้าง Roadmap 4 สัปดาห์ให้คุณค่ะ
           </p>
           <a
             href="/starter/plan"
@@ -307,7 +307,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
             ยังไม่มีสินค้าแนะนำ
           </p>
           <p style={{ margin: '0 0 18px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>
-            AI จะวิเคราะห์ช่องของคุณแล้วเลือกสินค้าที่ควรโปรโมต<br />พร้อม link และรายได้ต่อชิ้นค่ะ
+            MITA+ จะวิเคราะห์ช่องของคุณแล้วเลือกสินค้าที่ควรโปรโมต<br />พร้อม link และรายได้ต่อชิ้นค่ะ
           </p>
           <motion.button
             whileTap={{ scale: 0.97 }}
@@ -322,8 +322,8 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
             }}
           >
             {generating
-              ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> AI กำลังวิเคราะห์...</>
-              : <>✨ ให้ AI เลือกสินค้าให้</>
+              ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> MITA+ กำลังวิเคราะห์...</>
+              : <>✨ ให้ MITA+ เลือกสินค้าให้</>
             }
           </motion.button>
           {genError && (
@@ -350,7 +350,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
       }}>
         <div>
           <p style={{ margin: '0 0 2px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-            AI คัด {products.length} สินค้า · แนวช่อง: {niche}
+            MITA+ คัด {products.length} สินค้า · แนวช่อง: {niche}
             {isRealData && <span style={{ marginLeft: 6, color: '#22C55E', fontWeight: 700 }}>● สินค้าจริง</span>}
           </p>
           <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#22C55E' }}>
@@ -670,7 +670,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '48px 0' }}>
         <Loader2 size={28} style={{ color: '#7B61FF', animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
         <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
-          AI กำลังหาคลิปตัวอย่างและเขียน script...
+          MITA+ กำลังหาคลิปตัวอย่างและเขียน script...
         </p>
       </motion.div>
     )
@@ -699,10 +699,10 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
           คลิปตัวอย่างสัปดาห์นี้
         </p>
         <p style={{ margin: '0 0 20px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
-          AI จะหาคลิป viral ในแนวช่องของคุณ<br/>แล้วเขียน script พร้อมถ่ายให้เลยค่ะ
+          MITA+ จะหาคลิป viral ในแนวช่องของคุณ<br/>แล้วเขียน script พร้อมถ่ายให้เลยค่ะ
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', textAlign: 'left' }}>
-          {['🔍 ค้นหาคลิปดังในแนวช่องของคุณ', '✍️ AI เขียน Hook + Script + CTA', '⏰ บอกเวลาที่ควรโพสต์', '🛍️ แนะนำสินค้าที่โปรโมตในคลิป'].map((t, i) => (
+          {['🔍 ค้นหาคลิปดังในแนวช่องของคุณ', '✍️ MITA+ เขียน Hook + Script + CTA', '⏰ บอกเวลาที่ควรโพสต์', '🛍️ แนะนำสินค้าที่โปรโมตในคลิป'].map((t, i) => (
             <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
               <span style={{ fontSize: '13px' }}>{t}</span>
             </div>
@@ -1208,7 +1208,7 @@ export default function StarterPage() {
               <div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, background: 'rgba(123,97,255,0.15)', border: '1.5px solid rgba(123,97,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>📋</div>
               <div style={{ flex: 1, textAlign: 'left' }}>
                 <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: 800, color: '#fff' }}>ทำ Audit (2 นาที)</p>
-                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>unlock แผนหาเงิน 4 สัปดาห์ + Script คลิป AI</p>
+                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>unlock แผนหาเงิน 4 สัปดาห์ + Script คลิป MITA+</p>
               </div>
               <div style={{ background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>เริ่ม →</div>
             </motion.button>
@@ -1218,7 +1218,7 @@ export default function StarterPage() {
               <div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, background: 'rgba(34,197,94,0.10)', border: '1.5px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>📊</div>
               <div style={{ flex: 1, textAlign: 'left' }}>
                 <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: 800, color: 'rgba(255,255,255,0.5)' }}>เชื่อม Social Media</p>
-                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>unlock สินค้า AI คัด + Analytics จริง</p>
+                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>unlock สินค้า MITA+ คัด + Analytics จริง</p>
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             </div>
@@ -1232,7 +1232,7 @@ export default function StarterPage() {
             style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}
           >
             <StatPill icon={<Target size={13} style={{ color: '#7B61FF' }} />} label="แหล่งรายได้" value={`${monPlan?.revenue_streams?.length ?? 0}`} color="#7B61FF" />
-            <StatPill icon={<TrendingUp size={13} style={{ color: '#22C55E' }} />} label="สินค้า AI คัด" value={`${affiliateData?.products?.length ?? 0}`} color="#22C55E" />
+            <StatPill icon={<TrendingUp size={13} style={{ color: '#22C55E' }} />} label="MITA+ คัด" value={`${affiliateData?.products?.length ?? 0}`} color="#22C55E" />
             <StatPill icon={<Star size={13} style={{ color: '#FF9F1C' }} />} label="Platforms" value={`${connectedPlatforms.length}/6`} color="#FF9F1C" />
           </motion.div>
         )}
@@ -1252,7 +1252,7 @@ export default function StarterPage() {
               <div style={{ fontSize: '22px' }}>⚠️</div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: 900, color: '#FF9F1C' }}>
-                  AI รู้จักช่องคุณแค่ 30%
+                  MITA+ รู้จักช่องคุณแค่ 30%
                 </p>
                 <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
                   สินค้าที่แนะนำอาจไม่ตรงช่องของคุณถึง 70%
@@ -1284,7 +1284,7 @@ export default function StarterPage() {
             {/* What's missing */}
             <div style={{ padding: '10px 16px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
-                AI ยังไม่รู้จักช่องคุณใน 5 เรื่องนี้:
+                MITA+ ยังไม่รู้จักช่องคุณใน 5 เรื่องนี้:
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
                 {['👥 Demographics จริง', '📈 Engagement rate', '🎬 Topics ที่ดี', '📍 ผู้ชมอยู่ที่ไหน', '⏰ เวลาที่ active'].map(item => (
@@ -1331,7 +1331,7 @@ export default function StarterPage() {
             <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
               {monPlan
                 ? `${monPlan.primary_strategy} · ฿${fmt(monPlan.total_potential_min)}–฿${fmt(monPlan.total_potential_max)}/เดือน`
-                : 'AI วิเคราะห์ช่องจริง → บอกว่าทำอะไรก่อนถึงจะได้เงิน'
+                : 'MITA+ วิเคราะห์ช่องจริง → บอกว่าทำอะไรก่อนถึงจะได้เงิน'
               }
             </p>
           </div>
@@ -1574,7 +1574,7 @@ export default function StarterPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>
             {tab === 'plan' && '📅 แผนประจำสัปดาห์'}
-            {tab === 'products' && '🛍️ สินค้า Affiliate ที่ AI เลือก'}
+            {tab === 'products' && '🛍️ สินค้า Affiliate ที่ MITA+ เลือก'}
             {tab === 'clips' && '🎬 คลิปตัวอย่าง + Script'}
             {tab === 'milestones' && '🏆 เป้าหมายของคุณ'}
           </p>
@@ -1610,9 +1610,9 @@ export default function StarterPage() {
                 <div style={{ position: 'absolute', inset: 0, zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '14px', background: 'linear-gradient(to bottom, transparent 0%, rgba(11,11,15,0.85) 50%)' }}>
                   <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)', position: 'relative', zIndex: 3 }}>
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🛍️</div>
-                    <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>สินค้า AI คัด 5 ชิ้น</p>
+                    <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>สินค้า MITA+ คัด 10 ชิ้น</p>
                     <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>Creator แนวนี้ทำ ฿2,400–฿8,000/เดือน</p>
-                    <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>ทำ Audit เพื่อให้ AI เลือกสินค้า<br/>ที่ตรงกับช่องของคุณจริงๆ</p>
+                    <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>ทำ Audit เพื่อให้ MITA+ เลือกสินค้า<br/>ที่ตรงกับช่องของคุณจริงๆ</p>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #22C55E, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 4 }}>
                       ทำ Audit เพื่อ unlock →
                     </motion.button>
@@ -1642,7 +1642,7 @@ export default function StarterPage() {
                       สินค้าเหล่านี้แม่นยำแค่ 30%
                     </p>
                     <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>
-                      เชื่อม Social → AI รู้จักช่องจริง → แม่น 85% ทันที
+                      เชื่อม Social → MITA+ รู้จักช่องจริง → แม่น 85% ทันที
                     </p>
                   </div>
                   <div style={{ background: 'linear-gradient(135deg, #FF9F1C, #22C55E)', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
@@ -1680,7 +1680,7 @@ export default function StarterPage() {
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎬</div>
                     <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>Script คลิปส่วนตัว</p>
                     <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#3ECFFF', fontWeight: 700 }}>Hook + เนื้อหา + CTA ที่ตรงช่องคุณ</p>
-                    <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>AI จะเขียน script จากคลิป viral<br/>ในแนวช่องของคุณโดยเฉพาะ</p>
+                    <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>MITA+ จะเขียน script จากคลิป viral<br/>ในแนวช่องของคุณโดยเฉพาะ</p>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #3ECFFF, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 4 }}>
                       ทำ Audit เพื่อ unlock →
                     </motion.button>
