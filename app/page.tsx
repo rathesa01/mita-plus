@@ -53,9 +53,9 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/pricing"
-              className="text-white/45 hover:text-white/70 text-sm font-medium transition-colors hidden sm:block"
+              className="text-white/55 hover:text-white/80 text-xs sm:text-sm font-medium transition-colors"
             >
-              ราคา
+              แพ็คเกจ
             </Link>
             <Link
               href="/login"

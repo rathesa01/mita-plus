@@ -60,13 +60,16 @@ export function HeroSection() {
                 เริ่มต้นฟรี — วิเคราะห์ช่องของฉัน →
               </button>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap justify-center lg:justify-start">
               <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ boxShadow: '0 0 6px #22c55e' }} />
                 ฟรี 100% · ไม่ต้องสมัคร
               </p>
               <Link href="/login" className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
                 มีบัญชีแล้ว? <span style={{ color: '#7B61FF', textDecoration: 'underline' }}>เข้าสู่ระบบ</span>
+              </Link>
+              <Link href="/pricing" className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <span style={{ color: '#FF9F1C', textDecoration: 'underline' }}>ดูแพ็คเกจ</span> →
               </Link>
             </div>
           </div>
