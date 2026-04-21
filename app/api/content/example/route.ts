@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
     if (!supabaseKey) return NextResponse.json({ error: 'ระบบยังไม่พร้อมค่ะ' }, { status: 500 })
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, supabaseKey)
 
-    const { userId, force } = await req.json()
+    const { userId, force, dev } = await req.json()
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
     const youtubeApiKey = process.env.YOUTUBE_API_KEY
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       const offset = 7 * 60 * 60 * 1000
       const lastDay = new Date(new Date(cached.generated_at).getTime() + offset).toISOString().slice(0, 10)
       const today   = new Date(Date.now() + offset).toISOString().slice(0, 10)
-      if (lastDay === today) {
+      if (lastDay === today && !dev) {
         console.log('[content/example] rate limited — already refreshed today')
         return NextResponse.json({ rateLimited: true, message: 'รีเฟรชได้วันละ 1 ครั้งค่ะ มาใหม่พรุ่งนี้' })
       }

@@ -316,14 +316,15 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
   }
 
   const generate = async () => {
-    if (!userId || refreshedToday) return
+    const isDev = process.env.NODE_ENV === 'development'
+    if (!userId || (refreshedToday && !isDev)) return
     setGenerating(true)
     setGenError(null)
     try {
       const res = await fetch('/api/affiliate/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, force: true }),
+        body: JSON.stringify({ userId, force: true, dev: process.env.NODE_ENV === 'development' }),
       })
       const json = await res.json().catch(() => ({}))
       if (json.rateLimited) { setRefreshedToday(true); return }
@@ -708,14 +709,14 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
 
   const generate = async (force = false) => {
     if (!userId) return
-    if (force && refreshedToday) return
+    if (force && refreshedToday && process.env.NODE_ENV !== 'development') return
     setLoading(true)
     setError(null)
     try {
       const res = await fetch('/api/content/example', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, force }),
+        body: JSON.stringify({ userId, force, dev: process.env.NODE_ENV === 'development' }),
       })
       const json = await res.json()
       if (json.rateLimited) { setRefreshedToday(true); setLoading(false); return }

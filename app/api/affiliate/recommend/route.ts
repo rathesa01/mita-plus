@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     if (!anthropicKey) throw new Error('ANTHROPIC_API_KEY not set')
     if (!supabaseUrl || !serviceKey) throw new Error('Supabase env missing')
 
-    const { userId, force } = await req.json()
+    const { userId, force, dev } = await req.json()
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
     const supabase = createClient(supabaseUrl, serviceKey)
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       const offset = 7 * 60 * 60 * 1000
       const lastDay = new Date(new Date(lastGen).getTime() + offset).toISOString().slice(0, 10)
       const today   = new Date(Date.now() + offset).toISOString().slice(0, 10)
-      if (lastDay === today) {
+      if (lastDay === today && !dev) {
         if (force) return NextResponse.json({ rateLimited: true, message: 'รีเฟรชได้วันละ 1 ครั้งค่ะ มาใหม่พรุ่งนี้' })
         // ไม่ force → return cached
         return NextResponse.json({ success: true, data: profile!.affiliate_products, cached: true })
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         productPool = await searchProducts(
           involveKey ?? 'general',
           keywords,
-          { limit: 30, apiSecret: involveSecret }
+          { limit: 200, apiSecret: involveSecret, niche }
         )
         dataSource = 'involve_asia'
         console.log(`[affiliate/recommend] Got ${productPool.length} products from Involve Asia`)
