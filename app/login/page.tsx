@@ -29,7 +29,7 @@ export default function LoginPage() {
       .from('user_profiles')
       .select('plan')
       .eq('id', userId)
-      .single()
+      .single() as { data: { plan: string } | null, error: unknown }
     if (data?.plan === 'starter' || data?.plan === 'pro') {
       router.replace('/starter')
     } else {
