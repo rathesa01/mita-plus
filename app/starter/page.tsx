@@ -261,6 +261,14 @@ function ActionItem({ text, color, isLast }: { text: string; color: string; isLa
 function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateData: any; userId: string | null; niche: string; platform: string; onRefresh: () => void }) {
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
+
+  function timeAgo(date: Date): string {
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000)
+    if (diff < 60) return 'เมื่อสักครู่'
+    if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`
+    return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`
+  }
 
   const generate = async () => {
     if (!userId) return
@@ -276,6 +284,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error ?? `API error ${res.status}`)
       }
+      setLastRefreshed(new Date())
       await onRefresh()
     } catch (err) {
       setGenError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด ลองใหม่อีกครั้งค่ะ')
@@ -350,27 +359,34 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
       }}>
         <div>
           <p style={{ margin: '0 0 2px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-            MITA+ คัด {products.length} สินค้า · แนวช่อง: {niche}
+            MITA+ คัด {products.length} สินค้าสำหรับคุณโดยเฉพาะ
             {isRealData && <span style={{ marginLeft: 6, color: '#22C55E', fontWeight: 700 }}>● สินค้าจริง</span>}
           </p>
           <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#22C55E' }}>
             ฿{fmt(earnPerMonth)} – ฿{fmt(earnMax)}/เดือน
           </p>
         </div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={generate}
-          disabled={generating}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '5px',
-            padding: '7px 12px', background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px',
-            color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
-          }}
-        >
-          <RefreshCw size={11} style={{ animation: generating ? 'spin 1s linear infinite' : 'none' }} />
-          รีเฟรช
-        </motion.button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          {lastRefreshed && (
+            <p style={{ margin: 0, fontSize: '9px', color: 'rgba(34,197,94,0.7)', fontWeight: 600 }}>
+              ✨ อัปเดต{timeAgo(lastRefreshed)}
+            </p>
+          )}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={generate}
+            disabled={generating}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '5px',
+              padding: '7px 12px', background: generating ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${generating ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '10px',
+              color: generating ? '#22C55E' : 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+            }}
+          >
+            <RefreshCw size={11} style={{ animation: generating ? 'spin 1s linear infinite' : 'none' }} />
+            {generating ? 'กำลังอัปเดต...' : 'รีเฟรช'}
+          </motion.button>
+        </div>
       </div>
 
       {affiliateData.tip && (
@@ -638,6 +654,14 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
   const [data, setData] = useState<ContentExampleData | null>(cachedData)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
+
+  function timeAgo(date: Date): string {
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000)
+    if (diff < 60) return 'เมื่อสักครู่'
+    if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`
+    return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`
+  }
 
   const generate = async () => {
     if (!userId) return
@@ -652,6 +676,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'เกิดข้อผิดพลาด')
       setData(json)
+      setLastRefreshed(new Date())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'เกิดข้อผิดพลาด')
     } finally {
@@ -734,14 +759,27 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
         <div>
           <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: 800, color: '#fff' }}>🎬 คลิปตัวอย่างสัปดาห์นี้</p>
           <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>
-            แนวช่อง: {niche} · อัพเดตทุก 7 วัน
+            MITA+ คัด 10 คลิปสำหรับคุณโดยเฉพาะ
           </p>
         </div>
-        <motion.button whileTap={{ scale: 0.95 }} onClick={generate}
-          style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'rgba(255,255,255,0.5)', fontSize: '11px', cursor: 'pointer' }}>
-          <RefreshCw size={11} style={{ marginRight: '4px', display: 'inline' }} />
-          รีเฟรช
-        </motion.button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          {lastRefreshed && (
+            <p style={{ margin: 0, fontSize: '9px', color: 'rgba(62,207,255,0.8)', fontWeight: 600 }}>
+              ✨ อัปเดต{timeAgo(lastRefreshed)}
+            </p>
+          )}
+          <motion.button whileTap={{ scale: 0.95 }} onClick={generate}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '4px',
+              padding: '6px 12px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer',
+              background: loading ? 'rgba(62,207,255,0.1)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${loading ? 'rgba(62,207,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              color: loading ? '#3ECFFF' : 'rgba(255,255,255,0.5)',
+            }}>
+            <RefreshCw size={11} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            {loading ? 'กำลังอัปเดต...' : 'รีเฟรช'}
+          </motion.button>
+        </div>
       </div>
 
       {/* YouTube Videos */}

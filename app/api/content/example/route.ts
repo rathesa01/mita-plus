@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     const platform = audit?.input?.platform ?? audit?.platform ?? 'YouTube'
 
     // ── ค้นหา YouTube ──
-    const videos = await searchYouTubeByNiche(niche, youtubeApiKey, 8)
+    const videos = await searchYouTubeByNiche(niche, youtubeApiKey, 10)
     if (videos.length === 0) {
       return NextResponse.json({ error: 'ไม่พบคลิปตัวอย่าง' }, { status: 404 })
     }
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
     )
 
     const result: ContentExample = {
-      videos: videos.slice(0, 3), // แสดงแค่ 3 คลิป
+      videos: videos.slice(0, 10), // แสดง 10 คลิป
       script,
       niche,
       platform,
