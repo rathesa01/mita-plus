@@ -9,19 +9,26 @@ import { getSupabaseClient, type UserProfile } from '@/lib/db/supabaseClient'
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
-function categoryEmoji(category: string): string {
+function categoryEmoji(category: string, categoryTh?: string): string {
   const map: Record<string, string> = {
     beauty: '💄', skincare: '🌿', health: '💊', fitness: '💪',
     food: '🍳', kitchen: '🍽️', electronics: '📱', tech: '📷',
     fashion: '👗', home: '🏠', pets: '🐾', lifestyle: '✨',
     travel: '✈️', education: '📚', sports: '⚽',
+    // ภาษาไทย
+    ความงาม: '💄', สกินแคร์: '🌿', สุขภาพ: '💊', กีฬา: '💪',
+    อาหาร: '🍳', ครัว: '🍽️', อิเล็กทรอนิกส์: '📱', แฟชั่น: '👗',
+    ของแต่งบ้าน: '🏠', สัตว์เลี้ยง: '🐾', ไลฟ์สไตล์: '✨',
   }
-  const key = (category ?? '').toLowerCase()
-  const match = Object.keys(map).find(k => key.includes(k))
-  return match ? map[match] : '🛍️'
+  const keys = [category, categoryTh].filter(Boolean).map(s => s!.toLowerCase())
+  for (const key of keys) {
+    const match = Object.keys(map).find(k => key.includes(k.toLowerCase()))
+    if (match) return map[match]
+  }
+  return '🛍️'
 }
 
-function ProductImage({ imageUrl, category, name }: { imageUrl: string; category: string; name: string }) {
+function ProductImage({ imageUrl, category, categoryTh, name }: { imageUrl: string; category: string; categoryTh?: string; name: string }) {
   const [failed, setFailed] = useState(false)
   return (
     <div style={{
@@ -32,7 +39,7 @@ function ProductImage({ imageUrl, category, name }: { imageUrl: string; category
     }}>
       {imageUrl && !failed
         ? <img src={imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setFailed(true)} />
-        : <span style={{ fontSize: '26px' }}>{categoryEmoji(category)}</span>
+        : <span style={{ fontSize: '26px' }}>{categoryEmoji(category, categoryTh)}</span>
       }
     </div>
   )
@@ -336,7 +343,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
     id: string; name: string; brand: string; image_url: string;
     price: number; commission_rate: number; commission_thb: number;
     product_url: string; merchant_name: string; platform: string;
-    category_th: string; why_fits: string; content_idea: string; rank: number;
+    category: string; category_th: string; why_fits: string; content_idea: string; rank: number;
   }> | null
 
   const isRealData = affiliateData?.data_source === 'involve_asia'
@@ -458,7 +465,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
             {/* Rank badge + product image */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <ProductImage imageUrl={p.image_url} category={p.category ?? ''} name={p.name} />
+              <ProductImage imageUrl={p.image_url} category={p.category ?? ''} categoryTh={p.category_th} name={p.name} />
               <span style={{
                 position: 'absolute', top: -5, left: -5,
                 width: '18px', height: '18px', borderRadius: '99px',
