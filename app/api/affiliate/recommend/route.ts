@@ -23,10 +23,11 @@ const FALLBACK_PRODUCTS: InvolveProduct[] = [
 
 export async function POST(req: NextRequest) {
   try {
-    const anthropicKey = process.env.ANTHROPIC_API_KEY
-    const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey   = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
-    const involveKey   = process.env.INVOLVE_ASIA_API_KEY  // optional — fallback if missing
+    const anthropicKey    = process.env.ANTHROPIC_API_KEY
+    const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey      = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+    const involveKey      = process.env.INVOLVE_ASIA_API_KEY     // api_key (e.g. "general")
+    const involveSecret   = process.env.INVOLVE_ASIA_API_SECRET  // api_secret (bearer token)
 
     if (!anthropicKey) throw new Error('ANTHROPIC_API_KEY not set')
     if (!supabaseUrl || !serviceKey) throw new Error('Supabase env missing')
@@ -71,11 +72,15 @@ export async function POST(req: NextRequest) {
     let productPool: InvolveProduct[] = []
     let dataSource: 'involve_asia' | 'fallback' = 'fallback'
 
-    if (involveKey) {
+    if (involveKey || involveSecret) {
       try {
         const keywords = nicheToKeywords(niche, platform)
-        console.log(`[affiliate/recommend] Searching Involve Asia: keywords=${keywords.join(', ')}`)
-        productPool = await searchProducts(involveKey, keywords, { limit: 30 })
+        console.log(`[affiliate/recommend] Searching Involve Asia: keywords=${keywords.join(', ')} | auth=secret:${!!involveSecret}`)
+        productPool = await searchProducts(
+          involveKey ?? 'general',
+          keywords,
+          { limit: 30, apiSecret: involveSecret }
+        )
         dataSource = 'involve_asia'
         console.log(`[affiliate/recommend] Got ${productPool.length} products from Involve Asia`)
       } catch (err) {
@@ -83,7 +88,7 @@ export async function POST(req: NextRequest) {
         productPool = FALLBACK_PRODUCTS
       }
     } else {
-      console.log('[affiliate/recommend] INVOLVE_ASIA_API_KEY not set — using fallback catalog')
+      console.log('[affiliate/recommend] INVOLVE_ASIA_API_KEY/SECRET not set — using fallback catalog')
       productPool = FALLBACK_PRODUCTS
     }
 

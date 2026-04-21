@@ -77,9 +77,11 @@ const NICHE_TO_CATEGORIES: Record<string, string[]> = {
 
 // ── API Client ───────────────────────────────────────────
 
-function getHeaders(apiKey: string): HeadersInit {
+// Involve Asia auth: Bearer token = api_secret (หรือ api_key ถ้าไม่มี secret)
+function getHeaders(apiKey: string, apiSecret?: string): HeadersInit {
+  const token = apiSecret ?? apiKey
   return {
-    'Authorization': `Bearer ${apiKey}`,
+    'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   }
@@ -88,9 +90,9 @@ function getHeaders(apiKey: string): HeadersInit {
 /**
  * Get list of active campaigns (merchants) for Thailand
  */
-export async function getCampaigns(apiKey: string): Promise<InvolveCampaign[]> {
+export async function getCampaigns(apiKey: string, apiSecret?: string): Promise<InvolveCampaign[]> {
   const url = `${BASE_URL}/campaigns?country=TH&status=active&limit=100`
-  const res = await fetch(url, { headers: getHeaders(apiKey), next: { revalidate: 3600 } })
+  const res = await fetch(url, { headers: getHeaders(apiKey, apiSecret), next: { revalidate: 3600 } })
   if (!res.ok) throw new Error(`Involve Asia campaigns error: ${res.status}`)
   const json = await res.json()
 
@@ -115,9 +117,9 @@ export async function getCampaigns(apiKey: string): Promise<InvolveCampaign[]> {
 export async function searchProducts(
   apiKey: string,
   keywords: string[],
-  options: { limit?: number; country?: string } = {}
+  options: { limit?: number; country?: string; apiSecret?: string } = {}
 ): Promise<InvolveProduct[]> {
-  const { limit = 20, country = 'TH' } = options
+  const { limit = 20, country = 'TH', apiSecret } = options
   const keyword = keywords.slice(0, 3).join(' ')
 
   const params = new URLSearchParams({
@@ -129,7 +131,7 @@ export async function searchProducts(
   })
 
   const url = `${BASE_URL}/product-feed/search?${params}`
-  const res = await fetch(url, { headers: getHeaders(apiKey), next: { revalidate: 1800 } })
+  const res = await fetch(url, { headers: getHeaders(apiKey, apiSecret), next: { revalidate: 1800 } })
   if (!res.ok) throw new Error(`Involve Asia product search error: ${res.status} — ${await res.text()}`)
   const json = await res.json()
 
