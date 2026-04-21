@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { getSupabaseClient } from '@/lib/db/supabaseClient'
 import { motion, AnimatePresence, animate } from 'framer-motion'
 import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight, Share2, Copy, Check as CheckIcon, Lock } from 'lucide-react'
 import type { AuditResult } from '@/types'
@@ -363,8 +364,32 @@ export default function ResultPage() {
     if (!raw) { router.push('/audit'); return }
     const parsed = JSON.parse(raw)
     setResult(parsed)
-    // Save to localStorage so it survives across pages (for linking to account after payment)
+
+    // [1] localStorage fallback — ใช้เสมอ (กรณีเปลี่ยน browser / private mode)
     localStorage.setItem('mitaplus_audit', raw)
+
+    // [2] Hybrid: ถ้า login อยู่ → save ลง DB ทันทีเลย ไม่ต้องรอ /subscribe/success
+    const saveToDbIfLoggedIn = async () => {
+      try {
+        const supabase = getSupabaseClient()
+        if (!supabase) return
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user) return // ยังไม่ login → ใช้ localStorage ต่อไป
+
+        // มี session → save ลง DB ทันที (upsert เพื่อไม่ override plan ที่มีอยู่)
+        await supabase
+          .from('user_profiles')
+          .upsert(
+            { id: session.user.id, audit_data: parsed },
+            { onConflict: 'id' }
+          )
+        console.log('[result] audit_data saved to DB (user already logged in)')
+      } catch (e) {
+        // silent fail — localStorage ยังใช้ได้เป็น fallback
+        console.warn('[result] could not save audit to DB:', e)
+      }
+    }
+    saveToDbIfLoggedIn()
   }, [router])
 
   useEffect(() => {
