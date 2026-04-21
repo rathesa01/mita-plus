@@ -1237,6 +1237,77 @@ export default function StarterPage() {
           </motion.div>
         )}
 
+        {/* ── AI PERSONALIZATION SCORE (แสดงเมื่อทำ audit แต่ยังไม่เชื่อม social) ── */}
+        {audit && !hasChannel && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }}
+            style={{
+              marginBottom: '14px', borderRadius: '16px', overflow: 'hidden',
+              border: '1.5px solid rgba(255,159,28,0.45)',
+              background: 'linear-gradient(135deg, rgba(255,159,28,0.08), rgba(255,80,80,0.06))',
+            }}
+          >
+            {/* Header */}
+            <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ fontSize: '22px' }}>⚠️</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: '0 0 2px', fontSize: '13px', fontWeight: 900, color: '#FF9F1C' }}>
+                  AI รู้จักช่องคุณแค่ 30%
+                </p>
+                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                  สินค้าที่แนะนำอาจไม่ตรงช่องของคุณถึง 70%
+                </p>
+              </div>
+              <div style={{
+                background: 'rgba(255,159,28,0.15)', border: '1px solid rgba(255,159,28,0.3)',
+                borderRadius: '10px', padding: '6px 10px', textAlign: 'center', flexShrink: 0,
+              }}>
+                <p style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: '#FF9F1C', lineHeight: 1 }}>30%</p>
+                <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,159,28,0.7)' }}>แม่นยำ</p>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div style={{ padding: '0 16px 10px' }}>
+              <div style={{ height: '6px', borderRadius: '99px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                <motion.div
+                  initial={{ width: 0 }} animate={{ width: '30%' }} transition={{ duration: 1, delay: 0.4 }}
+                  style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #FF9F1C, #FF6B6B)' }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                <span style={{ fontSize: '10px', color: 'rgba(255,159,28,0.7)' }}>ตอนนี้: 30% (Audit อย่างเดียว)</span>
+                <span style={{ fontSize: '10px', color: 'rgba(34,197,94,0.8)', fontWeight: 700 }}>หลังเชื่อม: 85% 🎯</span>
+              </div>
+            </div>
+
+            {/* What's missing */}
+            <div style={{ padding: '10px 16px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
+                AI ยังไม่รู้จักช่องคุณใน 5 เรื่องนี้:
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                {['👥 Demographics จริง', '📈 Engagement rate', '🎬 Topics ที่ดี', '📍 ผู้ชมอยู่ที่ไหน', '⏰ เวลาที่ active'].map(item => (
+                  <span key={item} style={{ fontSize: '10px', background: 'rgba(255,80,80,0.12)', border: '1px solid rgba(255,80,80,0.2)', borderRadius: '99px', padding: '3px 8px', color: 'rgba(255,255,255,0.5)' }}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => router.push('/starter/connect')}
+                style={{
+                  width: '100%', padding: '12px', border: 'none', borderRadius: '10px', cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #FF9F1C, #22C55E)',
+                  color: '#fff', fontSize: '13px', fontWeight: 800,
+                }}
+              >
+                🔗 เชื่อม Social → เพิ่มความแม่นยำเป็น 85%
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
         {/* ── FEATURE #2: แผนหาเงิน CTA ──────────── */}
         <motion.button
           initial={{ opacity: 0, y: 8 }}
@@ -1550,13 +1621,43 @@ export default function StarterPage() {
               </div>
             </motion.div>
           ) : (
-            <ProductsTab
-              affiliateData={affiliateData}
-              userId={userId}
-              niche={niche}
-              platform={liveCreator.platform}
-              onRefresh={refreshProfile}
-            />
+            <>
+              {/* ⚠️ Accuracy warning banner — ถ้ายังไม่เชื่อม social */}
+              {!hasChannel && (
+                <motion.button
+                  initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => router.push('/starter/connect')}
+                  style={{
+                    width: '100%', marginBottom: '12px', padding: '11px 14px',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    background: 'linear-gradient(135deg, rgba(255,159,28,0.12), rgba(255,80,80,0.08))',
+                    border: '1.5px solid rgba(255,159,28,0.35)', borderRadius: '12px',
+                    cursor: 'pointer', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: '20px', flexShrink: 0 }}>⚠️</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: '0 0 1px', fontSize: '12px', fontWeight: 800, color: '#FF9F1C' }}>
+                      สินค้าเหล่านี้แม่นยำแค่ 30%
+                    </p>
+                    <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>
+                      เชื่อม Social → AI รู้จักช่องจริง → แม่น 85% ทันที
+                    </p>
+                  </div>
+                  <div style={{ background: 'linear-gradient(135deg, #FF9F1C, #22C55E)', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                    เชื่อมเลย →
+                  </div>
+                </motion.button>
+              )}
+              <ProductsTab
+                affiliateData={affiliateData}
+                userId={userId}
+                niche={niche}
+                platform={liveCreator.platform}
+                onRefresh={refreshProfile}
+              />
+            </>
           )
         )}
 
