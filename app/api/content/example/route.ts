@@ -86,8 +86,9 @@ ${videoTitles}
     messages: [{ role: 'user', content: prompt }],
   })
 
-  const text = (response.content[0] as { text: string }).text.trim()
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  const rawText = (response.content[0] as { text: string }).text.trim()
+  const stripped = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
+  const jsonMatch = stripped.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error('Claude did not return valid JSON')
 
   return JSON.parse(jsonMatch[0])
