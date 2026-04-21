@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     if (!supabaseKey) return NextResponse.json({ error: 'ระบบยังไม่พร้อมค่ะ' }, { status: 500 })
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, supabaseKey)
 
-    const { userId } = await req.json()
+    const { userId, force } = await req.json()
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
     const youtubeApiKey = process.env.YOUTUBE_API_KEY
@@ -117,15 +117,17 @@ export async function POST(req: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    // ── Cache check: ถ้าสร้างไปแล้วไม่เกิน 7 วัน → return cached ──
+    // ── Cache check: ถ้าสร้างไปแล้วไม่เกิน 7 วัน → return cached (ยกเว้นกด force refresh) ──
     const cached = profile.content_example as ContentExample | null
-    if (cached?.generated_at) {
+    if (!force && cached?.generated_at) {
       const age = Date.now() - new Date(cached.generated_at).getTime()
       const sevenDays = 7 * 24 * 60 * 60 * 1000
       if (age < sevenDays) {
+        console.log('[content/example] returning cached data')
         return NextResponse.json({ ...cached, cached: true })
       }
     }
+    if (force) console.log('[content/example] force refresh — bypassing cache')
 
     // ── ดึง niche + platform จาก audit_data ──
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

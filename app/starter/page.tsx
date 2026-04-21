@@ -663,7 +663,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
     return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`
   }
 
-  const generate = async () => {
+  const generate = async (force = false) => {
     if (!userId) return
     setLoading(true)
     setError(null)
@@ -671,12 +671,12 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
       const res = await fetch('/api/content/example', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, force }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'เกิดข้อผิดพลาด')
       setData(json)
-      setLastRefreshed(new Date())
+      if (force) setLastRefreshed(new Date())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'เกิดข้อผิดพลาด')
     } finally {
@@ -684,9 +684,9 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
     }
   }
 
-  // โหลดครั้งแรกถ้าไม่มี cache
+  // โหลดครั้งแรกถ้าไม่มี cache (ไม่ force)
   useEffect(() => {
-    if (!data && userId) generate()
+    if (!data && userId) generate(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
@@ -768,7 +768,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
               ✨ อัปเดต{timeAgo(lastRefreshed)}
             </p>
           )}
-          <motion.button whileTap={{ scale: 0.95 }} onClick={generate}
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => generate(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: '4px',
               padding: '6px 12px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer',
