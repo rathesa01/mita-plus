@@ -1026,7 +1026,7 @@ export default function StarterPage() {
           <span style={{ fontSize: '13px', fontWeight: 900, color: '#FF9F1C' }}>{liveCreator.streak} วันติด</span>
           {/* LINE Admin */}
           <a
-            href="https://line.me/ti/p/~@mitaplus"
+            href="https://lin.ee/WHWLZ7W"
             target="_blank" rel="noopener noreferrer"
             style={{
               display: 'flex', alignItems: 'center', gap: '4px',
