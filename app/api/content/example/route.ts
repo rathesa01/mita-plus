@@ -7,12 +7,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { searchYouTubeByNiche, type YouTubeVideo } from '@/lib/youtubeSearch'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+export const dynamic = 'force-dynamic'
 
 interface ContentExample {
   videos: YouTubeVideo[]
@@ -31,6 +26,7 @@ interface ContentExample {
 
 // Claude สร้าง script จากตัวอย่างคลิป + ข้อมูลช่อง
 async function generateScript(
+  anthropic: Anthropic,
   niche: string,
   platform: string,
   videos: YouTubeVideo[],
@@ -99,6 +95,12 @@ ${videoTitles}
 
 export async function POST(req: NextRequest) {
   try {
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     const { userId } = await req.json()
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
@@ -140,6 +142,7 @@ export async function POST(req: NextRequest) {
 
     // ── Claude สร้าง script ──
     const script = await generateScript(
+      anthropic,
       niche,
       platform,
       videos,
