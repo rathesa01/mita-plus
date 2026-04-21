@@ -260,17 +260,25 @@ function ActionItem({ text, color, isLast }: { text: string; color: string; isLa
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateData: any; userId: string | null; niche: string; platform: string; onRefresh: () => void }) {
   const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState<string | null>(null)
 
   const generate = async () => {
     if (!userId) return
     setGenerating(true)
+    setGenError(null)
     try {
-      await fetch('/api/affiliate/recommend', {
+      const res = await fetch('/api/affiliate/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
       })
-      onRefresh()
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? `API error ${res.status}`)
+      }
+      await onRefresh()
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด ลองใหม่อีกครั้งค่ะ')
     } finally {
       setGenerating(false)
     }
@@ -318,6 +326,11 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
               : <>✨ ให้ AI เลือกสินค้าให้</>
             }
           </motion.button>
+          {genError && (
+            <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#FF6B6B', textAlign: 'center', lineHeight: 1.5 }}>
+              ⚠️ {genError}
+            </p>
+          )}
         </div>
       </motion.div>
     )

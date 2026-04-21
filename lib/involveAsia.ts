@@ -131,8 +131,15 @@ export async function searchProducts(
   })
 
   const url = `${BASE_URL}/product-feed/search?${params}`
-  const res = await fetch(url, { headers: getHeaders(apiKey, apiSecret), next: { revalidate: 1800 } })
-  if (!res.ok) throw new Error(`Involve Asia product search error: ${res.status} — ${await res.text()}`)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 4000) // 4s timeout
+  let res: Response
+  try {
+    res = await fetch(url, { headers: getHeaders(apiKey, apiSecret), signal: controller.signal, cache: 'no-store' })
+  } finally {
+    clearTimeout(timer)
+  }
+  if (!res!.ok) throw new Error(`Involve Asia product search error: ${res!.status} — ${await res!.text()}`)
   const json = await res.json()
 
   const raw: any[] = json.data?.products ?? json.data?.items ?? json.data ?? []

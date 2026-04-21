@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import { searchProducts, nicheToKeywords, type InvolveProduct } from '@/lib/involveAsia'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 30 // allow up to 30s (needs Vercel Pro; Hobby caps at 10s automatically)
 
 // ── Fallback catalog (used when Involve Asia API not ready) ─
 // Simple static products — replaced by real API once INVOLVE_ASIA_API_KEY is set
