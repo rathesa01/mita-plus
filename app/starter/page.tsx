@@ -708,7 +708,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
         <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>
           {error.includes('YOUTUBE_API_KEY') ? 'ต้องใส่ YOUTUBE_API_KEY ก่อนค่ะ' : 'ลองใหม่อีกครั้งค่ะ'}
         </p>
-        <motion.button whileTap={{ scale: 0.97 }} onClick={generate}
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => generate(false)}
           style={{ padding: '10px 24px', background: '#7B61FF', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
           ลองใหม่
         </motion.button>
@@ -735,7 +735,7 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
         </div>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={generate}
+          onClick={() => generate(false)}
           disabled={!userId}
           style={{
             width: '100%', padding: '14px', border: 'none', borderRadius: '12px', cursor: userId ? 'pointer' : 'not-allowed',
