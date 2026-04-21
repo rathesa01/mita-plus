@@ -20,6 +20,11 @@ const FALLBACK_PRODUCTS: InvolveProduct[] = [
   { id: 'f8', name: 'เทียนหอม Soy Wax Set', brand: 'Karmakamet', price: 390, commission_rate: 11, commission_thb: 43, product_url: 'https://shopee.co.th/search?keyword=soy+wax+candle+set', image_url: '', category: 'home', category_th: 'ของแต่งบ้าน', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['home', 'decor', 'lifestyle', 'aesthetic'], in_stock: true, currency: 'THB' },
   { id: 'f9', name: 'น้ำพุแมว Cat Fountain', brand: 'Petkit', price: 590, commission_rate: 10, commission_thb: 59, product_url: 'https://shopee.co.th/search?keyword=cat+fountain+automatic', image_url: '', category: 'pets', category_th: 'สัตว์เลี้ยง', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['pets', 'cat', 'แมว'], in_stock: true, currency: 'THB' },
   { id: 'f10', name: 'ไมโครโฟน Wireless Clip', brand: 'DJI', price: 2490, commission_rate: 8, commission_thb: 199, product_url: 'https://shopee.co.th/search?keyword=wireless+mic+clip+on', image_url: '', category: 'electronics', category_th: 'อิเล็กทรอนิกส์', merchant_name: 'Lazada', merchant_id: '', platform: 'Lazada', tags: ['tech', 'creator', 'youtube', 'podcast'], in_stock: true, currency: 'THB' },
+  { id: 'f11', name: 'ชุดออกกำลังกาย Yoga Set', brand: 'Adidas', price: 890, commission_rate: 10, commission_thb: 89, product_url: 'https://shopee.co.th/search?keyword=yoga+set+outfit', image_url: '', category: 'fitness', category_th: 'กีฬา', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['fitness', 'yoga', 'ออกกำลังกาย', 'fashion'], in_stock: true, currency: 'THB' },
+  { id: 'f12', name: 'แผ่น Acne Patch Hydrocolloid', brand: 'Cosrx', price: 199, commission_rate: 14, commission_thb: 28, product_url: 'https://shopee.co.th/search?keyword=acne+patch+hydrocolloid', image_url: '', category: 'beauty', category_th: 'สกินแคร์', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['beauty', 'skincare', 'ความงาม', 'acne'], in_stock: true, currency: 'THB' },
+  { id: 'f13', name: 'Tripod มือถือ ปรับได้', brand: 'Ulanzi', price: 450, commission_rate: 11, commission_thb: 50, product_url: 'https://shopee.co.th/search?keyword=phone+tripod+flexible', image_url: '', category: 'electronics', category_th: 'อิเล็กทรอนิกส์', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['tech', 'creator', 'tiktok', 'youtube'], in_stock: true, currency: 'THB' },
+  { id: 'f14', name: 'กระบอกน้ำ Stanley Quencher', brand: 'Stanley', price: 1290, commission_rate: 9, commission_thb: 116, product_url: 'https://shopee.co.th/search?keyword=stanley+quencher+tumbler', image_url: '', category: 'lifestyle', category_th: 'ไลฟ์สไตล์', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['lifestyle', 'aesthetic', 'fitness', 'trending'], in_stock: true, currency: 'THB' },
+  { id: 'f15', name: 'อาหารเสริม Collagen Peptide', brand: 'Blackmore', price: 590, commission_rate: 12, commission_thb: 71, product_url: 'https://shopee.co.th/search?keyword=collagen+peptide+supplement', image_url: '', category: 'health', category_th: 'สุขภาพ', merchant_name: 'Lazada', merchant_id: '', platform: 'Lazada', tags: ['beauty', 'health', 'skincare', 'สุขภาพ'], in_stock: true, currency: 'THB' },
 ]
 
 export async function POST(req: NextRequest) {
@@ -110,25 +115,25 @@ export async function POST(req: NextRequest) {
 รายการสินค้าที่มีในระบบ:
 ${productSummary}
 
-เลือก 5-6 สินค้าที่เหมาะกับ creator นี้ที่สุด โดยพิจารณา:
+เลือก 10 สินค้าที่เหมาะกับ creator นี้ที่สุด โดยพิจารณา:
 1. สินค้าตรง niche และ audience ของช่อง
 2. ราคาและ commission เหมาะกับ follower count (ช่องเล็ก = ราคาต่ำ conversion ง่าย)
 3. สินค้าที่ใช้ใน content ได้จริง ไม่ดูเป็น ad โจ่งแจ้ง
 4. Mix ระหว่าง easy win (ราคาต่ำ ขายง่าย) และ high-value (commission สูงต่อชิ้น)
 
-Return ONLY valid JSON:
+Return ONLY valid JSON (no markdown, no explanation):
 {
-  "selected_ids": ["<id1>", "<id2>", "<id3>", "<id4>", "<id5>"],
+  "selected_ids": ["<id1>","<id2>","<id3>","<id4>","<id5>","<id6>","<id7>","<id8>","<id9>","<id10>"],
   "rankings": {
     "<id>": {
-      "rank": <1-6>,
-      "why_fits": "<1 ประโยค ภาษาไทย ว่าทำไมสินค้านี้ถึงเหมาะกับช่องนี้>",
-      "content_idea": "<ไอเดียทำคลิปกับสินค้านี้ — เช่น ทำ vlog ใช้แล้วแปะลิ้งค์ใน bio>"
+      "rank": <1-10>,
+      "why_fits": "<1 ประโยค ภาษาไทย>",
+      "content_idea": "<ไอเดียทำคลิปสั้น>"
     }
   },
-  "total_monthly_min": <number THB — ถ้าขายได้ 3-5 ชิ้น/เดือน>,
-  "total_monthly_max": <number THB — ถ้าขายได้ 10-20 ชิ้น/เดือน>,
-  "tip": "<เทคนิค affiliate 1 ประโยค เหมาะกับ creator niche นี้โดยเฉพาะ>"
+  "total_monthly_min": <number THB>,
+  "total_monthly_max": <number THB>,
+  "tip": "<เทคนิค affiliate 1 ประโยค>"
 }`
 
     const client = new Anthropic({ apiKey: anthropicKey })
