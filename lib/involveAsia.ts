@@ -119,31 +119,61 @@ export async function searchProducts(
   keywords: string[],
   options: { limit?: number; country?: string; apiSecret?: string } = {}
 ): Promise<InvolveProduct[]> {
-  const { limit = 20, country = 'TH', apiSecret } = options
-  const keyword = keywords.slice(0, 3).join(' ')
+  const { limit = 30, country = 'TH', apiSecret } = options
 
-  const params = new URLSearchParams({
-    keyword,
-    country,
-    limit: String(limit),
-    currency: 'THB',
-    status: 'active',
-  })
+  // ── ลอง 3 endpoints ตามลำดับ ──────────────────────────
+  const endpoints = [
+    // 1. Offers API (Latest Offers จาก dashboard)
+    `${BASE_URL}/offers?country=${country}&status=active&limit=${limit}`,
+    // 2. Product Feed / Shopee Commissions Xtra
+    `${BASE_URL}/product-feed?country=${country}&limit=${limit}`,
+    // 3. Campaigns list (fallback)
+    `${BASE_URL}/campaigns?country=${country}&status=active&limit=${limit}`,
+  ]
 
-  const url = `${BASE_URL}/product-feed/search?${params}`
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 4000) // 4s timeout
-  let res: Response
-  try {
-    res = await fetch(url, { headers: getHeaders(apiKey, apiSecret), signal: controller.signal, cache: 'no-store' })
-  } finally {
-    clearTimeout(timer)
+  for (const url of endpoints) {
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 5000)
+      let res: Response
+      try {
+        res = await fetch(url, { headers: getHeaders(apiKey, apiSecret), signal: controller.signal, cache: 'no-store' })
+      } finally {
+        clearTimeout(timer)
+      }
+
+      if (!res!.ok) {
+        console.warn(`[involveAsia] ${url} → ${res!.status}`)
+        continue // ลอง endpoint ถัดไป
+      }
+
+      const json = await res!.json()
+      console.log(`[involveAsia] ${url} → OK | keys:`, Object.keys(json))
+
+      // รองรับทุก response shape ที่เป็นไปได้
+      const raw: any[] = (
+        json.data?.products ?? json.data?.offers ?? json.data?.items ??
+        json.data?.campaigns ?? json.products ?? json.offers ?? json.items ??
+        (Array.isArray(json.data) ? json.data : [])
+      )
+
+      if (raw.length > 0) {
+        console.log(`[involveAsia] Got ${raw.length} items from ${url}`)
+        // กรอง keyword ถ้ามีข้อมูล
+        const kwLower = keywords.map(k => k.toLowerCase())
+        const filtered = raw.filter((p: any) => {
+          const text = [p.name, p.category, p.title, p.description, ...(p.tags ?? [])].join(' ').toLowerCase()
+          return kwLower.some(k => text.includes(k))
+        })
+        const result = (filtered.length > 0 ? filtered : raw).slice(0, limit)
+        return result.map((p: any): InvolveProduct => normalizeProduct(p))
+      }
+    } catch (err) {
+      console.warn(`[involveAsia] endpoint failed:`, err)
+    }
   }
-  if (!res!.ok) throw new Error(`Involve Asia product search error: ${res!.status} — ${await res!.text()}`)
-  const json = await res.json()
 
-  const raw: any[] = json.data?.products ?? json.data?.items ?? json.data ?? []
-  return raw.map((p: any): InvolveProduct => normalizeProduct(p))
+  return [] // ทุก endpoint ไม่ return data → caller จะใช้ FALLBACK_PRODUCTS
 }
 
 /**
