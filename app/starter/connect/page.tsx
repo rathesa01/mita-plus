@@ -399,7 +399,7 @@ export default function ConnectPage() {
                     <button
                       onClick={() => setMethod('upload')}
                       style={{
-                        padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        padding: '10px 24px', borderRadius: 10, cursor: 'pointer',
                         background: selectedPlatform.bg, border: `1px solid ${selectedPlatform.border}`,
                         color: '#fff', fontWeight: 700, fontSize: 13,
                       }}
