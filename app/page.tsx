@@ -47,25 +47,44 @@ export default function LandingPage() {
     <main className="bg-[#08080f] min-h-screen text-white overflow-x-hidden">
 
       {/* ── NAV ─────────────────────────────────── */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#08080f]/80 backdrop-blur-xl">
+      <nav className="fixed top-0 w-full z-50 border-b border-white/[0.06] bg-[#08080f]/85 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-          <span className="text-lg font-black gradient-brand tracking-tight">MITA+</span>
-          <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* Logo */}
+          <Link href="/" className="text-[1.15rem] font-black gradient-brand tracking-tight no-underline">
+            MITA+
+          </Link>
+
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+
+            {/* แพ็คเกจ — text link, desktop only */}
             <Link
               href="/pricing"
-              className="text-white/55 hover:text-white/80 text-xs sm:text-sm font-medium transition-colors"
+              className="hidden sm:inline-flex text-[13px] font-medium text-white/45 hover:text-white/75 transition-colors px-2"
             >
               แพ็คเกจ
             </Link>
+
+            {/* divider — desktop only */}
+            <span className="hidden sm:block w-px h-4 bg-white/10" />
+
+            {/* เข้าสู่ระบบ — ghost pill */}
             <Link
               href="/login"
-              className="text-white/55 hover:text-white/80 text-xs sm:text-sm font-medium transition-colors"
+              className="inline-flex items-center text-[13px] font-semibold text-white/70 hover:text-white
+                         border border-white/15 hover:border-white/30
+                         px-4 py-[7px] rounded-full transition-all hover:bg-white/5"
             >
               เข้าสู่ระบบ
             </Link>
+
+            {/* เริ่มฟรี — primary solid */}
             <Link
               href="/audit"
-              className="flex items-center gap-1.5 bg-white text-black text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 rounded-full hover:bg-white/90 transition-all"
+              className="inline-flex items-center gap-1.5 text-[13px] font-bold
+                         bg-white text-black px-4 py-[7px] rounded-full
+                         hover:bg-white/90 active:scale-95 transition-all"
             >
               เริ่มฟรี <ArrowRight size={12} />
             </Link>
