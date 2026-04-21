@@ -380,7 +380,7 @@ export default function ResultPage() {
         await supabase
           .from('user_profiles')
           .upsert(
-            { id: session.user.id, audit_data: parsed },
+            { id: session.user.id, audit_data: parsed } as never,
             { onConflict: 'id' }
           )
         console.log('[result] audit_data saved to DB (user already logged in)')
