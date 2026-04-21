@@ -1005,55 +1005,70 @@ export default function StarterPage() {
   const userId = profile?.id ?? null
 
   return (
-    <div style={{ background: COLORS.bg, minHeight: '100vh', maxWidth: '480px', margin: '0 auto', paddingBottom: '80px' }}>
+    <div style={{ background: COLORS.bg, minHeight: '100vh', maxWidth: '480px', margin: '0 auto', paddingBottom: '100px' }}>
 
       {/* ── NAV ─────────────────────────────────────── */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 50,
-        background: `${COLORS.bg}ee`, backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        padding: '12px 16px',
+        background: `${COLORS.bg}f0`, backdropFilter: 'blur(24px)',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        padding: '10px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <div>
+        {/* Logo + plan badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span className="gradient-purple-blue font-black text-lg">MITA+</span>
-          <span style={{ marginLeft: '8px', fontSize: '10px', color: '#7B61FF', background: 'rgba(123,97,255,0.12)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700 }}>
+          <span style={{ fontSize: '10px', color: '#7B61FF', background: 'rgba(123,97,255,0.12)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700 }}>
             Starter
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Flame size={14} style={{ color: '#FF9F1C' }} />
-          <span style={{ fontSize: '13px', fontWeight: 900, color: '#FF9F1C' }}>{liveCreator.streak} วันติด</span>
+
+        {/* Right side: streak + support */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Streak pill */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '4px',
+            background: 'rgba(255,159,28,0.10)', border: '1px solid rgba(255,159,28,0.22)',
+            borderRadius: '99px', padding: '4px 10px',
+          }}>
+            <Flame size={12} style={{ color: '#FF9F1C' }} />
+            <span style={{ fontSize: '12px', fontWeight: 900, color: '#FF9F1C' }}>{liveCreator.streak}</span>
+          </div>
+
           {/* LINE Admin */}
           <a
             href="https://lin.ee/WHWLZ7W"
             target="_blank" rel="noopener noreferrer"
+            title="ติดต่อแอดมิน"
             style={{
-              display: 'flex', alignItems: 'center', gap: '4px',
-              background: 'rgba(6,199,85,0.12)', border: '1px solid rgba(6,199,85,0.25)',
-              borderRadius: '99px', padding: '4px 10px', textDecoration: 'none',
-              fontSize: '11px', fontWeight: 700, color: '#06C755',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '32px', height: '32px',
+              background: 'rgba(6,199,85,0.10)', border: '1px solid rgba(6,199,85,0.22)',
+              borderRadius: '99px', textDecoration: 'none', flexShrink: 0,
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#06C755" xmlns="http://www.w3.org/2000/svg">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#06C755">
               <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.036 9.608.391.085.922.26 1.057.597.12.303.079.771.038 1.087l-.164 1.026c-.045.303-.24 1.192 1.049.649 1.291-.542 6.916-4.073 9.436-6.972C23.176 14.393 24 12.458 24 10.304zm-17.548 2.572h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .627.285.627.63v3.511h1.756c.348 0 .629.283.629.63 0 .344-.281.627-.629.627zm2.115-.629c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.139zm4.943 0c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.139zm3.856-2.772c.349 0 .63.283.63.63 0 .344-.281.629-.63.629H16.11v1.127h1.756c.349 0 .63.283.63.63 0 .344-.281.627-.63.627h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H16.11v1.127h1.756z"/>
             </svg>
-            แอดมิน
           </a>
-          {/* Logout */}
+
+          {/* Logout icon */}
           <button
             onClick={async () => {
               if (supabase) await supabase.auth.signOut()
               router.replace('/login')
             }}
+            title="ออกจากระบบ"
             style={{
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '99px', padding: '4px 10px',
-              fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)',
-              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '32px', height: '32px',
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '99px', cursor: 'pointer',
             }}
           >
-            ออกจากระบบ
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
           </button>
         </div>
       </nav>
@@ -1061,65 +1076,91 @@ export default function StarterPage() {
       <div style={{ padding: '20px 16px 0' }}>
 
         {/* ── HEADER ──────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <p style={{ margin: '0 0 2px', fontSize: '12px', color: COLORS.textSecondary }}>
-            สัปดาห์ที่ {liveCreator.weekNo} · เดือน 1
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '16px' }}>
+          <p style={{ margin: '0 0 3px', fontSize: '12px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>
+            สวัสดี {displayName} 👋 · สัปดาห์ที่ {liveCreator.weekNo}
           </p>
-          <h1 style={{ margin: '0 0 16px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>
-            แผนของ{displayName} 🎯
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+            {monPlan ? monPlan.headline ?? 'แผนหาเงินของคุณพร้อมแล้ว' : 'เริ่มสร้างรายได้จากช่องของคุณ'}
           </h1>
         </motion.div>
 
-        {/* ── REVENUE PROGRESS ────────────────────── */}
+        {/* ── REVENUE HERO CARD ───────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
           style={{
-            padding: '16px', marginBottom: '16px',
-            background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(34,197,94,0.08))',
-            border: '1px solid rgba(123,97,255,0.25)',
+            position: 'relative', overflow: 'hidden',
+            padding: '20px 18px 18px',
+            marginBottom: '12px',
+            background: 'linear-gradient(135deg, rgba(123,97,255,0.15) 0%, rgba(34,197,94,0.07) 100%)',
+            border: '1px solid rgba(123,97,255,0.28)',
             borderRadius: RADIUS.card,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+          {/* Glow orb background */}
+          <div style={{
+            position: 'absolute', top: '-30px', right: '-20px',
+            width: '120px', height: '120px', borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(123,97,255,0.25) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+            {/* Left: current income */}
             <div>
-              <p style={{ margin: '0 0 2px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>รายได้เดือนนี้</p>
-              <p style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#22C55E', lineHeight: 1 }}>
+              <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                รายได้เดือนนี้
+              </p>
+              <p style={{ margin: 0, fontSize: '38px', fontWeight: 900, color: '#22C55E', lineHeight: 1, letterSpacing: '-0.02em' }}>
                 ฿{fmt(liveCreator.currentEarned)}
               </p>
             </div>
+            {/* Right: target + potential */}
             <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 2px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>เป้าหมาย</p>
-              <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+              <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>เป้า/เดือน</p>
+              <p style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: 800, color: 'rgba(255,255,255,0.55)' }}>
                 ฿{fmt(liveCreator.targetIncome)}
               </p>
+              {monPlan && (
+                <span style={{ fontSize: '10px', color: '#7B61FF', background: 'rgba(123,97,255,0.12)', padding: '1px 8px', borderRadius: '99px', fontWeight: 700 }}>
+                  สูงสุด ฿{fmt(monPlan.total_potential_max)}/เดือน
+                </span>
+              )}
             </div>
           </div>
-          <div style={{ height: '8px', borderRadius: '99px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: '6px' }}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(to right, #7B61FF, #22C55E)' }}
-            />
+
+          {/* Progress bar */}
+          <div style={{ marginBottom: '8px' }}>
+            <div style={{ height: '7px', borderRadius: '99px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+                style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(to right, #7B61FF, #22C55E)' }}
+              />
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-              {Math.round(progressPct)}% ของเป้าหมาย
+              {Math.round(progressPct)}% ของเป้า
             </p>
-            <p style={{ margin: 0, fontSize: '11px', color: '#22C55E', fontWeight: 700 }}>
-              ยังขาดอีก ฿{fmt(liveCreator.targetIncome - liveCreator.currentEarned)}
+            <p style={{ margin: 0, fontSize: '11px', color: liveCreator.currentEarned > 0 ? '#22C55E' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
+              {liveCreator.currentEarned > 0
+                ? `ขาดอีก ฿${fmt(liveCreator.targetIncome - liveCreator.currentEarned)}`
+                : 'ยังไม่มีรายได้ — เริ่มเลยค่ะ 🚀'
+              }
             </p>
           </div>
         </motion.div>
 
         {/* ── STATS ROW ────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-          style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.16 }}
+          style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}
         >
-          <StatPill icon={<Target size={14} style={{ color: '#7B61FF' }} />} label="แหล่งรายได้" value={`${monPlan?.revenue_streams?.length ?? 0}`} color="#7B61FF" />
-          <StatPill icon={<TrendingUp size={14} style={{ color: '#22C55E' }} />} label="สินค้า AI คัด" value={`${affiliateData?.products?.length ?? 0}`} color="#22C55E" />
-          <StatPill icon={<Star size={14} style={{ color: '#FF9F1C' }} />} label="Platforms" value={`${connectedPlatforms.length}`} color="#FF9F1C" />
+          <StatPill icon={<Target size={13} style={{ color: '#7B61FF' }} />} label="แหล่งรายได้" value={`${monPlan?.revenue_streams?.length ?? 0}`} color="#7B61FF" />
+          <StatPill icon={<TrendingUp size={13} style={{ color: '#22C55E' }} />} label="สินค้า AI คัด" value={`${affiliateData?.products?.length ?? 0}`} color="#22C55E" />
+          <StatPill icon={<Star size={13} style={{ color: '#FF9F1C' }} />} label="Platforms" value={`${connectedPlatforms.length}/6`} color="#FF9F1C" />
         </motion.div>
 
         {/* ── FEATURE #2: แผนหาเงิน CTA ──────────── */}
@@ -1384,28 +1425,14 @@ export default function StarterPage() {
           </motion.div>
         )}
 
-        {/* ── TABS ────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'rgba(255,255,255,0.04)', padding: '4px', borderRadius: '12px' }}>
-          {([
-            { key: 'plan',       label: '📅 แผน' },
-            { key: 'products',   label: '🛍 สินค้า' },
-            { key: 'clips',      label: '🎬 คลิป' },
-            { key: 'milestones', label: '🏆 เป้า' },
-          ] as const).map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              style={{
-                flex: 1, padding: '9px 4px', border: 'none', borderRadius: '9px', cursor: 'pointer',
-                fontWeight: 700, fontSize: '11px',
-                background: tab === t.key ? '#7B61FF' : 'transparent',
-                color: tab === t.key ? '#fff' : 'rgba(255,255,255,0.35)',
-                transition: 'all 0.2s', whiteSpace: 'nowrap',
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* ── SECTION TITLE ────────────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>
+            {tab === 'plan' && '📅 แผนประจำสัปดาห์'}
+            {tab === 'products' && '🛍️ สินค้า Affiliate ที่ AI เลือก'}
+            {tab === 'clips' && '🎬 คลิปตัวอย่าง + Script'}
+            {tab === 'milestones' && '🏆 เป้าหมายของคุณ'}
+          </p>
         </div>
 
         {/* ── TAB CONTENT ─────────────────────────── */}
@@ -1445,6 +1472,89 @@ export default function StarterPage() {
           />
         )}
       </div>
+
+      {/* ── BOTTOM NAV ──────────────────────────── */}
+      <nav style={{
+        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: '480px', zIndex: 50,
+        background: `${COLORS.bg}f5`, backdropFilter: 'blur(24px)',
+        borderTop: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex', alignItems: 'stretch',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
+        {([
+          { key: 'plan',       label: 'แผน',   activeColor: '#7B61FF',
+            icon: (active: boolean) => (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#7B61FF' : 'rgba(255,255,255,0.35)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            ),
+          },
+          { key: 'products',  label: 'สินค้า',  activeColor: '#22C55E',
+            icon: (active: boolean) => (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#22C55E' : 'rgba(255,255,255,0.35)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
+            ),
+          },
+          { key: 'clips',     label: 'คลิป',   activeColor: '#3ECFFF',
+            icon: (active: boolean) => (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#3ECFFF' : 'rgba(255,255,255,0.35)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            ),
+          },
+          { key: 'milestones', label: 'เป้าหมาย', activeColor: '#FF9F1C',
+            icon: (active: boolean) => (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF9F1C' : 'rgba(255,255,255,0.35)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+              </svg>
+            ),
+          },
+        ] as const).map(t => {
+          const active = tab === t.key
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: '3px', padding: '10px 4px 12px',
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                position: 'relative',
+              }}
+            >
+              {/* Active indicator bar */}
+              {active && (
+                <motion.div
+                  layoutId="bottom-tab-indicator"
+                  style={{
+                    position: 'absolute', top: 0, left: '20%', right: '20%',
+                    height: '2px', borderRadius: '0 0 2px 2px',
+                    background: t.activeColor,
+                  }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                />
+              )}
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: active ? `${t.activeColor}15` : 'transparent',
+                transition: 'background 0.2s',
+              }}>
+                {t.icon(active)}
+              </div>
+              <span style={{
+                fontSize: '10px', fontWeight: active ? 800 : 500,
+                color: active ? t.activeColor : 'rgba(255,255,255,0.3)',
+                transition: 'color 0.2s',
+              }}>
+                {t.label}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
 
       {/* ── CHECK-IN MODAL ───────────────────────── */}
       <CheckInModal
