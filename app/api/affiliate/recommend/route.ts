@@ -1,39 +1,38 @@
 // @ts-nocheck
+/**
+ * POST /api/affiliate/recommend
+ *
+ * Flow:
+ * 1. Check user cache (affiliate_products) — ถ้า < 7 วัน return cached
+ * 2. Load product pool จาก niche_products table (Shopee trending, refresh ทุกอาทิตย์)
+ * 3. ถ้าไม่มี pool → fetch จาก Shopee ทันที (และ save pool)
+ * 4. Claude เลือก 10 สินค้าที่เหมาะกับ creator คนนี้ unique
+ * 5. Save ลง user_profiles.affiliate_products (cache 7 วัน)
+ *
+ * Rate limit: refresh ได้วันละ 1 ครั้ง (Thai timezone UTC+7)
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { searchProducts, nicheToKeywords, type InvolveProduct } from '@/lib/involveAsia'
+import { buildProductPool, canonicalNiche, type ShopeeProduct } from '@/lib/shopeeSearch'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 30 // allow up to 30s (needs Vercel Pro; Hobby caps at 10s automatically)
+export const maxDuration = 60
 
-// ── Fallback catalog (used when Involve Asia API not ready) ─
-// Simple static products — replaced by real API once INVOLVE_ASIA_API_KEY is set
-const FALLBACK_PRODUCTS: InvolveProduct[] = [
-  { id: 'f1', name: 'เซรั่มวิตามินซี', brand: 'Skinsista', price: 390, commission_rate: 12, commission_thb: 47, product_url: 'https://shopee.co.th/search?keyword=serum+vitamin+c', image_url: '', category: 'beauty', category_th: 'ความงาม', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['beauty', 'skincare', 'ความงาม'], in_stock: true, currency: 'THB' },
-  { id: 'f2', name: 'ครีมกันแดด SPF50+', brand: 'Banana Boat', price: 320, commission_rate: 10, commission_thb: 32, product_url: 'https://shopee.co.th/search?keyword=sunscreen+spf50', image_url: '', category: 'beauty', category_th: 'ความงาม', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['beauty', 'skincare', 'outdoor'], in_stock: true, currency: 'THB' },
-  { id: 'f3', name: 'Resistance Band Set', brand: 'Fit & Flex', price: 350, commission_rate: 12, commission_thb: 42, product_url: 'https://shopee.co.th/search?keyword=resistance+band+set', image_url: '', category: 'fitness', category_th: 'กีฬา', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['fitness', 'gym', 'ออกกำลังกาย'], in_stock: true, currency: 'THB' },
-  { id: 'f4', name: 'Ring Light LED 10 นิ้ว', brand: 'Godox', price: 690, commission_rate: 10, commission_thb: 69, product_url: 'https://shopee.co.th/search?keyword=ring+light+10+inch', image_url: '', category: 'electronics', category_th: 'อิเล็กทรอนิกส์', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['tech', 'creator', 'tiktok', 'youtube'], in_stock: true, currency: 'THB' },
-  { id: 'f5', name: 'หม้อทอดไร้น้ำมัน 5L', brand: 'Xiaomi', price: 1890, commission_rate: 6, commission_thb: 113, product_url: 'https://shopee.co.th/search?keyword=air+fryer+5l', image_url: '', category: 'kitchen', category_th: 'ของใช้ครัว', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['food', 'cooking', 'kitchen', 'ทำอาหาร'], in_stock: true, currency: 'THB' },
-  { id: 'f6', name: 'Whey Protein 1kg Vanilla', brand: 'Optimum Nutrition', price: 890, commission_rate: 9, commission_thb: 80, product_url: 'https://shopee.co.th/search?keyword=whey+protein+vanilla', image_url: '', category: 'fitness', category_th: 'สุขภาพ', merchant_name: 'Lazada', merchant_id: '', platform: 'Lazada', tags: ['fitness', 'gym', 'สุขภาพ', 'nutrition'], in_stock: true, currency: 'THB' },
-  { id: 'f7', name: 'กระเป๋า Canvas Tote Bag', brand: 'MUJI', price: 199, commission_rate: 9, commission_thb: 18, product_url: 'https://shopee.co.th/search?keyword=canvas+tote+bag', image_url: '', category: 'fashion', category_th: 'แฟชั่น', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['fashion', 'แฟชั่น', 'lifestyle'], in_stock: true, currency: 'THB' },
-  { id: 'f8', name: 'เทียนหอม Soy Wax Set', brand: 'Karmakamet', price: 390, commission_rate: 11, commission_thb: 43, product_url: 'https://shopee.co.th/search?keyword=soy+wax+candle+set', image_url: '', category: 'home', category_th: 'ของแต่งบ้าน', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['home', 'decor', 'lifestyle', 'aesthetic'], in_stock: true, currency: 'THB' },
-  { id: 'f9', name: 'น้ำพุแมว Cat Fountain', brand: 'Petkit', price: 590, commission_rate: 10, commission_thb: 59, product_url: 'https://shopee.co.th/search?keyword=cat+fountain+automatic', image_url: '', category: 'pets', category_th: 'สัตว์เลี้ยง', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['pets', 'cat', 'แมว'], in_stock: true, currency: 'THB' },
-  { id: 'f10', name: 'ไมโครโฟน Wireless Clip', brand: 'DJI', price: 2490, commission_rate: 8, commission_thb: 199, product_url: 'https://shopee.co.th/search?keyword=wireless+mic+clip+on', image_url: '', category: 'electronics', category_th: 'อิเล็กทรอนิกส์', merchant_name: 'Lazada', merchant_id: '', platform: 'Lazada', tags: ['tech', 'creator', 'youtube', 'podcast'], in_stock: true, currency: 'THB' },
-  { id: 'f11', name: 'ชุดออกกำลังกาย Yoga Set', brand: 'Adidas', price: 890, commission_rate: 10, commission_thb: 89, product_url: 'https://shopee.co.th/search?keyword=yoga+set+outfit', image_url: '', category: 'fitness', category_th: 'กีฬา', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['fitness', 'yoga', 'ออกกำลังกาย', 'fashion'], in_stock: true, currency: 'THB' },
-  { id: 'f12', name: 'แผ่น Acne Patch Hydrocolloid', brand: 'Cosrx', price: 199, commission_rate: 14, commission_thb: 28, product_url: 'https://shopee.co.th/search?keyword=acne+patch+hydrocolloid', image_url: '', category: 'beauty', category_th: 'สกินแคร์', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['beauty', 'skincare', 'ความงาม', 'acne'], in_stock: true, currency: 'THB' },
-  { id: 'f13', name: 'Tripod มือถือ ปรับได้', brand: 'Ulanzi', price: 450, commission_rate: 11, commission_thb: 50, product_url: 'https://shopee.co.th/search?keyword=phone+tripod+flexible', image_url: '', category: 'electronics', category_th: 'อิเล็กทรอนิกส์', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['tech', 'creator', 'tiktok', 'youtube'], in_stock: true, currency: 'THB' },
-  { id: 'f14', name: 'กระบอกน้ำ Stanley Quencher', brand: 'Stanley', price: 1290, commission_rate: 9, commission_thb: 116, product_url: 'https://shopee.co.th/search?keyword=stanley+quencher+tumbler', image_url: '', category: 'lifestyle', category_th: 'ไลฟ์สไตล์', merchant_name: 'Shopee', merchant_id: '', platform: 'Shopee', tags: ['lifestyle', 'aesthetic', 'fitness', 'trending'], in_stock: true, currency: 'THB' },
-  { id: 'f15', name: 'อาหารเสริม Collagen Peptide', brand: 'Blackmore', price: 590, commission_rate: 12, commission_thb: 71, product_url: 'https://shopee.co.th/search?keyword=collagen+peptide+supplement', image_url: '', category: 'health', category_th: 'สุขภาพ', merchant_name: 'Lazada', merchant_id: '', platform: 'Lazada', tags: ['beauty', 'health', 'skincare', 'สุขภาพ'], in_stock: true, currency: 'THB' },
-]
+// ── Thai timezone helper ──────────────────────────────────
+
+function thaiDateStr(date = new Date()): string {
+  return new Date(date.getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+// ── Main Handler ──────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
-    const anthropicKey    = process.env.ANTHROPIC_API_KEY
-    const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey      = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
-    const involveKey      = process.env.INVOLVE_ASIA_API_KEY     // api_key (e.g. "general")
-    const involveSecret   = process.env.INVOLVE_ASIA_API_SECRET  // api_secret (bearer token)
+    const anthropicKey = process.env.ANTHROPIC_API_KEY
+    const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey   = process.env.SUPABASE_SERVICE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!anthropicKey) throw new Error('ANTHROPIC_API_KEY not set')
     if (!supabaseUrl || !serviceKey) throw new Error('Supabase env missing')
@@ -42,194 +41,209 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
     const supabase = createClient(supabaseUrl, serviceKey)
+
+    // ── Load user profile ──────────────────────────────
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('audit_data, channel_data, monetization_plan, affiliate_products')
+      .select('audit_data, channel_data, affiliate_products')
       .eq('id', userId)
       .single()
 
-    // ── Rate limit: 1 refresh per day (Thai timezone UTC+7) ──
-    const lastGen = (profile?.affiliate_products as any)?.generated_at as string | undefined
-    if (lastGen) {
-      const offset = 7 * 60 * 60 * 1000
-      const lastDay = new Date(new Date(lastGen).getTime() + offset).toISOString().slice(0, 10)
-      const today   = new Date(Date.now() + offset).toISOString().slice(0, 10)
+    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+
+    const cached = profile.affiliate_products as any
+
+    // ── Rate limit: 1 refresh per day ─────────────────
+    if (cached?.generated_at) {
+      const lastDay = thaiDateStr(new Date(cached.generated_at))
+      const today   = thaiDateStr()
+
       if (lastDay === today && !dev) {
-        if (force) return NextResponse.json({ rateLimited: true, message: 'รีเฟรชได้วันละ 1 ครั้งค่ะ มาใหม่พรุ่งนี้' })
-        // ไม่ force → return cached
-        return NextResponse.json({ success: true, data: profile!.affiliate_products, cached: true })
+        if (force) {
+          return NextResponse.json({ rateLimited: true, message: 'รีเฟรชได้วันละ 1 ครั้งค่ะ มาใหม่พรุ่งนี้' })
+        }
+        // not force → return cached
+        return NextResponse.json({ success: true, data: cached, cached: true })
       }
     }
 
-    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-
+    // ── Extract creator context ────────────────────────
     const audit   = profile.audit_data   as any
     const channel = profile.channel_data as any
 
-    // ── Extract creator context ──────────────────────────
-    const niche    = audit?.input?.niche ?? 'general'
-    const platform = audit?.input?.platform ?? 'tiktok'
-    const followers = audit?.input?.followers ?? 0
+    const rawNiche   = audit?.input?.niche ?? audit?.niche ?? 'ทั่วไป'
+    const platform   = audit?.input?.platform ?? 'tiktok'
+    const followers  = audit?.input?.followers ?? 0
+    const niche      = canonicalNiche(rawNiche)
 
-    const platforms = Object.keys(channel ?? {})
-    const primary   = platforms[0] ?? platform
-    const pd        = channel?.[primary] ?? {}
-    const aud       = pd.audience ?? {}
-    const femalePct = aud.gender_female_pct ?? null
-    const topAge    = (() => {
-      const ages = [
-        { key: 'age_13_17_pct', label: '13-17' }, { key: 'age_18_24_pct', label: '18-24' },
-        { key: 'age_25_34_pct', label: '25-34' }, { key: 'age_35_44_pct', label: '35-44' },
-        { key: 'age_45_plus_pct', label: '45+' },
-      ]
-      let top = ages[0]
-      for (const ag of ages) if ((aud[ag.key] ?? 0) > (aud[top.key] ?? 0)) top = ag
-      return aud[top.key] ? top.label : null
-    })()
+    const platforms    = Object.keys(channel ?? {})
+    const primaryPlat  = platforms[0] ?? platform
+    const pd           = channel?.[primaryPlat] ?? {}
+    const aud          = pd.audience ?? {}
+    const femalePct    = aud.gender_female_pct ?? null
+    const topAge       = getTopAge(aud)
+    const bestFormat   = pd.content?.best_format ?? pd.overview?.best_format ?? ''
 
-    // ── Step 1: Search real products from Involve Asia (if key ready) ──
-    let productPool: InvolveProduct[] = []
-    let dataSource: 'involve_asia' | 'fallback' = 'fallback'
+    console.log(`[affiliate/recommend] userId=${userId} niche="${niche}" platform=${primaryPlat}`)
 
-    if (involveKey || involveSecret) {
-      try {
-        const keywords = nicheToKeywords(niche, platform)
-        console.log(`[affiliate/recommend] Searching Involve Asia: keywords=${keywords.join(', ')} niche=${niche}`)
-        const iaProducts = await searchProducts(
-          involveKey ?? 'general',
-          keywords,
-          { limit: 200, apiSecret: involveSecret, niche }
-        )
-        if (iaProducts.length > 0) {
-          productPool = iaProducts
-          dataSource = 'involve_asia'
-          console.log(`[affiliate/recommend] Got ${productPool.length} products from Involve Asia ✅`)
-        } else {
-          console.warn('[affiliate/recommend] Involve Asia returned 0 products — using fallback catalog')
-          console.warn('[affiliate/recommend] Fix: set INVOLVE_FEED_* env vars from dashboard (see /api/affiliate/debug)')
-          productPool = FALLBACK_PRODUCTS
-        }
-      } catch (err) {
-        console.warn('[affiliate/recommend] Involve Asia search error, using fallback:', err)
-        productPool = FALLBACK_PRODUCTS
+    // ── Load product pool ──────────────────────────────
+    let productPool: ShopeeProduct[] = []
+    let poolSource = 'shopee_live'
+
+    // 1. Try niche_products table (cached pool, refresh weekly)
+    const { data: nicheRow } = await supabase
+      .from('niche_products')
+      .select('products, refreshed_at, product_count')
+      .eq('niche', niche)
+      .single()
+
+    if (nicheRow?.products && Array.isArray(nicheRow.products) && nicheRow.products.length > 0) {
+      const ageMs = Date.now() - new Date(nicheRow.refreshed_at).getTime()
+      const sevenDays = 7 * 24 * 60 * 60 * 1000
+
+      if (ageMs < sevenDays) {
+        productPool = nicheRow.products as ShopeeProduct[]
+        poolSource = 'niche_cache'
+        console.log(`[affiliate/recommend] Using cached pool: ${productPool.length} products (${Math.round(ageMs / 86400000)}d old)`)
       }
-    } else {
-      console.log('[affiliate/recommend] No Involve Asia credentials — using fallback catalog')
-      productPool = FALLBACK_PRODUCTS
     }
 
-    // ── Step 2: AI picks best matches ───────────────────
-    const productSummary = productPool.map(p =>
-      `[${p.id}] ${p.name} | ${p.merchant_name} | ฿${p.price} | commission ${p.commission_rate}% (฿${p.commission_thb}/ชิ้น) | tags: ${p.tags.slice(0,5).join(', ')}`
+    // 2. No cache → fetch from Shopee now + save pool
+    if (productPool.length === 0) {
+      console.log(`[affiliate/recommend] No cache for "${niche}" — fetching from Shopee...`)
+      productPool = await buildProductPool(niche, 200)
+
+      if (productPool.length > 0) {
+        // Save pool for future users with same niche
+        await supabase
+          .from('niche_products')
+          .upsert({
+            niche,
+            products: productPool,
+            product_count: productPool.length,
+            refreshed_at: new Date().toISOString(),
+          })
+        console.log(`[affiliate/recommend] Pool saved: ${productPool.length} products`)
+      }
+    }
+
+    // 3. Fallback ถ้า Shopee ไม่ตอบ
+    if (productPool.length === 0) {
+      return NextResponse.json({
+        error: 'ขณะนี้ระบบไม่สามารถดึงข้อมูลสินค้าได้ กรุณาลองใหม่อีกครั้งค่ะ',
+        retry: true,
+      }, { status: 503 })
+    }
+
+    // ── Claude picks 10 ───────────────────────────────
+    // สร้าง product summary สำหรับ Claude (ไม่เกิน 200 ชิ้น)
+    const pool200 = productPool.slice(0, 200)
+    const productSummary = pool200.map((p, i) =>
+      `[${i}] ${p.name} | ฿${p.price} | ⭐${p.rating} | ขายแล้ว ${p.sold.toLocaleString()} ชิ้น`
     ).join('\n')
 
-    const prompt = `คุณคือ MITA+ AI ผู้เชี่ยวชาญ affiliate marketing สำหรับ creator ไทย
+    const audienceDesc = [
+      femalePct != null ? `หญิง ${femalePct}% / ชาย ${100 - femalePct}%` : null,
+      topAge ? `อายุหลัก ${topAge} ปี` : null,
+    ].filter(Boolean).join(', ') || 'ไม่ทราบ'
+
+    const prompt = `คุณคือ MITA+ AI ผู้เชี่ยวชาญด้านการเลือกสินค้าสำหรับ creator ไทย
 
 ข้อมูล Creator:
-- Niche/เนื้อหา: ${niche}
-- Platform หลัก: ${primary}
-- Followers: ${followers?.toLocaleString() ?? 'unknown'}
-- เพศผู้ชม: ${femalePct != null ? `หญิง ${femalePct}% / ชาย ${100 - femalePct}%` : 'ไม่ทราบ'}
-- ช่วงอายุหลัก: ${topAge ?? 'ไม่ทราบ'} ปี
+- แนวคลิป/Niche: ${rawNiche}
+- Platform หลัก: ${primaryPlat}
+- Followers: ${followers.toLocaleString()}
+- ผู้ชม: ${audienceDesc}
+- รูปแบบคอนเทนต์: ${bestFormat || 'Short-form video'}
 
-รายการสินค้าที่มีในระบบ:
+สินค้า trending บน Shopee ขณะนี้ (${pool200.length} ชิ้น):
 ${productSummary}
 
-เลือก 10 สินค้าที่เหมาะกับ creator นี้ที่สุด โดยพิจารณา:
-1. สินค้าตรง niche และ audience ของช่อง
-2. ราคาและ commission เหมาะกับ follower count (ช่องเล็ก = ราคาต่ำ conversion ง่าย)
-3. สินค้าที่ใช้ใน content ได้จริง ไม่ดูเป็น ad โจ่งแจ้ง
-4. Mix ระหว่าง easy win (ราคาต่ำ ขายง่าย) และ high-value (commission สูงต่อชิ้น)
+เลือก index (0-${pool200.length - 1}) ของสินค้า 10 ชิ้นที่เหมาะกับ creator นี้มากที่สุด โดยพิจารณา:
+1. ตรง niche และสไตล์คลิปของช่อง
+2. เหมาะกับ audience (เพศ อายุ)
+3. ราคาสมเหตุสมผล — ช่องเล็กเน้นสินค้าราคาต่ำ (conversion ง่าย)
+4. Mix สินค้า: ง่ายขาย + มูลค่าสูง
+5. ใช้ใน content ได้จริง ไม่ดูเป็น ad โจ่งแจ้ง
 
-Return ONLY valid JSON (no markdown, no explanation):
+ตอบ JSON เท่านั้น:
 {
-  "selected_ids": ["<id1>","<id2>","<id3>","<id4>","<id5>","<id6>","<id7>","<id8>","<id9>","<id10>"],
-  "rankings": {
-    "<id>": {
+  "selected_indexes": [<0-${pool200.length - 1}>, ...10 ตัวเลข],
+  "picks": {
+    "<index>": {
       "rank": <1-10>,
-      "why_fits": "<1 ประโยค ภาษาไทย>",
-      "content_idea": "<ไอเดียทำคลิปสั้น>"
+      "why_fits": "<เหตุผล 1 ประโยค ภาษาไทย>",
+      "content_idea": "<ไอเดียทำคลิป 1 ประโยค>"
     }
   },
-  "total_monthly_min": <number THB>,
-  "total_monthly_max": <number THB>,
-  "tip": "<เทคนิค affiliate 1 ประโยค>"
+  "tip": "<เทคนิค affiliate สำหรับ creator นี้ 1 ประโยค>"
 }`
 
     const client = new Anthropic({ apiKey: anthropicKey })
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: prompt }],
+      model:      'claude-haiku-4-5',
+      max_tokens: 1200,
+      messages:   [{ role: 'user', content: prompt }],
     })
 
-    const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
-    console.log('[affiliate/recommend] raw AI response:', rawText.slice(0, 500))
+    const rawText = response.content[0]?.type === 'text' ? response.content[0].text : ''
 
     let aiResult: any = {}
     try {
-      // Strip markdown code fences if present
       const stripped = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
-      // Extract first JSON object
       const match = stripped.match(/\{[\s\S]*\}/)
-      if (match) {
-        aiResult = JSON.parse(match[0])
-      } else {
-        console.warn('[affiliate/recommend] No JSON found in response, using empty result')
-      }
-    } catch (parseErr) {
-      console.error('[affiliate/recommend] JSON parse failed:', parseErr, '| raw:', rawText.slice(0, 300))
-      // Don't throw — fall through with empty aiResult, will use fallback products below
+      if (match) aiResult = JSON.parse(match[0])
+    } catch (e) {
+      console.error('[affiliate/recommend] JSON parse error:', e)
     }
 
-    // ── Step 3: Build enriched result ───────────────────
-    const productMap = Object.fromEntries(productPool.map(p => [p.id, p]))
-    const selectedIds: string[] = aiResult.selected_ids ?? []
-    const rankings: Record<string, any> = aiResult.rankings ?? {}
+    // ── Build enriched products ───────────────────────
+    const selectedIndexes: number[] = aiResult.selected_indexes ?? []
+    const picks: Record<string, any> = aiResult.picks ?? {}
 
-    let enrichedProducts = selectedIds
-      .map(id => {
-        const product = productMap[id]
-        if (!product) return null
-        const rankInfo = rankings[id] ?? {}
+    let enriched = selectedIndexes
+      .map(idx => {
+        const p = pool200[idx]
+        if (!p) return null
+        const pick = picks[String(idx)] ?? {}
         return {
-          ...product,
-          rank: rankInfo.rank ?? selectedIds.indexOf(id) + 1,
-          why_fits: rankInfo.why_fits ?? '',
-          content_idea: rankInfo.content_idea ?? '',
+          ...p,
+          rank:         pick.rank ?? selectedIndexes.indexOf(idx) + 1,
+          why_fits:     pick.why_fits ?? '',
+          content_idea: pick.content_idea ?? '',
         }
       })
       .filter(Boolean)
       .sort((a, b) => a.rank - b.rank)
 
-    // Fallback: if AI returned no valid IDs, take top 5 from pool
-    if (enrichedProducts.length === 0 && productPool.length > 0) {
-      console.warn('[affiliate/recommend] AI selected no valid products — using top 5 from pool')
-      enrichedProducts = productPool.slice(0, 5).map((p, i) => ({
-        ...p, rank: i + 1, why_fits: 'เหมาะกับช่องของคุณค่ะ', content_idea: 'ลองรีวิวสินค้านี้ใน content ของคุณค่ะ'
+    // Fallback ถ้า Claude ไม่ได้ pick อะไร
+    if (enriched.length === 0) {
+      console.warn('[affiliate/recommend] Claude returned no valid picks — using top 10 from pool')
+      enriched = pool200.slice(0, 10).map((p, i) => ({
+        ...p,
+        rank: i + 1,
+        why_fits: 'สินค้า trending บน Shopee ที่เหมาะกับช่องของคุณค่ะ',
+        content_idea: 'ลองรีวิวสินค้านี้ในคอนเทนต์ของคุณค่ะ',
       }))
     }
 
+    // ── Save result ───────────────────────────────────
     const result = {
-      products: enrichedProducts,
-      total_monthly_min: aiResult.total_monthly_min ?? 0,
-      total_monthly_max: aiResult.total_monthly_max ?? 0,
-      tip: aiResult.tip ?? '',
-      data_source: dataSource,
-      generated_at: new Date().toISOString(),
-      based_on_niche: niche,
-      based_on_platform: primary,
+      products:          enriched,
+      tip:               aiResult.tip ?? '',
+      data_source:       poolSource,
+      pool_size:         pool200.length,
+      based_on_niche:    rawNiche,
+      based_on_platform: primaryPlat,
+      generated_at:      new Date().toISOString(),
     }
 
-    // ── Step 4: Save to DB ───────────────────────────────
-    const { error: dbError } = await supabase
+    await supabase
       .from('user_profiles')
       .update({ affiliate_products: result })
       .eq('id', userId)
 
-    if (dbError) throw new Error(`DB: ${dbError.message}`)
-
-    console.log(`[affiliate/recommend] ✅ ${enrichedProducts.length} products (${dataSource}) for user ${userId}`)
+    console.log(`[affiliate/recommend] ✅ ${enriched.length} products (${poolSource}) for user ${userId}`)
     return NextResponse.json({ success: true, data: result })
 
   } catch (err) {
@@ -237,4 +251,21 @@ Return ONLY valid JSON (no markdown, no explanation):
     console.error('[affiliate/recommend] error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
+}
+
+// ── Helpers ───────────────────────────────────────────────
+
+function getTopAge(aud: any): string | null {
+  const ages = [
+    { key: 'age_13_17_pct', label: '13-17' },
+    { key: 'age_18_24_pct', label: '18-24' },
+    { key: 'age_25_34_pct', label: '25-34' },
+    { key: 'age_35_44_pct', label: '35-44' },
+    { key: 'age_45_plus_pct', label: '45+' },
+  ]
+  let top = ages[0]
+  for (const ag of ages) {
+    if ((aud[ag.key] ?? 0) > (aud[top.key] ?? 0)) top = ag
+  }
+  return aud[top.key] ? top.label : null
 }
