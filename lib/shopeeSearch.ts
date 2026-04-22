@@ -314,6 +314,7 @@ export function findKeywordsForNiche(niche: string): string[] {
 export function canonicalNiche(niche: string): string {
   const n = niche.toLowerCase().trim()
   const map: Record<string, string> = {
+    // English / generic
     beauty: 'ความงาม', skincare: 'ความงาม', สกินแคร์: 'ความงาม',
     makeup: 'ความงาม', แต่งหน้า: 'ความงาม',
     food: 'อาหาร', ทำอาหาร: 'อาหาร', เบเกอรี: 'อาหาร', เบเกอรี่: 'อาหาร',
@@ -326,9 +327,12 @@ export function canonicalNiche(niche: string): string {
     education: 'การศึกษา', หนังสือ: 'การศึกษา', books: 'การศึกษา',
     pets: 'สัตว์เลี้ยง', แมว: 'สัตว์เลี้ยง', สุนัข: 'สัตว์เลี้ยง',
     jewelry: 'เครื่องประดับ', เครื่องประดับ: 'เครื่องประดับ',
+    // fallback values → ความงาม (most popular niche)
+    other: 'ความงาม', ทั่วไป: 'ความงาม', general: 'ความงาม', others: 'ความงาม',
   }
   for (const [key, canonical] of Object.entries(map)) {
     if (n.includes(key) || key.includes(n)) return canonical
   }
-  return niche
+  // No match → default to ความงาม (largest pool)
+  return 'ความงาม'
 }
