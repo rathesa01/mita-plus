@@ -94,20 +94,27 @@ export async function POST(req: NextRequest) {
     if (involveKey || involveSecret) {
       try {
         const keywords = nicheToKeywords(niche, platform)
-        console.log(`[affiliate/recommend] Searching Involve Asia: keywords=${keywords.join(', ')} | auth=secret:${!!involveSecret}`)
-        productPool = await searchProducts(
+        console.log(`[affiliate/recommend] Searching Involve Asia: keywords=${keywords.join(', ')} niche=${niche}`)
+        const iaProducts = await searchProducts(
           involveKey ?? 'general',
           keywords,
           { limit: 200, apiSecret: involveSecret, niche }
         )
-        dataSource = 'involve_asia'
-        console.log(`[affiliate/recommend] Got ${productPool.length} products from Involve Asia`)
+        if (iaProducts.length > 0) {
+          productPool = iaProducts
+          dataSource = 'involve_asia'
+          console.log(`[affiliate/recommend] Got ${productPool.length} products from Involve Asia ✅`)
+        } else {
+          console.warn('[affiliate/recommend] Involve Asia returned 0 products — using fallback catalog')
+          console.warn('[affiliate/recommend] Fix: set INVOLVE_FEED_* env vars from dashboard (see /api/affiliate/debug)')
+          productPool = FALLBACK_PRODUCTS
+        }
       } catch (err) {
-        console.warn('[affiliate/recommend] Involve Asia search failed, using fallback:', err)
+        console.warn('[affiliate/recommend] Involve Asia search error, using fallback:', err)
         productPool = FALLBACK_PRODUCTS
       }
     } else {
-      console.log('[affiliate/recommend] INVOLVE_ASIA_API_KEY/SECRET not set — using fallback catalog')
+      console.log('[affiliate/recommend] No Involve Asia credentials — using fallback catalog')
       productPool = FALLBACK_PRODUCTS
     }
 

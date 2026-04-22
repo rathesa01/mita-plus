@@ -1,24 +1,21 @@
 /**
- * Involve Asia Publisher API Client
- * Docs: https://developers.involve.asia/
+ * Involve Asia Publisher API Client — Fixed & Correct Implementation
  *
- * Campaigns with Product Feed (joined):
- * - Banggood (Global)   → Electronics, Gadgets, Fitness, Pets, General
- * - Sephora TH          → Beauty, Skincare, Makeup
- * - Lotus's TH          → Food, Grocery, Kitchen
- * - HomePro TH          → Home, DIY, Furniture
- * - Xiaomi TH           → Tech, Electronics, Gadgets
- * - Studio7 TH          → Tech, Camera, Apple
- * - Shein Global        → Fashion, Clothing
- * - B2S TH              → Education, Books, Stationery
- * - Trip.com            → Travel, Hotel, Flight
- * - Chow Sang Sang      → Jewelry, Accessories
- * + Lazada TH (pending) → General (all categories)
+ * Involve Asia API structure (api.involve.asia/publisher):
+ *   POST /authenticate  → get Bearer token (expires 2h)
+ *   GET  /offers/all    → joined campaigns + data feed URLs
+ *   POST /deeplink/generate → create affiliate tracking link
+ *   NO product-feed REST endpoint — product data comes from downloadable CSV/XML feeds
+ *
+ * Campaigns with Data Feed enabled (joined):
+ *   Banggood, Sephora TH, Lotus's TH, HomePro TH,
+ *   Xiaomi TH, Studio7 TH, Shein Global, B2S TH,
+ *   Trip.com, Chow Sang Sang
  */
 
-const BASE_URL = 'https://api.involve.asia/publisher'
+const BASE = 'https://api.involve.asia/publisher'
 
-// ── Types ────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────
 
 export interface InvolveProduct {
   id: string
@@ -40,109 +37,68 @@ export interface InvolveProduct {
   in_stock: boolean
 }
 
-export interface InvolveCampaign {
+export interface InvolveOffer {
   id: string
   name: string
   merchant_name: string
   category: string
   commission_rate: number
-  status: 'active' | 'paused' | 'ended'
+  status: string
   tracking_url_base: string
+  data_feed_url?: string
   country: string
 }
 
-// ── Niche → Campaign mapping ─────────────────────────────
+// ── Token cache (server-side module-level) ────────────────────
 
-// Map niche keywords → campaign name patterns (lowercase)
-const NICHE_TO_CAMPAIGNS: Record<string, string[]> = {
-  // Beauty / Skincare
-  beauty:       ['sephora', 'banggood'],
-  ความงาม:     ['sephora', 'banggood'],
-  skincare:     ['sephora'],
-  สกินแคร์:    ['sephora'],
-  makeup:       ['sephora'],
-  แต่งหน้า:    ['sephora'],
+let _tokenCache: { token: string; expires: number } | null = null
 
-  // Food / Kitchen
-  food:         ['lotus', "lotus's"],
-  อาหาร:       ['lotus', "lotus's"],
-  เบเกอรี:     ['lotus', "lotus's"],
-  ทำอาหาร:    ['lotus', "lotus's"],
-  ทำขนม:       ['lotus', "lotus's"],
+async function getAuthToken(apiKey: string, apiSecret: string): Promise<string | null> {
+  const now = Date.now()
 
-  // Home / DIY
-  home:         ['homepro'],
-  ของแต่งบ้าน: ['homepro'],
-  บ้าน:        ['homepro'],
-  diy:          ['homepro'],
-  furniture:    ['homepro'],
+  // Return cached token if still valid (expire 10 min early for safety)
+  if (_tokenCache && _tokenCache.expires > now + 10 * 60 * 1000) {
+    return _tokenCache.token
+  }
 
-  // Tech / Electronics
-  tech:         ['xiaomi', 'studio7', 'banggood'],
-  เทคโนโลยี:  ['xiaomi', 'studio7', 'banggood'],
-  electronics:  ['xiaomi', 'studio7', 'banggood'],
-  อิเล็กทรอนิกส์: ['xiaomi', 'studio7'],
-  gadgets:      ['banggood', 'xiaomi'],
-  กล้อง:       ['studio7'],
-  camera:       ['studio7'],
-  apple:        ['studio7'],
+  try {
+    console.log('[involveAsia] authenticating...')
+    const res = await fetch(`${BASE}/authenticate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
+      cache: 'no-store',
+    })
 
-  // Fashion
-  fashion:      ['shein'],
-  แฟชั่น:      ['shein'],
-  clothing:     ['shein'],
-  เสื้อผ้า:    ['shein'],
+    const text = await res.text()
+    console.log('[involveAsia] auth response:', res.status, text.slice(0, 300))
 
-  // Travel
-  travel:       ['trip'],
-  ท่องเที่ยว:  ['trip'],
-  hotel:        ['trip'],
-  โรงแรม:      ['trip'],
-  flight:       ['trip'],
+    if (!res.ok) {
+      console.error('[involveAsia] auth failed:', res.status, text)
+      return null
+    }
 
-  // Education / Books
-  education:    ['b2s'],
-  การศึกษา:    ['b2s'],
-  books:        ['b2s'],
-  หนังสือ:      ['b2s'],
-  stationery:   ['b2s'],
-  เครื่องเขียน: ['b2s'],
+    let json: any
+    try { json = JSON.parse(text) } catch { return null }
 
-  // Jewelry
-  jewelry:      ['chow'],
-  เครื่องประดับ: ['chow'],
-  gold:         ['chow'],
-  ทอง:         ['chow'],
+    // Involve Asia wraps token in data.token or just token
+    const token: string = json?.data?.token ?? json?.token ?? json?.access_token ?? ''
+    if (!token) {
+      console.error('[involveAsia] no token in response:', json)
+      return null
+    }
 
-  // Fitness / Sports / Pets / General → Banggood
-  fitness:      ['banggood'],
-  ออกกำลังกาย: ['banggood'],
-  sports:       ['banggood'],
-  กีฬา:        ['banggood'],
-  pets:         ['banggood'],
-  สัตว์เลี้ยง: ['banggood'],
+    _tokenCache = { token, expires: now + 1.8 * 60 * 60 * 1000 } // 1h48m
+    console.log('[involveAsia] auth success, token cached for 1h48m')
+    return token
+
+  } catch (err) {
+    console.error('[involveAsia] auth error:', err)
+    return null
+  }
 }
 
-// ── Category → Thai mapping ──────────────────────────────
-const NICHE_TO_CATEGORIES: Record<string, string[]> = {
-  beauty:       ['beauty', 'skincare', 'makeup', 'health-beauty'],
-  ความงาม:     ['beauty', 'skincare', 'makeup'],
-  skincare:     ['skincare', 'beauty'],
-  food:         ['food-beverage', 'kitchen', 'cooking'],
-  อาหาร:       ['food-beverage', 'kitchen'],
-  fitness:      ['sports', 'health', 'fitness'],
-  fashion:      ['fashion', 'clothing', 'shoes'],
-  tech:         ['electronics', 'gadgets', 'tech'],
-  home:         ['home', 'furniture', 'decor'],
-  education:    ['education', 'books'],
-  travel:       ['travel', 'hotel'],
-  pets:         ['pets', 'pet-supplies'],
-}
-
-// ── Auth ─────────────────────────────────────────────────
-
-function getHeaders(apiKey: string, apiSecret?: string): HeadersInit {
-  const token = apiSecret ?? apiKey
+function authHeader(token: string): HeadersInit {
   return {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
@@ -150,285 +106,430 @@ function getHeaders(apiKey: string, apiSecret?: string): HeadersInit {
   }
 }
 
-// ── Campaigns ────────────────────────────────────────────
+// ── Get joined offers (campaigns) ────────────────────────────
 
-export async function getCampaigns(apiKey: string, apiSecret?: string): Promise<InvolveCampaign[]> {
-  const url = `${BASE_URL}/campaigns?country=TH&status=active&limit=100`
-  const res = await fetch(url, { headers: getHeaders(apiKey, apiSecret), next: { revalidate: 3600 } })
-  if (!res.ok) throw new Error(`Involve Asia campaigns error: ${res.status}`)
-  const json = await res.json()
+export async function getOffers(apiKey: string, apiSecret: string): Promise<InvolveOffer[]> {
+  const token = await getAuthToken(apiKey, apiSecret)
+  if (!token) return []
 
-  const raw = json.data?.campaigns ?? json.data?.items ?? json.data ?? []
-  return raw.map((c: any): InvolveCampaign => ({
-    id: String(c.id ?? c.campaign_id ?? ''),
-    name: c.name ?? c.campaign_name ?? '',
-    merchant_name: c.advertiser_name ?? c.merchant ?? c.name ?? '',
-    category: c.category ?? c.vertical ?? 'general',
-    commission_rate: parseFloat(c.commission_rate ?? c.rate ?? 0),
-    status: c.status ?? 'active',
-    tracking_url_base: c.tracking_url ?? c.deeplink ?? '',
-    country: 'TH',
-  }))
+  try {
+    const res = await fetch(`${BASE}/offers/all`, {
+      headers: authHeader(token),
+      cache: 'no-store',
+    })
+    const text = await res.text()
+    console.log('[involveAsia] /offers/all:', res.status, text.slice(0, 500))
+
+    if (!res.ok) return []
+
+    const json = JSON.parse(text)
+    const raw: any[] = json?.data?.offers ?? json?.data ?? json?.offers ?? []
+
+    return raw.map((o: any): InvolveOffer => ({
+      id: String(o.id ?? o.offer_id ?? ''),
+      name: o.name ?? o.offer_name ?? '',
+      merchant_name: o.advertiser_name ?? o.merchant ?? o.name ?? '',
+      category: o.category ?? o.vertical ?? 'general',
+      commission_rate: parseFloat(o.commission_rate ?? o.rate ?? 0),
+      status: o.status ?? 'active',
+      tracking_url_base: o.tracking_url ?? o.deeplink ?? '',
+      data_feed_url: o.feed_url ?? o.data_feed_url ?? o.product_feed_url,
+      country: o.country ?? 'TH',
+    }))
+  } catch (err) {
+    console.error('[involveAsia] getOffers error:', err)
+    return []
+  }
 }
 
-// ── Product Search ────────────────────────────────────────
+// ── Download & parse data feed (CSV or XML) ──────────────────
+
+interface RawFeedProduct {
+  id: string
+  name: string
+  price: number
+  original_price: number
+  image_url: string
+  product_url: string
+  brand: string
+  category: string
+  merchant: string
+  in_stock: boolean
+}
+
+async function downloadDataFeed(feedUrl: string, token?: string): Promise<RawFeedProduct[]> {
+  try {
+    const headers: HeadersInit = { 'Accept': 'text/csv, application/xml, text/xml, */*' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 15000)
+    let res: Response
+    try {
+      res = await fetch(feedUrl, { headers, signal: controller.signal, cache: 'no-store' })
+    } finally {
+      clearTimeout(timer)
+    }
+
+    if (!res.ok) {
+      console.warn('[involveAsia] feed download failed:', feedUrl, res.status)
+      return []
+    }
+
+    const contentType = res.headers.get('content-type') ?? ''
+    const text = await res.text()
+    console.log('[involveAsia] feed downloaded:', feedUrl, 'bytes:', text.length, 'type:', contentType)
+
+    if (contentType.includes('xml') || text.trim().startsWith('<')) {
+      return parseXMLFeed(text)
+    } else {
+      return parseCSVFeed(text)
+    }
+  } catch (err) {
+    console.warn('[involveAsia] downloadDataFeed error:', feedUrl, err)
+    return []
+  }
+}
+
+function parseCSVFeed(csv: string): RawFeedProduct[] {
+  const lines = csv.split('\n').filter(l => l.trim())
+  if (lines.length < 2) return []
+
+  // Parse header
+  const header = splitCSVLine(lines[0]).map(h => h.toLowerCase().trim())
+  const products: RawFeedProduct[] = []
+
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i])
+    const row: Record<string, string> = {}
+    header.forEach((h, idx) => { row[h] = vals[idx] ?? '' })
+
+    // Common CSV column name patterns across different merchants
+    const name = row['name'] ?? row['product_name'] ?? row['title'] ?? row['product title'] ?? ''
+    if (!name) continue
+
+    const price = parseFloat(row['price'] ?? row['sale_price'] ?? row['selling_price'] ?? row['saleprice'] ?? '0')
+    const origPrice = parseFloat(row['original_price'] ?? row['regular_price'] ?? row['regular price'] ?? row['mrp'] ?? String(price))
+    const productUrl = row['product_url'] ?? row['link'] ?? row['url'] ?? row['affiliate_url'] ?? ''
+    const imageUrl = row['image_url'] ?? row['image_link'] ?? row['image link'] ?? row['image'] ?? row['imgurl'] ?? ''
+    const category = row['category'] ?? row['google_product_category'] ?? row['product_type'] ?? 'general'
+    const brand = row['brand'] ?? row['manufacturer'] ?? row['advertiser'] ?? ''
+    const merchant = row['merchant'] ?? row['advertiser'] ?? row['source'] ?? ''
+    const inStock = (row['availability'] ?? row['in_stock'] ?? 'in stock').toLowerCase() !== 'out of stock'
+    const id = row['id'] ?? row['product_id'] ?? row['sku'] ?? `${name}-${price}`
+
+    products.push({ id, name, price, original_price: origPrice, image_url: imageUrl, product_url: productUrl, brand, category, merchant, in_stock: inStock })
+  }
+
+  console.log('[involveAsia] CSV parsed:', products.length, 'products')
+  return products
+}
+
+function parseXMLFeed(xml: string): RawFeedProduct[] {
+  // Simple XML product feed parser (RSS/Atom/Google Shopping format)
+  const products: RawFeedProduct[] = []
+
+  // Match <item> or <entry> blocks
+  const itemRegex = /<(?:item|entry|product)>([\s\S]*?)<\/(?:item|entry|product)>/gi
+  let match
+
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const block = match[1]
+
+    const extract = (tag: string): string => {
+      const m = block.match(new RegExp(`<(?:g:)?${tag}[^>]*>([\\s\\S]*?)<\\/(?:g:)?${tag}>`, 'i'))
+      return m ? m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1').trim() : ''
+    }
+
+    const name = extract('title') || extract('name') || extract('product_name')
+    if (!name) continue
+
+    const priceStr = extract('price') || extract('sale_price') || '0'
+    const price = parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0
+    const origStr = extract('regular_price') || extract('original_price') || priceStr
+    const origPrice = parseFloat(origStr.replace(/[^0-9.]/g, '')) || price
+
+    products.push({
+      id: extract('id') || extract('product_id') || extract('sku') || `${name}-${price}`,
+      name,
+      price,
+      original_price: origPrice,
+      image_url: extract('image_link') || extract('image_url') || extract('image'),
+      product_url: extract('link') || extract('product_url') || extract('url'),
+      brand: extract('brand') || extract('manufacturer'),
+      category: extract('product_type') || extract('google_product_category') || extract('category'),
+      merchant: extract('merchant') || extract('advertiser'),
+      in_stock: !/out.of.stock/i.test(extract('availability')),
+    })
+  }
+
+  console.log('[involveAsia] XML parsed:', products.length, 'products')
+  return products
+}
+
+// Basic CSV line splitter (handles quoted commas)
+function splitCSVLine(line: string): string[] {
+  const result: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (const ch of line) {
+    if (ch === '"') { inQuotes = !inQuotes }
+    else if (ch === ',' && !inQuotes) { result.push(current); current = '' }
+    else { current += ch }
+  }
+  result.push(current)
+  return result.map(s => s.replace(/^"|"$/g, '').trim())
+}
+
+// ── Main product search function ──────────────────────────────
 
 /**
- * Search products by niche — tries niche-specific campaigns first,
- * then falls back to general product feed.
- * Uses Involve Asia product-feed API (joined campaigns with data feed enabled).
+ * Fetch products from Involve Asia data feeds.
+ *
+ * Strategy:
+ * 1. Authenticate with Involve Asia API
+ * 2. Try environment-variable feed URLs (per campaign)
+ * 3. Try to discover feed URLs from /offers/all response
+ * 4. Filter by niche keywords
+ * Returns [] if nothing found (caller should use fallback)
  */
 export async function searchProducts(
   apiKey: string,
   keywords: string[],
-  options: { limit?: number; country?: string; apiSecret?: string; niche?: string } = {}
+  options: {
+    limit?: number
+    country?: string
+    apiSecret?: string
+    niche?: string
+  } = {}
 ): Promise<InvolveProduct[]> {
-  const { limit = 30, country = 'TH', apiSecret, niche = '' } = options
-
-  // Build keyword string for API
-  const kwString = keywords.slice(0, 3).join(',')
-  const nicheLower = niche.toLowerCase()
-
-  // Find best campaigns for this niche
-  const matchedCampaigns = findCampaignsForNiche(nicheLower, keywords)
-
-  // ── Endpoints to try (ordered by specificity) ──────────
-  const endpoints: string[] = []
-
-  // 1. Product feed with keyword search (most specific)
-  if (kwString) {
-    endpoints.push(
-      `${BASE_URL}/product-feed?country=${country}&keyword=${encodeURIComponent(kwString)}&limit=${limit}`,
-      `${BASE_URL}/product-feed?keyword=${encodeURIComponent(kwString)}&limit=${limit}`,
-    )
-  }
-
-  // 2. General product feed (returns all joined campaign products)
-  endpoints.push(
-    `${BASE_URL}/product-feed?country=${country}&limit=${Math.min(limit, 500)}`,
-    `${BASE_URL}/product-feed?limit=${Math.min(limit, 500)}`,
-  )
-
-  // 3. Offers API fallback
-  endpoints.push(
-    `${BASE_URL}/offers?country=${country}&status=active&limit=${limit}`,
-  )
-
-  for (const url of endpoints) {
-    try {
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 8000)
-      let res: Response
-      try {
-        res = await fetch(url, {
-          headers: getHeaders(apiKey, apiSecret),
-          signal: controller.signal,
-          cache: 'no-store',
-        })
-      } finally {
-        clearTimeout(timer)
-      }
-
-      if (!res!.ok) {
-        console.warn(`[involveAsia] ${url} → ${res!.status}`)
-        continue
-      }
-
-      const json = await res!.json()
-      console.log(`[involveAsia] ${url} → OK | keys:`, Object.keys(json))
-
-      const raw: any[] = (
-        json.data?.products ?? json.data?.offers ?? json.data?.items ??
-        json.data?.campaigns ?? json.products ?? json.offers ?? json.items ??
-        (Array.isArray(json.data) ? json.data : [])
-      )
-
-      if (raw.length === 0) continue
-
-      console.log(`[involveAsia] Got ${raw.length} items from ${url}`)
-
-      // Filter by niche-matched campaigns first
-      let filtered = filterByNicheAndCampaign(raw, keywords, matchedCampaigns)
-
-      // If no niche match, filter by keyword only
-      if (filtered.length === 0) {
-        const kwLower = keywords.map(k => k.toLowerCase())
-        filtered = raw.filter((p: any) => {
-          const text = [p.name, p.category, p.title, p.description, p.merchant_name, p.advertiser_name, ...(p.tags ?? [])]
-            .join(' ').toLowerCase()
-          return kwLower.some(k => text.includes(k))
-        })
-      }
-
-      // If still no match, use all results (general pool)
-      const result = (filtered.length > 0 ? filtered : raw).slice(0, limit)
-      return result.map((p: any): InvolveProduct => normalizeProduct(p))
-
-    } catch (err) {
-      console.warn(`[involveAsia] endpoint failed:`, err)
-    }
-  }
-
-  return []
-}
-
-/**
- * Find which campaigns match the given niche/keywords
- */
-function findCampaignsForNiche(nicheLower: string, keywords: string[]): string[] {
-  const matched = new Set<string>()
-
-  for (const [key, campaigns] of Object.entries(NICHE_TO_CAMPAIGNS)) {
-    const keyLower = key.toLowerCase()
-    const isMatch = nicheLower.includes(keyLower) ||
-      keyLower.includes(nicheLower) ||
-      keywords.some(k => k.toLowerCase().includes(keyLower) || keyLower.includes(k.toLowerCase()))
-    if (isMatch) {
-      campaigns.forEach(c => matched.add(c))
-    }
-  }
-
-  // Default: include banggood as catch-all
-  if (matched.size === 0) matched.add('banggood')
-
-  return [...matched]
-}
-
-/**
- * Filter products by campaign and keyword relevance
- */
-function filterByNicheAndCampaign(raw: any[], keywords: string[], campaigns: string[]): any[] {
+  const { limit = 200, apiSecret, niche = '' } = options
   const kwLower = keywords.map(k => k.toLowerCase())
-
-  return raw.filter((p: any) => {
-    const merchantName = (p.merchant_name ?? p.advertiser_name ?? p.source ?? '').toLowerCase()
-    const campaignName = (p.campaign_name ?? p.campaign ?? '').toLowerCase()
-
-    // Check if product is from a matched campaign
-    const campaignMatch = campaigns.some(c =>
-      merchantName.includes(c) || campaignName.includes(c)
-    )
-
-    // Check keyword relevance
-    const text = [p.name, p.category, p.title, p.description, ...(p.tags ?? [])]
-      .join(' ').toLowerCase()
-    const keywordMatch = kwLower.some(k => text.includes(k))
-
-    return campaignMatch || keywordMatch
-  })
-}
-
-/**
- * Get products from a specific campaign (by campaign ID)
- */
-export async function getCampaignProducts(
-  apiKey: string,
-  campaignId: string,
-  options: { limit?: number; category?: string } = {}
-): Promise<InvolveProduct[]> {
-  const { limit = 20, category } = options
-  const params = new URLSearchParams({ limit: String(limit) })
-  if (category) params.set('category', category)
-
-  const url = `${BASE_URL}/product-feed?campaign_id=${campaignId}&${params}`
-  const res = await fetch(url, { headers: getHeaders(apiKey), next: { revalidate: 3600 } })
-  if (!res.ok) throw new Error(`Involve Asia campaign products error: ${res.status}`)
-  const json = await res.json()
-
-  const raw: any[] = json.data?.products ?? json.data?.items ?? json.data ?? []
-  return raw.map((p: any): InvolveProduct => normalizeProduct(p))
-}
-
-/**
- * Convert niche string to search keywords for Involve Asia
- */
-export function nicheToKeywords(niche: string, platform: string): string[] {
   const nicheLower = niche.toLowerCase()
-  const keywords: string[] = [niche]
 
-  for (const [key, cats] of Object.entries(NICHE_TO_CATEGORIES)) {
-    if (nicheLower.includes(key.toLowerCase()) || key.toLowerCase().includes(nicheLower)) {
-      keywords.push(...cats.slice(0, 2))
+  // ── Step 1: Get auth token ──────────────────────────────────
+  const token = await getAuthToken(apiKey, apiSecret ?? apiKey)
+
+  // ── Step 2: Collect data feed URLs ─────────────────────────
+  // Priority: env vars → API offers response → empty
+  const feedUrls: Array<{ url: string; merchant: string }> = []
+
+  // Feed URLs from environment variables (set manually from dashboard)
+  const envFeeds: Array<{ env: string; merchant: string }> = [
+    { env: 'INVOLVE_FEED_BANGGOOD',   merchant: 'Banggood' },
+    { env: 'INVOLVE_FEED_SEPHORA',    merchant: 'Sephora' },
+    { env: 'INVOLVE_FEED_LOTUS',      merchant: "Lotus's" },
+    { env: 'INVOLVE_FEED_HOMEPRO',    merchant: 'HomePro' },
+    { env: 'INVOLVE_FEED_XIAOMI',     merchant: 'Xiaomi' },
+    { env: 'INVOLVE_FEED_STUDIO7',    merchant: 'Studio7' },
+    { env: 'INVOLVE_FEED_SHEIN',      merchant: 'Shein' },
+    { env: 'INVOLVE_FEED_B2S',        merchant: 'B2S' },
+    { env: 'INVOLVE_FEED_TRIP',       merchant: 'Trip.com' },
+    { env: 'INVOLVE_FEED_CHOW',       merchant: 'Chow Sang Sang' },
+    { env: 'INVOLVE_FEED_LAZADA',     merchant: 'Lazada' },
+  ]
+
+  for (const { env, merchant } of envFeeds) {
+    const url = process.env[env]
+    if (url) feedUrls.push({ url, merchant })
+  }
+
+  // Try to discover feed URLs from /offers/all
+  if (feedUrls.length === 0 && token) {
+    const offers = await getOffers(apiKey, apiSecret ?? apiKey)
+    for (const offer of offers) {
+      if (offer.data_feed_url) {
+        feedUrls.push({ url: offer.data_feed_url, merchant: offer.merchant_name })
+      }
+    }
+    console.log('[involveAsia] discovered', feedUrls.length, 'feed URLs from /offers/all')
+  }
+
+  if (feedUrls.length === 0) {
+    console.warn('[involveAsia] no data feed URLs found — set INVOLVE_FEED_* env vars from dashboard')
+    return []
+  }
+
+  // ── Step 3: Download feeds, filter by niche ─────────────────
+  // Select feeds relevant to this niche
+  const relevantFeeds = selectFeedsForNiche(feedUrls, nicheLower, kwLower)
+  console.log('[involveAsia] selected feeds for niche', nicheLower, ':', relevantFeeds.map(f => f.merchant))
+
+  const allProducts: InvolveProduct[] = []
+
+  for (const { url, merchant } of relevantFeeds) {
+    const raw = await downloadDataFeed(url, token ?? undefined)
+    const normalized = raw.map(p => normalizeProduct(p, merchant))
+    allProducts.push(...normalized)
+
+    if (allProducts.length >= limit * 2) break // got enough, stop downloading
+  }
+
+  if (allProducts.length === 0) return []
+
+  // ── Step 4: Filter and rank by keyword relevance ────────────
+  const scored = allProducts.map(p => {
+    const text = [p.name, p.category, p.brand, p.merchant_name, ...p.tags].join(' ').toLowerCase()
+    const score = kwLower.reduce((acc, k) => acc + (text.includes(k) ? 1 : 0), 0)
+    return { p, score }
+  })
+
+  scored.sort((a, b) => b.score - a.score)
+
+  const result = scored.map(x => x.p).slice(0, limit)
+  console.log('[involveAsia] returning', result.length, 'products for niche:', nicheLower)
+  return result
+}
+
+// ── Niche → merchant mapping ──────────────────────────────────
+
+const NICHE_MERCHANTS: Record<string, string[]> = {
+  beauty: ['sephora', 'banggood'],
+  ความงาม: ['sephora', 'banggood'],
+  skincare: ['sephora'],
+  สกินแคร์: ['sephora'],
+  makeup: ['sephora'],
+  แต่งหน้า: ['sephora'],
+  food: ['lotus', "lotus's"],
+  อาหาร: ["lotus's", 'lotus'],
+  เบเกอรี: ["lotus's"],
+  ทำอาหาร: ["lotus's"],
+  home: ['homepro'],
+  ของแต่งบ้าน: ['homepro'],
+  บ้าน: ['homepro'],
+  diy: ['homepro'],
+  tech: ['xiaomi', 'studio7', 'banggood'],
+  เทคโนโลยี: ['xiaomi', 'studio7'],
+  electronics: ['xiaomi', 'studio7', 'banggood'],
+  gadgets: ['banggood'],
+  กล้อง: ['studio7'],
+  camera: ['studio7'],
+  apple: ['studio7'],
+  fashion: ['shein'],
+  แฟชั่น: ['shein'],
+  clothing: ['shein'],
+  เสื้อผ้า: ['shein'],
+  travel: ['trip.com'],
+  ท่องเที่ยว: ['trip.com'],
+  education: ['b2s'],
+  การศึกษา: ['b2s'],
+  books: ['b2s'],
+  หนังสือ: ['b2s'],
+  jewelry: ['chow sang sang'],
+  เครื่องประดับ: ['chow sang sang'],
+  fitness: ['banggood'],
+  ออกกำลังกาย: ['banggood'],
+  sports: ['banggood'],
+  pets: ['banggood'],
+}
+
+function selectFeedsForNiche(
+  feedUrls: Array<{ url: string; merchant: string }>,
+  niche: string,
+  keywords: string[]
+): Array<{ url: string; merchant: string }> {
+  // Find relevant merchants for this niche
+  const relevantMerchants = new Set<string>()
+  for (const [key, merchants] of Object.entries(NICHE_MERCHANTS)) {
+    const k = key.toLowerCase()
+    if (niche.includes(k) || k.includes(niche) || keywords.some(kw => kw.includes(k) || k.includes(kw))) {
+      merchants.forEach(m => relevantMerchants.add(m.toLowerCase()))
     }
   }
 
-  if (platform === 'tiktok' || platform === 'instagram') {
-    keywords.push('trending')
-  }
+  // Match feed URLs to relevant merchants
+  const matched = feedUrls.filter(f => {
+    const mLower = f.merchant.toLowerCase()
+    return [...relevantMerchants].some(rm => mLower.includes(rm) || rm.includes(mLower))
+  })
 
-  return [...new Set(keywords)].slice(0, 5)
+  // Return matched first, then all (so we always have something)
+  const rest = feedUrls.filter(f => !matched.includes(f))
+  return matched.length > 0 ? [...matched, ...rest] : feedUrls
 }
 
-// ── Normalizer ────────────────────────────────────────────
+// ── Normalizer ────────────────────────────────────────────────
 
-function normalizeProduct(p: any): InvolveProduct {
-  const price = parseFloat(p.price ?? p.sale_price ?? p.retail_price ?? 0)
-  const commissionRate = parseFloat(p.commission_rate ?? p.commission ?? 0)
-  const commissionThb = commissionRate > 0 ? Math.round(price * commissionRate / 100) : 0
+function normalizeProduct(p: RawFeedProduct, fallbackMerchant: string): InvolveProduct {
+  const commRate = 0 // Data feed doesn't include commission; that's per campaign
+  const url = p.product_url
 
-  const url: string = p.product_url ?? p.url ?? p.deeplink ?? p.link ?? ''
+  const platform = url?.includes('shopee') ? 'Shopee'
+    : url?.includes('lazada') ? 'Lazada'
+    : url?.includes('banggood') ? 'Banggood'
+    : url?.includes('sephora') ? 'Sephora'
+    : url?.includes('homepro') ? 'HomePro'
+    : url?.includes('lotus') ? "Lotus's"
+    : url?.includes('mi.com') || url?.includes('xiaomi') ? 'Xiaomi'
+    : url?.includes('studio7') ? 'Studio7'
+    : url?.includes('shein') ? 'Shein'
+    : url?.includes('b2s') ? 'B2S'
+    : url?.includes('trip.com') ? 'Trip.com'
+    : p.merchant || fallbackMerchant
 
-  // Detect platform from URL or merchant
-  const platform = url.includes('shopee') ? 'Shopee'
-    : url.includes('lazada') ? 'Lazada'
-    : url.includes('banggood') ? 'Banggood'
-    : url.includes('sephora') ? 'Sephora'
-    : url.includes('homepro') ? 'HomePro'
-    : url.includes('lotus') ? "Lotus's"
-    : url.includes('mi.com') || url.includes('xiaomi') ? 'Xiaomi'
-    : url.includes('studio7') ? 'Studio7'
-    : url.includes('shein') ? 'Shein'
-    : url.includes('b2s') ? 'B2S'
-    : url.includes('trip.com') ? 'Trip.com'
-    : p.merchant_name ?? p.advertiser_name ?? 'Involve Asia'
-
-  const category: string = p.category ?? p.vertical ?? p.sub_category ?? 'general'
+  const category = p.category || 'general'
 
   return {
-    id: String(p.id ?? p.product_id ?? Math.random()),
-    name: p.name ?? p.product_name ?? p.title ?? '',
-    brand: p.brand ?? p.advertiser_name ?? p.merchant ?? '',
-    price,
-    original_price: parseFloat(p.original_price ?? p.mrp ?? price),
-    currency: p.currency ?? 'THB',
-    commission_rate: commissionRate,
-    commission_thb: commissionThb,
+    id: p.id || String(Math.random()),
+    name: p.name,
+    brand: p.brand || fallbackMerchant,
+    price: p.price,
+    original_price: p.original_price,
+    currency: 'THB',
+    commission_rate: commRate,
+    commission_thb: 0,
     product_url: url,
-    image_url: p.image_url ?? p.image ?? p.thumbnail ?? p.image_link ?? '',
+    image_url: p.image_url || '',
     category,
     category_th: categoryToThai(category),
-    merchant_name: p.merchant_name ?? p.advertiser_name ?? platform,
-    merchant_id: String(p.merchant_id ?? p.advertiser_id ?? ''),
+    merchant_name: p.merchant || fallbackMerchant,
+    merchant_id: '',
     platform,
-    tags: extractTags(p),
-    in_stock: p.availability !== 'out_of_stock' && p.stock !== 0,
+    tags: [category.toLowerCase(), (p.brand || '').toLowerCase(), fallbackMerchant.toLowerCase()].filter(Boolean),
+    in_stock: p.in_stock,
   }
 }
 
 function categoryToThai(cat: string): string {
   const map: Record<string, string> = {
     beauty: 'ความงาม', skincare: 'สกินแคร์', makeup: 'แต่งหน้า',
-    food: 'อาหาร', 'food-beverage': 'อาหารและเครื่องดื่ม',
-    kitchen: 'ของใช้ครัว', baking: 'เบเกอรี',
+    food: 'อาหาร', 'food-beverage': 'อาหารและเครื่องดื่ม', kitchen: 'ของใช้ครัว',
     sports: 'กีฬา', fitness: 'ฟิตเนส', health: 'สุขภาพ',
     fashion: 'แฟชั่น', clothing: 'เสื้อผ้า', shoes: 'รองเท้า',
     electronics: 'อิเล็กทรอนิกส์', gadgets: 'แกดเจ็ต', tech: 'เทคโนโลยี',
     travel: 'ท่องเที่ยว', hotel: 'โรงแรม',
-    pets: 'สัตว์เลี้ยง', 'pet-supplies': 'อุปกรณ์สัตว์เลี้ยง',
-    home: 'ของแต่งบ้าน', furniture: 'เฟอร์นิเจอร์', decor: 'ตกแต่งบ้าน',
-    education: 'การศึกษา', books: 'หนังสือ', stationery: 'เครื่องเขียน',
-    jewelry: 'เครื่องประดับ', accessories: 'เครื่องประดับ',
+    pets: 'สัตว์เลี้ยง',
+    home: 'ของแต่งบ้าน', furniture: 'เฟอร์นิเจอร์',
+    education: 'การศึกษา', books: 'หนังสือ',
+    jewelry: 'เครื่องประดับ',
   }
   return map[cat.toLowerCase()] ?? cat
 }
 
-function extractTags(p: any): string[] {
-  const tags: string[] = []
-  if (p.category) tags.push(p.category.toLowerCase())
-  if (p.sub_category) tags.push(p.sub_category.toLowerCase())
-  if (p.brand) tags.push(p.brand.toLowerCase())
-  if (p.merchant_name) tags.push(p.merchant_name.toLowerCase())
-  if (p.tags && Array.isArray(p.tags)) tags.push(...p.tags)
-  if (p.keywords) tags.push(...String(p.keywords).split(',').map((k: string) => k.trim()))
-  return [...new Set(tags)].filter(Boolean)
+// ── Keyword helper ────────────────────────────────────────────
+
+export function nicheToKeywords(niche: string, platform: string): string[] {
+  const nicheLower = niche.toLowerCase()
+  const keywords: string[] = [niche]
+
+  const categoryKeywords: Record<string, string[]> = {
+    beauty: ['beauty', 'skincare', 'makeup'], ความงาม: ['beauty', 'skincare'],
+    food: ['food', 'cooking', 'kitchen'], อาหาร: ['food', 'kitchen'],
+    fitness: ['fitness', 'sports', 'health'], fashion: ['fashion', 'clothing'],
+    tech: ['electronics', 'gadgets', 'tech'], home: ['home', 'furniture'],
+    education: ['education', 'books'], travel: ['travel', 'hotel'],
+    pets: ['pets', 'pet-supplies'],
+  }
+
+  for (const [key, cats] of Object.entries(categoryKeywords)) {
+    if (nicheLower.includes(key.toLowerCase()) || key.toLowerCase().includes(nicheLower)) {
+      keywords.push(...cats.slice(0, 2))
+    }
+  }
+
+  if (platform === 'tiktok' || platform === 'instagram') keywords.push('trending')
+  return [...new Set(keywords)].slice(0, 5)
 }
+
+// ── Legacy alias for backward compatibility ───────────────────
+export const getCampaigns = getOffers
