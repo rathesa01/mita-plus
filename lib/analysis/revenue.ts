@@ -212,19 +212,6 @@ function estimatePlatformAdsIncome(data: AuditFormData): number {
 }
 
 // ─────────────────────────────────────────────
-// INCOME MIDPOINT (from form)
-// ─────────────────────────────────────────────
-
-const INCOME_MIDPOINT: Record<string, number> = {
-  zero:        0,
-  under_5k:    2_500,
-  '5k_20k':    12_000,
-  '20k_50k':   35_000,
-  '50k_100k':  75_000,
-  over_100k:   150_000,
-}
-
-// ─────────────────────────────────────────────
 // MAIN EXPORT
 // ─────────────────────────────────────────────
 
@@ -234,7 +221,12 @@ export interface RevenueBreakdown {
   platformAds:  number  // ฿/เดือน
 }
 
-export function estimateRevenue(data: AuditFormData): RevenueEstimation & { breakdown: RevenueBreakdown } {
+/**
+ * scoreTotal (optional) — used to scale down totalMissed for high-scoring creators.
+ * A creator with score 93 already has most systems in place, so their remaining
+ * "gap" should be proportionally smaller than a beginner with score 20.
+ */
+export function estimateRevenue(data: AuditFormData, scoreTotal?: number): RevenueEstimation & { breakdown: RevenueBreakdown } {
   const sponsorship = estimateSponsorshipIncome(data)
   const affiliate   = estimateAffiliateIncome(data)
   const platformAds = estimatePlatformAdsIncome(data)
@@ -251,15 +243,25 @@ export function estimateRevenue(data: AuditFormData): RevenueEstimation & { brea
     sponsorship * 1.3 + affiliate * 1.8 + platformAds * 1.2
   )
 
-  const currentIncome = INCOME_MIDPOINT[data.monthlyIncome] ?? 0
+  // currentIncome = actual number from form (monthlyIncome is now ฿ not enum)
+  const currentIncome = typeof data.monthlyIncome === 'number' ? data.monthlyIncome : 0
 
-  // totalMissed = gap ไปถึง aggressive เสมอ
-  // ถ้า aggressive ต่ำกว่า current → ใช้ 50% ของ current เป็น floor
-  // เพื่อให้มี gap เสมอ ไม่มีทางแสดง +฿0
+  // Score-based gap multiplier:
+  // High score = creator already has most systems → smaller remaining gap
+  // Low score = beginner with full upside → full gap
+  const scoreMultiplier =
+    scoreTotal === undefined ? 1.0
+    : scoreTotal >= 86 ? 0.35
+    : scoreTotal >= 71 ? 0.50
+    : scoreTotal >= 51 ? 0.70
+    : scoreTotal >= 31 ? 0.85
+    : 1.0
+
+  const rawGap    = Math.max(aggressive - currentIncome, 0)
   const totalMissed = Math.max(
-    aggressive - currentIncome,
-    Math.round(currentIncome * 0.5),
-    500, // minimum floor ฿500 เสมอ
+    Math.round(rawGap * scoreMultiplier),
+    Math.round(currentIncome * 0.10), // floor: at least 10% of current income
+    500, // absolute minimum ฿500
   )
 
   const postsPerMonth = FREQ_POSTS_PER_MONTH[data.postingFrequency] ?? 6

@@ -45,16 +45,16 @@ export function classifyStage(
   const s = score.total
   const income = data.monthlyIncome
 
-  if (s > 70 && (income === '50k_100k' || income === 'over_100k')) {
+  if (s > 70 && income >= 50_000) {
     return STAGES.revenue_engine
   }
   if (s >= 55 && data.hasProduct) {
     return STAGES.conversion_ready
   }
-  if (s >= 35 && (income === '5k_20k' || income === '20k_50k')) {
+  if (s >= 35 && income >= 5_000 && income < 50_000) {
     return STAGES.early_revenue
   }
-  if (data.followers >= 5000 && income === 'zero') {
+  if (data.followers >= 5000 && income === 0) {
     return STAGES.monetizable
   }
   return STAGES.audience_only

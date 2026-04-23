@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import type { AuditFormData, Platform, Niche, PostingFrequency, MonthlyIncomeRange, IncomeSource, ContentDuration, TriedAndFailed, AudienceBuyingPower } from '@/types'
+import type { AuditFormData, Platform, Niche, PostingFrequency, IncomeSource, ContentDuration, TriedAndFailed, AudienceBuyingPower } from '@/types'
 
 // ── Loading Screen ─────────────────────────────────────────
 const LOADING_STEPS = [
@@ -262,14 +262,6 @@ const FREQUENCIES: { value: PostingFrequency; label: string }[] = [
   { value: 'monthly', label: 'ไม่สม่ำเสมอ / น้อยมาก' },
 ]
 
-const INCOME_RANGES: { value: MonthlyIncomeRange; label: string }[] = [
-  { value: 'zero', label: 'ยังไม่มีรายได้' },
-  { value: 'under_5k', label: 'น้อยกว่า 5,000 บาท/เดือน' },
-  { value: '5k_20k', label: '5,000–20,000 บาท/เดือน' },
-  { value: '20k_50k', label: '20,000–50,000 บาท/เดือน' },
-  { value: '50k_100k', label: '50,000–100,000 บาท/เดือน' },
-  { value: 'over_100k', label: 'มากกว่า 100,000 บาท/เดือน' },
-]
 
 const INCOME_SOURCES: { value: IncomeSource; label: string }[] = [
   { value: 'ads_revenue', label: 'ค่า Ads จากแพลตฟอร์ม' },
@@ -317,7 +309,7 @@ const defaultForm: AuditFormData = {
   postingFrequency: '3-5x_week',
   engagementRate: 3,
   currentIncomeSources: ['none'],
-  monthlyIncome: 'zero',
+  monthlyIncome: 0,
   hasProduct: false,
   hasFunnel: false,
   hasAffiliate: false,
@@ -692,14 +684,21 @@ export default function AuditPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">รายได้จาก Content ต่อเดือน</label>
-                    <div className="space-y-2">
-                      {INCOME_RANGES.map((r) => (
-                        <Chip key={r.value} selected={form.monthlyIncome === r.value} onClick={() => update('monthlyIncome', r.value)}>
-                          {r.label}
-                        </Chip>
-                      ))}
-                    </div>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">รายได้จาก Content ต่อเดือน (บาท)</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={form.monthlyIncome || ''}
+                      onChange={(e) => update('monthlyIncome', Math.max(0, Number(e.target.value) || 0))}
+                      placeholder="เช่น 15000 (ถ้ายังไม่มีรายได้ใส่ 0)"
+                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
+                    />
+                    {form.monthlyIncome > 0 && (
+                      <p className="text-violet-400/60 text-xs mt-1.5 font-medium">
+                        ฿{form.monthlyIncome.toLocaleString('th-TH')} บาท/เดือน
+                      </p>
+                    )}
+                    <p className="text-white/20 text-xs mt-1">รายได้จาก content เท่านั้น ไม่รวมเงินเดือนหรืองานอื่น</p>
                   </div>
 
                   <div>

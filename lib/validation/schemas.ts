@@ -18,7 +18,7 @@ export const AuditFormSchema = z.object({
   currentIncomeSources: z.array(
     z.enum(['ads_revenue', 'sponsorship', 'affiliate', 'own_product', 'coaching', 'merchandise', 'subscription', 'none'])
   ).min(1).max(8),
-  monthlyIncome: z.enum(['zero', 'under_5k', '5k_20k', '20k_50k', '50k_100k', 'over_100k']),
+  monthlyIncome: z.number().min(0).max(100_000_000),
   hasProduct: z.boolean(),
   hasFunnel: z.boolean(),
   hasAffiliate: z.boolean(),

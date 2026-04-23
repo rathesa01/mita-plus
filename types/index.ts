@@ -21,13 +21,9 @@ export type Niche =
   | 'other'
 export type AudienceType = 'general' | 'niche' | 'professional' | 'mixed'
 export type PostingFrequency = 'daily' | '3-5x_week' | '1-2x_week' | 'monthly'
-export type MonthlyIncomeRange =
-  | 'zero'
-  | 'under_5k'
-  | '5k_20k'
-  | '20k_50k'
-  | '50k_100k'
-  | 'over_100k'
+// monthlyIncome is now an actual number (฿/month) — e.g. 15000
+// Old enum strings are no longer used
+export type MonthlyIncomeRange = number
 export type IncomeSource =
   | 'ads_revenue'
   | 'sponsorship'

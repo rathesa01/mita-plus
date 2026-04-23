@@ -102,12 +102,8 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
   }
 
   // ── 6. NO BACKEND / TRACKING ──────────────────────────────────────
-  if (!data.hasFunnel && data.monthlyIncome !== 'zero') {
-    const missed = Math.round(
-      (['5k_20k', '20k_50k', '50k_100k', 'over_100k'].includes(data.monthlyIncome)
-        ? 15000
-        : 5000),
-    )
+  if (!data.hasFunnel && data.monthlyIncome > 0) {
+    const missed = Math.round(data.monthlyIncome >= 5000 ? 15000 : 5000)
     leaks.push({
       id: 'no_tracking',
       severity: 'low',

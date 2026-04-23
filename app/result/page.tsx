@@ -146,6 +146,76 @@ function UpgradeGate({ lockedCount, lockedLossTotal, variant = 'leaks' }: {
   )
 }
 
+// ── Locked Leak Card ───────────────────────────
+// Shows blocker name + severity, but blurs the financial amount
+function LockedLeakCard({ leak, index }: {
+  leak: { id: string; severity: string; title: string; missedPerMonth: number }
+  index: number
+}) {
+  const severityMeta: Record<string, { label: string; color: string }> = {
+    critical: { label: '🔴 Critical', color: '#FF4D4F' },
+    high:     { label: '🟠 High',     color: '#FF9F1C' },
+    medium:   { label: '🟣 Medium',   color: '#a78bfa' },
+    low:      { label: '⚪ Low',      color: 'rgba(255,255,255,0.3)' },
+  }
+  const { label: sevLabel, color: sevColor } = severityMeta[leak.severity] ?? severityMeta.medium
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.05 }}
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderLeft: `3px solid ${sevColor}55`,
+        borderRadius: '12px',
+        padding: '12px 14px',
+        marginTop: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+      }}
+    >
+      {/* Left: severity + name */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{
+          fontSize: '10px', fontWeight: 700, textTransform: 'uppercase',
+          color: sevColor, background: `${sevColor}18`,
+          padding: '2px 8px', borderRadius: '99px',
+          display: 'inline-block', marginBottom: '6px',
+        }}>
+          {sevLabel}
+        </span>
+        <p style={{ fontWeight: 700, fontSize: '13px', color: 'rgba(255,255,255,0.70)', lineHeight: 1.3 }}>
+          {leak.title}
+        </p>
+      </div>
+
+      {/* Right: blurred amount + lock */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <p style={{
+          fontWeight: 900, fontSize: '15px', color: '#FF4D4F',
+          filter: 'blur(5px)', userSelect: 'none',
+        }}>
+          -฿{Math.round(leak.missedPerMonth).toLocaleString('th-TH')}
+        </p>
+        <div style={{
+          width: '26px', height: '26px', borderRadius: '50%',
+          background: 'rgba(123,97,255,0.10)',
+          border: '1px solid rgba(123,97,255,0.22)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Lock size={11} style={{ color: '#a78bfa' }} />
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 // ── AI Block ───────────────────────────────────
 function AIBlock({ text }: { text: string }) {
   return (
@@ -649,21 +719,16 @@ function ResultPageInner() {
           {/* Leak 1 — free, fully visible */}
           {leaks[0] && <LeakCard leak={leaks[0]} index={0} />}
 
-          {/* Leaks 2+ — 1 blurred ghost → fade → gate */}
+          {/* Leaks 2+ — show names & severity, blur amounts, gate */}
           {leaks.length > 1 && (() => {
             const lockedLeaks = leaks.slice(1)
             const lockedTotal = lockedLeaks.reduce((s, l) => s + l.missedPerMonth, 0)
             return (
               <>
-                {/* One blurred ghost fading out */}
-                {leaks[1] && (
-                  <div style={{ position: 'relative', overflow: 'hidden', maxHeight: '90px', marginTop: '8px' }}>
-                    <div style={{ filter: 'blur(4px)', opacity: 0.55, pointerEvents: 'none', userSelect: 'none' }}>
-                      <LeakCard leak={leaks[1]} index={1} />
-                    </div>
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '64px', background: 'linear-gradient(transparent, #08080f)' }} />
-                  </div>
-                )}
+                {/* Show all locked blockers: name visible, amount blurred */}
+                {lockedLeaks.map((leak, i) => (
+                  <LockedLeakCard key={leak.id} leak={leak} index={i} />
+                ))}
                 <UpgradeGate lockedCount={lockedLeaks.length} lockedLossTotal={lockedTotal} variant="leaks" />
               </>
             )

@@ -133,9 +133,14 @@ const NICHE_TH: Record<string, string> = {
   lifestyle: 'ไลฟ์สไตล์', education: 'การศึกษา/สอน', finance: 'การเงิน', entertainment: 'ความบันเทิง',
   beauty: 'ความงาม', fitness: 'ออกกำลังกาย/สุขภาพ', business: 'ธุรกิจ/การตลาด', food: 'อาหาร', travel: 'ท่องเที่ยว', other: 'อื่นๆ',
 }
-const INCOME_TH: Record<string, string> = {
-  zero: '0 บาท', under_5k: 'น้อยกว่า ฿5,000', '5k_20k': '฿5,000–20,000',
-  '20k_50k': '฿20,000–50,000', '50k_100k': '฿50,000–100,000', over_100k: 'มากกว่า ฿100,000',
+const INCOME_SOURCE_TH: Record<string, string> = {
+  ads_revenue:  'ค่า Ads จากแพลตฟอร์ม',
+  sponsorship:  'Sponsorship/รีวิว',
+  affiliate:    'Affiliate/ค่าคอม',
+  own_product:  'สินค้า/คอร์สตัวเอง',
+  coaching:     'Coaching/Consulting',
+  merchandise:  'Merchandise',
+  subscription: 'Membership/Subscription',
 }
 const TRIED_TH: Record<string, string> = {
   affiliate: 'Affiliate/ค่าคอม', sponsorship: 'หา Sponsor', own_product: 'ขายสินค้า/คอร์ส',
@@ -166,6 +171,7 @@ export function buildSystemPrompt(): string {
 - ❌ ห้ามใช้ศัพท์ธุรกิจโดยไม่อธิบาย: Algorithm, Funnel, ROI, Engagement, Niche, Commission, Content Strategy ถ้าจำเป็นต้องใช้ ให้วงเล็บอธิบายในประโยคเดียวกันเลย เช่น "ค่าคอม (เงินที่ได้เมื่อมีคนซื้อผ่านลิงก์ของคุณ)"
 - ❌ ห้ามใช้ภาษาที่คนทำธุรกิจถึงจะเข้าใจ — คนอ่านคือคนทำคลิปทั่วไปที่ไม่ได้เรียนธุรกิจมา
 - ❌ ห้ามแนะนำวิธีที่เขาเคยลองแล้วไม่ได้ผล ถ้าจะแนะนำซ้ำต้องอธิบายว่าทำต่างออกไปยังไง
+- ❌ ห้ามแนะนำช่องทางรายได้ที่เขาทำอยู่แล้ว — ดู "รายได้จากที่ไหนตอนนี้" ในโปรไฟล์ ถ้าเขาทำ Affiliate อยู่แล้ว ห้ามบอกให้ "ไปทำ Affiliate" ให้บอกว่าจะทำให้ได้ผลมากกว่าเดิมยังไง หรือแนะนำช่องทางอื่นที่ยังไม่มีแทน
 
 กฎเหล็ก — ต้องทำ:
 - ✅ เขียนแบบ "อธิบายให้คนที่ไม่รู้เรื่องธุรกิจเลยฟัง" — ถ้าแม่หรือเพื่อนที่ไม่เคยทำคลิปอ่านแล้วเข้าใจ ถือว่าผ่าน
@@ -207,6 +213,12 @@ export function buildUserPrompt(
   const triedText = triedAndFailed.filter(t => t !== 'none_tried').map(t => TRIED_TH[t] ?? t).join(', ')
   const hasTriedSomething = triedText.length > 0
 
+  // Current income sources (what they do now — AI must not recommend these again generically)
+  const currentSources = (data.currentIncomeSources ?? []).filter(s => s !== 'none')
+  const currentSourcesText = currentSources.length > 0
+    ? currentSources.map(s => INCOME_SOURCE_TH[s] ?? s).join(', ')
+    : 'ยังไม่มีรายได้'
+
   const platformTH = PLATFORM_TH[platform] ?? platform
   const nicheTH = NICHE_TH[niche] ?? niche
   const audienceTH = AUDIENCE_TH[audienceBuyingPower] ?? audienceBuyingPower
@@ -216,6 +228,11 @@ export function buildUserPrompt(
   const currentPer1k = monthlyViews > 0 ? Math.round((revenue.currentIncome / monthlyViews) * 1000) : 0
   const realisticPer1k = monthlyViews > 0 ? Math.round((revenue.realistic / monthlyViews) * 1000) : 0
 
+  // Format monthly income as ฿ number
+  const currentIncomeDisplay = revenue.currentIncome > 0
+    ? `฿${Math.round(revenue.currentIncome).toLocaleString('th-TH')}`
+    : 'ยังไม่มีรายได้'
+
   return `=== CREATOR PROFILE ===
 ชื่อ: ${data.name}
 Platform: ${platformTH} | Niche: ${nicheTH}${subNiche ? ` → ${subNiche}` : ''}
@@ -223,7 +240,8 @@ Platform: ${platformTH} | Niche: ${nicheTH}${subNiche ? ` → ${subNiche}` : ''}
 ทำมาแล้ว: ${durationTH}
 Followers: ${data.followers.toLocaleString('th-TH')} | ยอดวิวเฉลี่ย/โพสต์: ${data.avgViews.toLocaleString('th-TH')}
 วิวรวม/เดือน: ${fmt(monthlyViews)} | Engagement: ${data.engagementRate}%
-รายได้ปัจจุบัน: ${INCOME_TH[data.monthlyIncome] ?? data.monthlyIncome}/เดือน
+รายได้จากที่ไหนตอนนี้: ${currentSourcesText} ← ⚠️ ห้ามแนะนำวิธีเหล่านี้ซ้ำ ให้แนะนำวิธีอื่นหรือบอกว่าจะทำให้ดีกว่าเดิมยังไง
+รายได้ต่อเดือนตอนนี้: ${currentIncomeDisplay}
 คะแนน: ${score.total}/100
 
 📊 มูลค่าต่อ 1,000 view ปัจจุบัน: ฿${currentPer1k} (ที่ควรได้: ฿${realisticPer1k})

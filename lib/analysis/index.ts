@@ -12,10 +12,10 @@ function fmt(n: number) {
 
 function getPricing(
   score: number,
-  monthlyIncome: string,
+  monthlyIncome: number,
   totalMissed: number,
 ): PricingRecommendation {
-  if (monthlyIncome === 'over_100k') {
+  if (monthlyIncome >= 100_000) {
     return {
       tier: 'revenue_share',
       reportPrice: 0,
@@ -24,7 +24,7 @@ function getPricing(
       valueProposition: 'เราช่วย Scale รายได้คุณ แล้วรับ % เฉพาะเงินที่เพิ่มขึ้น',
     }
   }
-  if (score >= 55 || monthlyIncome === '50k_100k') {
+  if (score >= 55 || monthlyIncome >= 50_000) {
     return {
       tier: 'premium',
       reportPrice: 999,
@@ -33,7 +33,7 @@ function getPricing(
       valueProposition: 'เราวางระบบ Funnel + Monetization ให้ครบ ใน 30 วัน',
     }
   }
-  if (score >= 35 || monthlyIncome === '20k_50k') {
+  if (score >= 35 || monthlyIncome >= 20_000) {
     return {
       tier: 'growth',
       reportPrice: 599,
@@ -54,7 +54,8 @@ function getPricing(
 export function analyzeAudit(data: AuditFormData): Omit<AuditResult, 'id' | 'createdAt' | 'aiInsights'> {
   const score = calculateScore(data)
   const stage = classifyStage(data, score)
-  const revenueEstimation = estimateRevenue(data)
+  // Pass score.total so high-scoring creators get a realistic (smaller) gap
+  const revenueEstimation = estimateRevenue(data, score.total)
   const rawLeaks = detectLeaks(data, revenueEstimation)
 
   // ── Normalize leak amounts ─────────────────────────────────────────
