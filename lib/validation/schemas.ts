@@ -9,7 +9,7 @@ export const AuditFormSchema = z.object({
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? t : ''
   }),
   platform: z.enum(['tiktok', 'instagram', 'youtube', 'facebook', 'multi']),
-  niche: z.enum(['lifestyle', 'education', 'finance', 'entertainment', 'beauty', 'fitness', 'business', 'food', 'travel', 'other']),
+  niche: z.enum(['lifestyle', 'education', 'finance', 'entertainment', 'beauty', 'fitness', 'business', 'food', 'travel', 'other', 'mom_baby', 'gaming', 'cafe', 'health', 'automotive']),
   audienceType: z.enum(['general', 'niche', 'professional', 'mixed']),
   followers: z.number().min(0).max(100_000_000),
   avgViews: z.number().min(0).max(100_000_000),
