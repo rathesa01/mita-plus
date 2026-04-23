@@ -83,21 +83,32 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
   }
 
   // ── 5. WEAK CTA / LOW FREQUENCY ───────────────────────────────────
-  if (data.postingFrequency === 'monthly' || data.engagementRate < 2) {
+  // 'monthly' = ต่ำมาก (high severity)
+  // '1-2x_week' + reach ดี = กำลังทิ้งโอกาสใหญ่ (medium severity)
+  const isVeryLowFreq = data.postingFrequency === 'monthly'
+  const isLowFreqForReach = data.postingFrequency === '1-2x_week' &&
+    (data.followers > 10_000 || data.avgViews > 3_000)
+  const isLowEngagement = data.engagementRate < 2
+
+  if (isVeryLowFreq || isLowFreqForReach || isLowEngagement) {
     const missed = Math.round(monthlyViews * 0.002 * 990)
+    const isFreqIssue = isVeryLowFreq || isLowFreqForReach
     leaks.push({
-      id: data.postingFrequency === 'monthly' ? 'low_frequency' : 'weak_cta',
-      severity: 'medium',
-      title: data.postingFrequency === 'monthly' ? 'โพสต์น้อยเกินไป' : 'Engagement ต่ำเกินไป',
-      painLine: 'Algorithm กำลังลงโทษคุณอยู่ทุกวัน',
-      explanation:
-        data.postingFrequency === 'monthly'
-          ? 'คอนเทนต์น้อย = Algorithm ไม่ดัน = คนเห็นน้อย = รายได้น้อย วงจรนี้ทำลายการเติบโตทุกวัน'
-          : 'Engagement ต่ำบอกว่า Algorithm จะไม่ดันคอนเทนต์คุณ ต่อให้โพสต์บ่อยแค่ไหน',
+      id: isFreqIssue ? 'low_frequency' : 'weak_cta',
+      severity: isVeryLowFreq ? 'high' : 'medium',
+      title: isFreqIssue ? 'โพสต์น้อยเกินไปสำหรับ Reach ที่มีอยู่' : 'Engagement ต่ำเกินไป',
+      painLine: isFreqIssue
+        ? 'คุณมี audience แต่ไม่ได้ใช้ให้คุ้ม — คู่แข่งกำลังกิน traffic ของคุณไปทุกวันที่ไม่ได้โพสต์'
+        : 'Algorithm กำลังลงโทษคุณอยู่ทุกวัน',
+      explanation: isFreqIssue
+        ? `โพสต์ ${data.postingFrequency === 'monthly' ? 'แค่เดือนละครั้ง' : 'แค่สัปดาห์ละ 1-2 ครั้ง'} ทั้งที่มี audience ระดับนี้ — ถ้าโพสต์ 3-5 ครั้ง/สัปดาห์ views รวมต่อเดือนจะเพิ่มขึ้น 2.5-3 เท่าทันที ซึ่งตรงมาเป็นรายได้เลย`
+        : 'Engagement ต่ำบอกว่า Algorithm จะไม่ดันคอนเทนต์คุณ ต่อให้โพสต์บ่อยแค่ไหน',
       missedPerMonth: missed,
       missedPerYear: missed * 12,
-      shockSentence: `Algorithm ดันคุณน้อยลงทุกวัน — ต่อให้คอนเทนต์ดีแค่ไหน reach ก็ไม่เติบโตถ้าไม่แก้จุดนี้`,
-      impact: `Reach ต่ำกว่าที่ควรเป็น`,
+      shockSentence: isFreqIssue
+        ? `ทุกวันที่ไม่ได้โพสต์ = views หายไปหลายหมื่น ซึ่ง Algorithm จะไม่คืนให้อีกแล้ว`
+        : `Algorithm ดันคุณน้อยลงทุกวัน — ต่อให้คอนเทนต์ดีแค่ไหน reach ก็ไม่เติบโตถ้าไม่แก้จุดนี้`,
+      impact: isFreqIssue ? `Views หายไปจากการโพสต์น้อยเกินไป` : `Reach ต่ำกว่าที่ควรเป็น`,
     })
   }
 
@@ -115,6 +126,29 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
       missedPerYear: missed * 12,
       shockSentence: `ถ้าไม่รู้ว่าโพสต์ไหนสร้างรายได้ คุณก็ scale ไม่ได้ — รายได้จะติดเพดานเดิมไปเรื่อยๆ`,
       impact: `Scale ไม่ได้เพราะไม่มีข้อมูล`,
+    })
+  }
+
+  // ── 7. SINGLE PLATFORM CONCENTRATION RISK ─────────────────────────
+  // สำหรับ high earner ที่พึ่งพา platform เดียว
+  if (data.platform !== 'multi' && data.monthlyIncome >= 50_000) {
+    const platformTH: Record<string, string> = {
+      tiktok: 'TikTok', instagram: 'Instagram',
+      youtube: 'YouTube', facebook: 'Facebook',
+    }
+    const pName = platformTH[data.platform] ?? data.platform
+    const missed = Math.round(data.monthlyIncome * 0.3) // 30% at risk
+    leaks.push({
+      id: 'wrong_monetization_model',
+      severity: 'medium',
+      title: `รายได้ทั้งหมดอยู่บน ${pName} แพลตฟอร์มเดียว`,
+      painLine: `ถ้า ${pName} เปลี่ยน algorithm พรุ่งนี้ รายได้คุณหายทันที`,
+      explanation:
+        `Creator ที่พึ่งพา platform เดียวคือ "เดิมพันทั้งหมดในตะกร้าใบเดียว" — ${pName} เคยเปลี่ยน algorithm มาหลายครั้งแล้ว และ creator ที่ไม่กระจาย platform สูญรายได้ 60-80% ในคืนเดียว`,
+      missedPerMonth: missed,
+      missedPerYear: missed * 12,
+      shockSentence: `${pName} เคยฆ่า creator ใหญ่กว่าคุณมาแล้ว — รายได้ ฿${Math.round(missed).toLocaleString('th-TH')} ที่อยู่บน platform เดียวคือความเสี่ยงที่คำนวณได้`,
+      impact: `รายได้ที่เสี่ยงถ้า platform เปลี่ยน`,
     })
   }
 

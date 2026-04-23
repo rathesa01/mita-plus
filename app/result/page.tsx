@@ -485,14 +485,29 @@ function ResultPageInner() {
 
   const { stage, score, leaks, revenueEstimation, recommendations, actionPlan, aiInsights, pricing, input } = result
   const totalLeakPerMonth = leaks.reduce((s, l) => s + l.missedPerMonth, 0)
-  const revenueGap        = revenueEstimation.realistic - revenueEstimation.currentIncome
   const dailyLoss         = Math.round(totalLeakPerMonth / 30)
 
-  // High earner = คนที่รายได้ปัจจุบัน >= realistic estimate
-  const isHighEarner      = revenueEstimation.currentIncome >= revenueEstimation.realistic
-  // สำหรับ high earner ใช้ aggressive เป็นเป้าหมาย
-  const displayTarget     = isHighEarner ? revenueEstimation.aggressive : revenueEstimation.realistic
-  const displayGap        = displayTarget - revenueEstimation.currentIncome
+  // High earner = รายได้จริงเกิน realistic estimate ของ model
+  const isHighEarner = revenueEstimation.currentIncome >= revenueEstimation.realistic
+
+  // displayTarget: สำหรับ high earner ใช้ max(aggressive, currentIncome*1.3) เพื่อแสดง growth potential ที่ไม่ negative
+  const displayTarget = isHighEarner
+    ? Math.max(revenueEstimation.aggressive, Math.round(revenueEstimation.currentIncome * 1.3))
+    : revenueEstimation.realistic
+
+  // displayGap: ไม่ negative เสมอ ใช้ totalMissed เป็น floor
+  const displayGap = Math.max(
+    displayTarget - revenueEstimation.currentIncome,
+    revenueEstimation.totalMissed,
+  )
+
+  // revenueGap: ใช้ displayGap สำหรับ high earner, ใช้ totalMissed สำหรับคนทั่วไป (เพื่อ clamp negative)
+  const revenueGap = isHighEarner
+    ? displayGap
+    : Math.max(revenueEstimation.realistic - revenueEstimation.currentIncome, revenueEstimation.totalMissed)
+
+  // displayLeakTotal: ถ้าไม่มี leak (ครบทุกระบบ) ใช้ totalMissed แทน
+  const displayLeakTotal = totalLeakPerMonth > 500 ? totalLeakPerMonth : revenueEstimation.totalMissed
 
   const scrollToUpgrade = () => document.getElementById('upgrade')?.scrollIntoView({ behavior: 'smooth' })
 
@@ -570,7 +585,7 @@ function ResultPageInner() {
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#FF9F1C', flexShrink: 0 }} />
               <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
                 ยังเติบโตได้อีก{' '}
-                <span style={{ color: '#FF9F1C', fontWeight: 900 }}>฿{fmt(Math.round(displayGap / 30))}</span>
+                <span style={{ color: '#FF9F1C', fontWeight: 900 }}>฿{fmt(Math.max(Math.round(displayGap / 30), 1))}</span>
                 {' '}ต่อวัน
               </span>
             </div>
@@ -646,8 +661,8 @@ function ResultPageInner() {
       <SectionWrapper>
         <SectionLabel n="①" label="รายได้ที่หลุดมือทุกวัน" />
         <MoneyHero
-          perMonth={totalLeakPerMonth}
-          label="รายได้ที่คุณเพิ่มได้ทันที ถ้าทำตามแผนนี้"
+          perMonth={displayLeakTotal}
+          label="รายได้ที่คุณเพิ่มได้ ถ้าทำตามแผนนี้"
           type="gain"
         />
 
@@ -671,11 +686,11 @@ function ResultPageInner() {
           </div>
           {isHighEarner ? (
             <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '6px' }}>
-              รายได้คุณดีแล้ว — แต่ยังโตได้อีก {Math.round((displayGap / Math.max(revenueEstimation.currentIncome, 1)) * 100)}% ด้วยระบบที่ถูกต้อง
+              รายได้คุณดีแล้ว — แต่ยังโตได้อีก {Math.round((displayGap / Math.max(revenueEstimation.currentIncome, 1)) * 100)}% ถ้าวางระบบให้ถูกต้อง
             </p>
           ) : (
             <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '6px' }}>
-              ยังมีโอกาสเพิ่มรายได้อีก {Math.round((displayGap / Math.max(displayTarget, 1)) * 100)}% จากที่มีอยู่
+              ยังมีโอกาสเพิ่มรายได้อีก {Math.max(Math.round((revenueGap / Math.max(displayTarget, 1)) * 100), 5)}% จากที่มีอยู่
             </p>
           )}
         </div>
