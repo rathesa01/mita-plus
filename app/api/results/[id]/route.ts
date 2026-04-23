@@ -10,9 +10,9 @@ const supabase = createClient(
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
 
   if (!id || !/^[0-9a-f-]{36}$/.test(id)) {
     return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
