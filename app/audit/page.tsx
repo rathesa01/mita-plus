@@ -430,10 +430,13 @@ export default function AuditPage() {
         throw new Error(msg)
       }
       const result = await res.json()
+      // เก็บใน sessionStorage เป็น fallback (กรณี DB ไม่ได้ save)
       sessionStorage.setItem('mita_result', JSON.stringify(result))
       // Signal loading screen → 100%, then navigate after brief celebration moment
       setApiDone(true)
-      setTimeout(() => router.push('/result'), 800)
+      // ใช้ id จาก result เพื่อ shareable URL — fallback ไป /result ถ้าไม่มี id
+      const dest = result.id ? `/result?id=${result.id}` : '/result'
+      setTimeout(() => router.push(dest), 800)
     } catch (err) {
       console.error('[MITA+] Submit error:', err)
       setLoading(false)

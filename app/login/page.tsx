@@ -165,7 +165,7 @@ export default function LoginPage() {
 
               {/* LINE Login */}
               <motion.a
-                href="/api/auth/line?redirect=/starter"
+                href="/api/auth/line?redirect=/api/auth/line/smart-redirect"
                 whileTap={{ scale: 0.98 }}
                 style={{
                   width: '100%', padding: '14px', marginBottom: '12px',

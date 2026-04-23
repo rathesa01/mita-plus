@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { getSupabaseClient } from '@/lib/db/supabaseClient'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence, animate } from 'framer-motion'
 import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight, Share2, Copy, Check as CheckIcon, Lock } from 'lucide-react'
 import type { AuditResult } from '@/types'
@@ -270,9 +269,9 @@ function PhaseCard({ label, items, color, accent }: {
 }
 
 // ── Share Section ──────────────────────────────
-function ShareSection({ score, revenueGap, name }: { score: number; revenueGap: number; name: string }) {
+function ShareSection({ score, revenueGap, name, resultId }: { score: number; revenueGap: number; name: string; resultId?: string }) {
   const [copied, setCopied] = useState(false)
-  const url = 'https://www.mitaplus.com'
+  const url = resultId ? `https://mitaplus.com/r/${resultId}` : 'https://mitaplus.com'
   const gap = Math.round(revenueGap).toLocaleString('th-TH')
 
   const shareText = `Monetization Score ของฉัน: ${score}/100 🎯\nRevenue Gap: -฿${gap}/เดือน 💸\n\nลองเช็กของคุณที่ mitaplus.com`
@@ -357,10 +356,13 @@ interface LineUser { id: string; lineUserId: string; displayName: string; pictur
 
 export default function ResultPage() {
   const router = useRouter()
-  const [result, setResult]       = useState<AuditResult | null>(null)
-  const [showSticky, setShowSticky] = useState(false)
-  const [showScore, setShowScore] = useState(false)
-  const [lineUser, setLineUser]   = useState<LineUser | null>(null)
+  const searchParams = useSearchParams()
+  const resultId = searchParams.get('id')
+
+  const [result, setResult]           = useState<AuditResult | null>(null)
+  const [showSticky, setShowSticky]   = useState(false)
+  const [showScore, setShowScore]     = useState(false)
+  const [lineUser, setLineUser]       = useState<LineUser | null>(null)
   const [lineLoading, setLineLoading] = useState(true)
 
   // เช็ค LINE session
@@ -371,38 +373,31 @@ export default function ResultPage() {
       .finally(() => setLineLoading(false))
   }, [])
 
+  // โหลด result: DB (ถ้ามี id) → sessionStorage fallback
   useEffect(() => {
-    const raw = sessionStorage.getItem('mita_result')
-    if (!raw) { router.push('/audit'); return }
-    const parsed = JSON.parse(raw)
-    setResult(parsed)
-
-    // [1] localStorage fallback — ใช้เสมอ (กรณีเปลี่ยน browser / private mode)
-    localStorage.setItem('mitaplus_audit', raw)
-
-    // [2] Hybrid: ถ้า login อยู่ → save ลง DB ทันทีเลย ไม่ต้องรอ /subscribe/success
-    const saveToDbIfLoggedIn = async () => {
-      try {
-        const supabase = getSupabaseClient()
-        if (!supabase) return
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.user) return // ยังไม่ login → ใช้ localStorage ต่อไป
-
-        // มี session → save ลง DB ทันที (upsert เพื่อไม่ override plan ที่มีอยู่)
-        await supabase
-          .from('user_profiles')
-          .upsert(
-            { id: session.user.id, audit_data: parsed } as never,
-            { onConflict: 'id' }
-          )
-        console.log('[result] audit_data saved to DB (user already logged in)')
-      } catch (e) {
-        // silent fail — localStorage ยังใช้ได้เป็น fallback
-        console.warn('[result] could not save audit to DB:', e)
+    const loadResult = async () => {
+      // ── A. โหลดจาก DB ด้วย id ────────────────
+      if (resultId) {
+        try {
+          const res = await fetch(`/api/results/${resultId}`)
+          if (res.ok) {
+            const data = await res.json()
+            setResult(data)
+            // sync sessionStorage ด้วยเผื่อ refresh
+            sessionStorage.setItem('mita_result', JSON.stringify(data))
+            return
+          }
+        } catch { /* fallthrough to sessionStorage */ }
       }
+
+      // ── B. Fallback: sessionStorage ──────────
+      const raw = sessionStorage.getItem('mita_result')
+      if (!raw) { router.push('/audit'); return }
+      setResult(JSON.parse(raw))
     }
-    saveToDbIfLoggedIn()
-  }, [router])
+
+    loadResult()
+  }, [resultId, router])
 
   useEffect(() => {
     const onScroll = () => setShowSticky(window.scrollY > 450)
@@ -557,7 +552,7 @@ export default function ResultPage() {
               ฟรี 100% ไม่มีค่าใช้จ่าย
             </p>
             <a
-              href={`/api/auth/line?redirect=/result`}
+              href={`/api/auth/line?redirect=${encodeURIComponent(resultId ? `/result?id=${resultId}` : '/result')}`}
               className="flex items-center justify-center gap-3 w-full bg-[#06C755] hover:bg-[#05b34d] text-white font-bold py-3 px-6 rounded-xl transition-colors text-sm"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -894,7 +889,7 @@ export default function ResultPage() {
       {/* ══════════════════════════════════════
           SHARE
       ══════════════════════════════════════ */}
-      <ShareSection score={score.total} revenueGap={revenueGap} name={input.name} />
+      <ShareSection score={score.total} revenueGap={revenueGap} name={input.name} resultId={result.id} />
 
       {/* ══════════════════════════════════════
           CTA / UPGRADE

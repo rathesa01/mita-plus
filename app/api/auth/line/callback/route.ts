@@ -92,6 +92,20 @@ export async function GET(req: NextRequest) {
       pictureUrl:  profile.pictureUrl ?? null,
     })
 
+    // 5. ถ้า redirect มาจาก /result?id=xxx → link line_user_id เข้า audit_results
+    const resultIdMatch = redirectTo.match(/[?&]id=([0-9a-f-]{36})/)
+    if (resultIdMatch) {
+      const auditId = resultIdMatch[1]
+      void supabase
+        .from('audit_results')
+        .update({
+          line_user_id: profile.userId,
+          consented: true,
+        })
+        .eq('id', auditId)
+        .is('line_user_id', null) // link เฉพาะที่ยังไม่มีเจ้าของ
+    }
+
     const response = NextResponse.redirect(`${origin}${redirectTo}`)
     response.cookies.set('mita_line_session', sessionData, {
       httpOnly: true,

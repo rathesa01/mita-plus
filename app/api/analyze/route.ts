@@ -5,6 +5,7 @@ import { AuditFormSchema } from '@/lib/validation/schemas'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { saveLead } from '@/lib/db/supabase'
 import { sendResultEmail } from '@/lib/email'
+import { createClient } from '@supabase/supabase-js'
 import type { AuditResult } from '@/types'
 
 // ── Discord helper ──────────────────────────────
@@ -22,9 +23,51 @@ async function notifyDiscord(content: string) {
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
+// ── Save full result ลง audit_results table ────
+async function saveAuditResult(result: AuditResult): Promise<string | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_KEY
+  if (!url || !key) return null
+
+  try {
+    const db = createClient(url, key)
+    const { data, error } = await db
+      .from('audit_results')
+      .insert({
+        id:                  result.id,
+        platform:            result.input.platform,
+        niche:               result.input.niche,
+        followers:           result.input.followers,
+        name:                result.input.name,
+        score_total:         result.score.total,
+        score_breakdown:     result.score.breakdown,
+        leaks:               result.leaks,
+        revenue_estimation:  result.revenueEstimation,
+        ai_insights:         result.aiInsights,
+        recommendations:     result.recommendations,
+        action_plan:         result.actionPlan,
+        pricing:             result.pricing,
+        stage:               result.stage,
+        input:               result.input,
+        consented:           false,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('[MITA+] saveAuditResult error:', error.message)
+      return null
+    }
+    return data?.id ?? null
+  } catch (e) {
+    console.error('[MITA+] saveAuditResult unexpected:', e)
+    return null
+  }
+}
+
 export async function POST(req: NextRequest) {
   // ── 1. Rate limit ─────────────────────────────
-  const { allowed, remaining, resetIn } = checkRateLimit(req, 5, 60_000)
+  const { allowed, resetIn } = checkRateLimit(req, 5, 60_000)
   if (!allowed) {
     return NextResponse.json(
       { error: 'Too many requests — ลองใหม่ในอีก 1 นาทีค่ะ' },
@@ -60,7 +103,7 @@ export async function POST(req: NextRequest) {
     // ── 3. Deterministic analysis ─────────────────
     const analysis = analyzeAudit(data)
 
-    // ── 4. AI insights (OpenAI or mock fallback) ──
+    // ── 4. AI insights ────────────────────────────
     const aiInsights = await generateInsights(
       data,
       analysis.leaks,
@@ -76,12 +119,14 @@ export async function POST(req: NextRequest) {
       ...analysis,
     }
 
-    // ── 5. Persist lead + notify (fire-and-forget) ─
+    // ── 5. Save full result ลง DB (await — ต้องการ id) ──
+    await saveAuditResult(result)
+
+    // ── 6. Lead + notify (fire-and-forget) ────────
     const gap = analysis.revenueEstimation.totalMissed
     const hasEmail = !!(data.email && data.email.length > 0)
 
     void Promise.all([
-      // Supabase
       saveLead({
         type: 'audit',
         name: data.name,
@@ -95,7 +140,6 @@ export async function POST(req: NextRequest) {
         premium_price: Math.round(analysis.pricing.premiumPrice),
       }),
 
-      // Discord notification
       (data.email || data.name) && notifyDiscord([
         `🔍 **Audit Completed**`,
         ``,
@@ -105,10 +149,10 @@ export async function POST(req: NextRequest) {
         `💸 **Revenue Gap:** ฿${fmt(gap)}/เดือน`,
         `🎵 **Platform:** ${data.platform}  |  🎯 **Niche:** ${data.niche}`,
         `👥 **Followers:** ${Number(data.followers).toLocaleString('th-TH')}`,
+        `🔗 **Result:** mitaplus.com/r/${result.id}`,
         `⏰ ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`,
       ].filter(Boolean).join('\n')),
 
-      // Result email to user
       hasEmail && sendResultEmail({
         name: data.name,
         email: data.email!,
@@ -119,7 +163,9 @@ export async function POST(req: NextRequest) {
       }),
     ].filter(Boolean))
 
+    // ── 7. Return result พร้อม id ─────────────────
     return NextResponse.json(result)
+
   } catch (err) {
     console.error('[MITA+] Analyze error:', err)
     return NextResponse.json({ error: 'Analysis failed' }, { status: 500 })
