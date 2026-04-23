@@ -353,11 +353,23 @@ function ShareSection({ score, revenueGap, name }: { score: number; revenueGap: 
 }
 
 // ── Main Page ──────────────────────────────────
+interface LineUser { id: string; lineUserId: string; displayName: string; pictureUrl: string | null }
+
 export default function ResultPage() {
   const router = useRouter()
-  const [result, setResult] = useState<AuditResult | null>(null)
+  const [result, setResult]       = useState<AuditResult | null>(null)
   const [showSticky, setShowSticky] = useState(false)
   const [showScore, setShowScore] = useState(false)
+  const [lineUser, setLineUser]   = useState<LineUser | null>(null)
+  const [lineLoading, setLineLoading] = useState(true)
+
+  // เช็ค LINE session
+  useEffect(() => {
+    fetch('/api/auth/line/session')
+      .then(r => r.json())
+      .then(({ user }) => setLineUser(user))
+      .finally(() => setLineLoading(false))
+  }, [])
 
   useEffect(() => {
     const raw = sessionStorage.getItem('mita_result')
@@ -512,6 +524,54 @@ export default function ResultPage() {
           )}
         </motion.div>
       </SectionWrapper>
+
+      {/* ══════════════════════════════════════
+          LINE LOGIN GATE
+          แสดง Hero Score ก่อน → ติด hook แล้ว
+          ถ้ายังไม่ login → แสดงปุ่ม LINE
+      ══════════════════════════════════════ */}
+      {!lineLoading && !lineUser && (
+        <div className="relative mx-auto max-w-[420px] px-4 pb-8">
+          {/* teaser blur — ดูผลคร่าวๆ ก่อน */}
+          <div className="pointer-events-none select-none filter blur-sm opacity-30 max-h-40 overflow-hidden">
+            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', marginBottom: '8px' }}>
+              <p style={{ color: '#fff', fontWeight: 900, fontSize: '15px' }}>① รายได้ที่หลุดมือทุกวัน</p>
+              <p style={{ color: '#FF4D4F', fontWeight: 900, fontSize: '28px' }}>-฿{fmt(totalLeakPerMonth)}/เดือน</p>
+            </div>
+            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px' }}>
+              <p style={{ color: '#fff', fontWeight: 900, fontSize: '15px' }}>② Revenue Blocker</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>พบ {leaks.length} จุดที่ทำให้คุณเสียเงิน</p>
+            </div>
+          </div>
+
+          {/* Gate Card */}
+          <div className="mt-4 bg-white rounded-2xl shadow-2xl p-6 text-center border border-gray-100">
+            <div className="w-14 h-14 bg-[#06C755] rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+              </svg>
+            </div>
+            <h3 className="text-gray-900 font-black text-lg mb-1">ดูผลวิเคราะห์ฟรีทั้งหมด</h3>
+            <p className="text-gray-500 text-sm mb-5">
+              Login ด้วย LINE เพื่อดูผลการวินิจฉัยแบบเต็ม<br/>
+              ฟรี 100% ไม่มีค่าใช้จ่าย
+            </p>
+            <a
+              href={`/api/auth/line?redirect=/result`}
+              className="flex items-center justify-center gap-3 w-full bg-[#06C755] hover:bg-[#05b34d] text-white font-bold py-3 px-6 rounded-xl transition-colors text-sm"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+              </svg>
+              เข้าสู่ระบบด้วย LINE
+            </a>
+            <p className="text-xs text-gray-400 mt-3">เราเก็บเฉพาะชื่อและรูปโปรไฟล์ LINE เท่านั้น</p>
+          </div>
+        </div>
+      )}
+
+      {/* เนื้อหาหลัก — แสดงเมื่อ login แล้วเท่านั้น */}
+      {(lineLoading || lineUser) && <>
 
       {/* ══════════════════════════════════════
           ① เงินที่เสีย
@@ -973,6 +1033,10 @@ export default function ResultPage() {
         <span><span className="gradient-purple-blue font-black">MITA+</span> — Money In The Air</span>
         <a href="/privacy" style={{ color: 'rgba(255,255,255,0.22)', textDecoration: 'none' }}>Privacy Policy</a>
       </footer>
+
+      {/* ปิด block เนื้อหาหลัก (LINE Login Gate) */}
+      </>}
+
     </main>
   )
 }
