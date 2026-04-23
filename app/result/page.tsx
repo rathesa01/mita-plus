@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence, animate } from 'framer-motion'
 import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight, Share2, Copy, Check as CheckIcon, Lock } from 'lucide-react'
@@ -356,7 +356,7 @@ function ShareSection({ score, revenueGap, name, resultId }: { score: number; re
 // ── Main Page ──────────────────────────────────
 interface LineUser { id: string; lineUserId: string; displayName: string; pictureUrl: string | null }
 
-export default function ResultPage() {
+function ResultPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const resultId = searchParams.get('id')
@@ -1035,5 +1035,18 @@ export default function ResultPage() {
       </>}
 
     </main>
+  )
+}
+
+// ── Default export — Suspense wrapper ────────
+export default function ResultPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ background: '#08080f', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>กำลังโหลด...</p>
+      </div>
+    }>
+      <ResultPageInner />
+    </Suspense>
   )
 }
