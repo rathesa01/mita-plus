@@ -25,12 +25,12 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.mitaplus.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
-  title: 'MITA+ | วิเคราะห์ Revenue Gap ฟรี — Creator ควรได้เงินเท่าไหร่?',
-  description: 'บอก Platform, Followers และระบบที่มีอยู่ — MITA+ จะวิเคราะห์ว่าคุณกำลังเสียเงินเท่าไหร่ต่อเดือน และต้องทำอะไรเพื่อดึงเงินกลับมา ฟรี 100% ผลออกใน 3 นาที',
-  keywords: ['creator monetization', 'revenue gap', 'thai creator', 'influencer income', 'MITA+', 'ทำเงินจาก content'],
+  title: 'MITA+ | ทำคอนเทนต์แล้วได้เงินน้อยไปไหม? เช็กฟรีใน 3 นาที',
+  description: 'บอก Platform กับจำนวนผู้ติดตาม — MITA+ จะบอกว่าคุณพลาดเงินไปเดือนละเท่าไหร่ และต้องทำอะไรให้ได้เงินเพิ่ม ฟรี 100% ผลออกใน 3 นาที',
+  keywords: ['creator', 'ทำเงินจาก content', 'คอนเทนต์ครีเอเตอร์', 'รายได้ creator', 'MITA+', 'เพิ่มรายได้'],
   openGraph: {
-    title: 'MITA+ — Creator ควรได้เงินเท่าไหร่?',
-    description: 'วิเคราะห์ฟรี · ผลออกใน 3 นาที · เห็นเงินใน 7 วัน',
+    title: 'MITA+ — ทำคอนเทนต์แล้วได้เงินน้อยไปไหม?',
+    description: 'เช็กฟรีใน 3 นาที · รู้เลยว่าพลาดเงินไปเท่าไหร่ · เริ่มได้เงินเพิ่มใน 7 วัน',
     url: BASE_URL,
     siteName: 'MITA+',
     images: [
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MITA+ — Creator ควรได้เงินเท่าไหร่?',
-    description: 'วิเคราะห์ Revenue Gap ฟรี · ผลออกใน 3 นาที',
+    title: 'MITA+ — ทำคอนเทนต์แล้วได้เงินน้อยไปไหม?',
+    description: 'เช็กฟรีใน 3 นาที · รู้เลยว่าพลาดเงินไปเท่าไหร่',
     images: ['/opengraph-image'],
   },
   robots: {
