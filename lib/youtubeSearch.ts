@@ -11,21 +11,26 @@ export interface YouTubeVideo {
   publishedAt: string
 }
 
-// niche → search query (ภาษาไทย + English สำหรับ TH region)
+// niche → search query — เน้น keyword ภาษาไทย เพื่อดึง Thai creator เท่านั้น
+// ไม่ใส่ "viral" "shorts" ภาษาอังกฤษ เพราะดึง Indian/Global creator แทน
 const NICHE_QUERIES: Record<string, string> = {
-  food:          'ช่อง youtube อาหาร viral shorts ทำอาหาร creator',
-  beauty:        'ช่อง youtube สกินแคร์ ความงาม creator viral shorts',
-  fitness:       'ช่อง youtube ออกกำลังกาย สุขภาพ creator viral shorts',
-  fashion:       'ช่อง youtube แฟชั่น ไลฟ์สไตล์ ootd creator viral',
-  review:        'ช่อง youtube รีวิวสินค้า creator viral shorts thailand',
-  travel:        'ช่อง youtube ท่องเที่ยวไทย vlog creator viral',
-  finance:       'ช่อง youtube การเงิน ลงทุน เงิน creator viral',
-  entertainment: 'ช่อง youtube ตลก ความบันเทิง creator viral',
-  pets:          'ช่อง youtube สัตว์เลี้ยง แมว หมา creator viral',
-  education:     'ช่อง youtube สอน ทักษะ เรียน creator viral shorts',
-  gaming:        'ช่อง youtube เกม gaming creator viral thailand',
-  tech:          'ช่อง youtube เทคโนโลยี tech review creator viral',
-  general:       'ช่อง youtube creator viral shorts thailand content',
+  food:          'ยูทูปไทย ทำอาหาร กินรีวิว คนไทย',
+  beauty:        'ยูทูปไทย สกินแคร์ แต่งหน้า คนไทย',
+  fitness:       'ยูทูปไทย ออกกำลังกาย ลดน้ำหนัก คนไทย',
+  fashion:       'ยูทูปไทย แฟชั่น แต่งตัว ootd คนไทย',
+  review:        'ยูทูปไทย รีวิวสินค้า ของดี คนไทย',
+  travel:        'ยูทูปไทย ท่องเที่ยวไทย vlog คนไทย',
+  finance:       'ยูทูปไทย การเงิน ลงทุน ออมเงิน คนไทย',
+  entertainment: 'ยูทูปไทย ตลก ความบันเทิง คอนเทนต์ไทย',
+  pets:          'ยูทูปไทย สัตว์เลี้ยง แมว หมา คนไทย',
+  education:     'ยูทูปไทย สอน ความรู้ ทักษะ คนไทย',
+  gaming:        'ยูทูปไทย เกม เล่นเกม คนไทย',
+  tech:          'ยูทูปไทย เทคโนโลยี รีวิว gadget คนไทย',
+  lifestyle:     'ยูทูปไทย ไลฟ์สไตล์ ชีวิตประจำวัน vlog คนไทย',
+  mom_baby:      'ยูทูปไทย แม่และเด็ก เลี้ยงลูก คนไทย',
+  cafe:          'ยูทูปไทย คาเฟ่ กาแฟ รีวิว คนไทย',
+  business:      'ยูทูปไทย ธุรกิจ การตลาด freelance คนไทย',
+  general:       'ยูทูปไทย คอนเทนต์ไทย creator คนไทย',
 }
 
 function getNicheQuery(niche: string): string {
@@ -50,9 +55,9 @@ export async function searchYouTubeByNiche(
     part: 'snippet',
     q: query,
     type: 'video',
-    videoDuration: 'short',   // under 4 minutes
-    order: 'viewCount',       // เรียงตาม views มากที่สุด
-    maxResults: String(maxResults),
+    videoDuration: 'short',     // under 4 minutes
+    order: 'relevance',         // relevance ดีกว่า viewCount — viewCount ดึง Indian creator ที่ views สูงมาก
+    maxResults: String(maxResults * 2), // ดึงเยอะกว่าที่ต้องการ เพื่อกรองทีหลัง
     regionCode: 'TH',
     relevanceLanguage: 'th',
     key: apiKey,
@@ -71,9 +76,12 @@ export async function searchYouTubeByNiche(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = await res.json() as { items?: any[] }
 
-  return (data.items ?? [])
+  // Thai Unicode range: \u0E00–\u0E7F
+  const hasThai = (text: string) => /[\u0E00-\u0E7F]/.test(text)
+
+  const allVideos: YouTubeVideo[] = (data.items ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((item: any) => item.id?.videoId) // กรอง playlist/channel ออก
+    .filter((item: any) => item.id?.videoId)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((item: any): YouTubeVideo => ({
       id: item.id.videoId,
@@ -86,4 +94,19 @@ export async function searchYouTubeByNiche(
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
       publishedAt: item.snippet.publishedAt,
     }))
+
+  // แบ่ง Thai 70% + ต่างประเทศ 30% เพื่อให้ได้ไอเดียหลากหลาย
+  const thaiVideos    = allVideos.filter(v => hasThai(v.title) || hasThai(v.channelTitle))
+  const foreignVideos = allVideos.filter(v => !hasThai(v.title) && !hasThai(v.channelTitle))
+
+  const thaiCount    = Math.ceil(maxResults * 0.7)   // 70% Thai
+  const foreignCount = maxResults - thaiCount         // 30% ต่างประเทศ
+
+  const mixed = [
+    ...thaiVideos.slice(0, thaiCount),
+    ...foreignVideos.slice(0, foreignCount),
+  ]
+
+  // fallback: ถ้าไม่มี Thai เลย คืน all ตามปกติ
+  return mixed.length >= 3 ? mixed : allVideos.slice(0, maxResults)
 }

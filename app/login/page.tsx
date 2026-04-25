@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Mail, CheckCircle2, Loader2 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/db/supabaseClient'
+import MitaLogo from '@/app/components/MitaLogo'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -45,7 +46,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
     if (error) { setError(error.message); setLoading(false) }
@@ -59,7 +60,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
     if (error) {
@@ -84,12 +85,8 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <a href="/" style={{ textDecoration: 'none' }}>
-            <span style={{
-              fontSize: '24px', fontWeight: 900,
-              background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>MITA+</span>
+          <a href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+            <MitaLogo size="lg" />
           </a>
           <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
             เข้าสู่ระบบเพื่อดู dashboard ของคุณ

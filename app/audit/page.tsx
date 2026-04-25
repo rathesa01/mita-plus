@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import type { AuditFormData, Platform, Niche, PostingFrequency, IncomeSource, ContentDuration, TriedAndFailed, AudienceBuyingPower } from '@/types'
+import MitaLogo from '@/app/components/MitaLogo'
 
 // ── Loading Screen ─────────────────────────────────────────
 const LOADING_STEPS = [
@@ -449,7 +450,7 @@ export default function AuditPage() {
         >
           <ArrowLeft size={18} />
         </button>
-        <span className="gradient-brand font-black">MITA+</span>
+        <MitaLogo size="sm" />
 
         {/* Step dots */}
         <div className="ml-auto flex items-center gap-2">
@@ -588,8 +589,8 @@ export default function AuditPage() {
             {/* ── STEP 2: PERFORMANCE ── */}
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">ตัวเลข Performance</h1>
-                <p className="text-white/38 text-sm mb-8">ใช้คำนวณ Revenue Gap ที่แม่นยำสำหรับคุณ</p>
+                <h1 className="text-2xl font-black mb-1">ช่องของคุณเป็นยังไงบ้าง?</h1>
+                <p className="text-white/38 text-sm mb-8">บอกตามจริงเลย — ไม่ต้องกลัวตัวเลขเล็ก เราเคยเห็นช่อง 0 followers เป็นเงินได้มาแล้ว</p>
 
                 <div className="space-y-5">
                   <div>
@@ -668,12 +669,12 @@ export default function AuditPage() {
             {/* ── STEP 3: MONETIZATION ── */}
             {step === 3 && (
               <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">ระบบทำเงินปัจจุบัน</h1>
-                <p className="text-white/38 text-sm mb-8">ส่วนนี้ใช้หา Revenue Blocker ที่ทำให้รายได้ไม่โต</p>
+                <h1 className="text-2xl font-black mb-1">ตอนนี้คุณหาเงินจาก content ยังไงบ้าง?</h1>
+                <p className="text-white/38 text-sm mb-8">ตอบตามความจริงเลยนะ — ยังไม่มีรายได้เลยก็โอเค นั่นแหละที่เราช่วยได้</p>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">รายได้จากที่ไหนบ้าง? (เลือกได้หลายอย่าง)</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ตอนนี้มีรายได้จากช่องทางไหนบ้าง? (เลือกได้หลายอย่าง)</label>
                     <div className="grid grid-cols-2 gap-2">
                       {INCOME_SOURCES.map((src) => (
                         <Chip key={src.value} selected={form.currentIncomeSources.includes(src.value)} onClick={() => toggleIncomeSource(src.value)}>
@@ -684,13 +685,13 @@ export default function AuditPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">รายได้จาก Content ต่อเดือน (บาท)</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">มีรายได้จาก content เดือนละเท่าไหร่? (บาท)</label>
                     <input
                       type="number"
                       inputMode="numeric"
                       value={form.monthlyIncome || ''}
                       onChange={(e) => update('monthlyIncome', Math.max(0, Number(e.target.value) || 0))}
-                      placeholder="เช่น 15000 (ถ้ายังไม่มีรายได้ใส่ 0)"
+                      placeholder="ถ้ายังไม่มีรายได้เลย ใส่ 0 ได้เลย"
                       className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
                     />
                     {form.monthlyIncome > 0 && (
@@ -699,10 +700,29 @@ export default function AuditPage() {
                       </p>
                     )}
                     <p className="text-white/20 text-xs mt-1">รายได้จาก content เท่านั้น ไม่รวมเงินเดือนหรืองานอื่น</p>
+
+                    {/* ── High Earner Notice ── */}
+                    {form.monthlyIncome > 30000 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/6 p-4"
+                      >
+                        <p className="text-amber-400 font-bold text-sm mb-1">
+                          {form.monthlyIncome >= 50000 ? '🏆 ทำได้ดีมากเลย!' : '💡 หมายเหตุเล็กน้อย'}
+                        </p>
+                        <p className="text-white/55 text-xs leading-relaxed">
+                          {form.monthlyIncome >= 50000
+                            ? 'รายได้ระดับนี้คุณทำมาได้ดีมากแล้ว — MITA+ เหมาะกับ creator ที่เพิ่งเริ่ม เราจะยังวิเคราะห์ให้ แต่อาจมีบางส่วนที่คุณรู้อยู่แล้ว'
+                            : 'MITA+ เหมาะกับ creator ที่กำลังเริ่มสร้างรายได้จาก content ผลวิเคราะห์จะตรงที่สุดสำหรับคนที่ยังอยู่ในช่วงนี้'}
+                        </p>
+                      </motion.div>
+                    )}
                   </div>
 
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-3 block">ระบบที่มีอยู่แล้ว</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-3 block">ตอนนี้มีระบบอะไรแล้วบ้าง?</label>
                     <div className="grid grid-cols-2 gap-3">
                       <Toggle label="มีสินค้า/บริการของตัวเอง?" value={form.hasProduct} onChange={(v) => update('hasProduct', v)} />
                       <Toggle label="มี Funnel / Landing Page?" value={form.hasFunnel} onChange={(v) => update('hasFunnel', v)} />
@@ -713,7 +733,7 @@ export default function AuditPage() {
 
                   <div>
                     <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                      เคยลองสร้างรายได้วิธีไหนบ้าง แต่ไม่ได้ผล? <span className="text-white/20 normal-case font-normal">(เลือกได้หลายอย่าง)</span>
+                      เคยลองวิธีไหนมาบ้างแต่ยังไม่ work? <span className="text-white/20 normal-case font-normal">(เลือกได้หลายอย่าง)</span>
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {TRIED_AND_FAILED.map((t) => (
@@ -730,8 +750,8 @@ export default function AuditPage() {
             {/* ── STEP 4: GOALS ── */}
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">เป้าหมายและสถานการณ์</h1>
-                <p className="text-white/38 text-sm mb-8">ช่วยให้ MITA+ วิเคราะห์ได้ตรงกับตัวคุณมากที่สุด</p>
+                <h1 className="text-2xl font-black mb-1">อยากได้อะไรจาก content?</h1>
+                <p className="text-white/38 text-sm mb-8">ยิ่งบอกตรงๆ แผนที่ได้ยิ่งเวิร์ค — ไม่มีคำตอบที่ผิด</p>
 
                 <div className="space-y-5">
                   <div>
@@ -748,18 +768,18 @@ export default function AuditPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ปัญหาหลักในตอนนี้คืออะไร?</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ปัญหาที่กวนใจที่สุดตอนนี้คืออะไร?</label>
                     <textarea
                       value={form.biggestProblem}
                       onChange={(e) => update('biggestProblem', e.target.value)}
-                      placeholder="เช่น: มีคนดูเยอะแต่ไม่รู้จะขายอะไร หรือ มีสินค้าแต่ปิดการขายไม่ได้..."
+                      placeholder="เช่น: มีคนดูเยอะแต่ไม่รู้จะขายอะไร, มีสินค้าแต่ไม่มีคนซื้อ, ไม่รู้จะเริ่มจากตรงไหน..."
                       rows={3}
                       className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all resize-none text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">อยากได้อะไรใน 90 วันนับจากนี้?</label>
+                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">อยากได้อะไรใน 30 วันนับจากนี้?</label>
                     <textarea
                       value={form.goalIn90Days}
                       onChange={(e) => update('goalIn90Days', e.target.value)}
@@ -770,8 +790,8 @@ export default function AuditPage() {
                   </div>
 
                   <div className="card rounded-xl p-4 border-violet-500/15" style={{ borderColor: 'rgba(139,92,246,0.15)', background: 'rgba(139,92,246,0.04)' }}>
-                    <p className="text-violet-300 font-semibold text-sm mb-1">พร้อมวิเคราะห์แล้ว</p>
-                    <p className="text-white/38 text-xs">MITA+ จะประเมิน Score + Revenue Gap และสร้างแผนเฉพาะสำหรับคุณทันที</p>
+                    <p className="text-violet-300 font-semibold text-sm mb-1">✨ พร้อมแล้ว!</p>
+                    <p className="text-white/38 text-xs">MITA+ จะวิเคราะห์ช่องทางรายได้ที่คุณยังขาดอยู่ และสร้างแผนทีละขั้นสำหรับคุณโดยเฉพาะ</p>
                   </div>
                 </div>
               </motion.div>
@@ -823,7 +843,7 @@ export default function AuditPage() {
                 disabled={loading}
                 className="flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black text-base transition-all disabled:opacity-60"
               >
-                วิเคราะห์ Monetization ของฉัน <ArrowRight size={16} />
+                วิเคราะห์ช่องของฉันเลย <ArrowRight size={16} />
               </button>
             )}
           </div>

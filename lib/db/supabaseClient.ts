@@ -14,7 +14,7 @@ export function getSupabaseClient() {
   if (!url || !key) return null
   _client = createClient(url, key, {
     auth: {
-      flowType: 'implicit', // ใช้ implicit flow — tokens ใน hash fragment ไม่ใช่ PKCE code
+      flowType: 'pkce', // PKCE flow — ใช้ code exchange ผ่าน /auth/callback (client-side)
     },
   })
   return _client
@@ -40,4 +40,5 @@ export interface UserProfile {
   monetization_plan: Record<string, unknown> | null
   affiliate_products: Record<string, unknown> | null
   content_example: Record<string, unknown> | null
+  weekly_checkins: { checkins: Array<{ week_no: number; income_range: string; income_approx: number; clips: number; date: string; mood?: string; obstacle?: string }> } | null
 }

@@ -256,7 +256,7 @@ function StepGoal({
       <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 700, color: '#7B61FF' }}>ขั้นที่ 3/4</p>
       <h2 style={{ margin: '0 0 6px', fontSize: '24px', fontWeight: 900, color: '#fff' }}>ตั้งเป้าหมายรายได้</h2>
       <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
-        โค้ชจะวางแผนให้ถึงเป้านี้ใน 90 วันค่ะ
+        โค้ชจะวางแผนให้ถึงเป้านี้ใน 30 วันค่ะ
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '28px' }}>
         {INCOME_GOALS.map(g => (

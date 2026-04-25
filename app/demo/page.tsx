@@ -196,7 +196,7 @@ export default function DemoPage() {
           background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)',
           borderRadius: RADIUS.card,
         }}>
-          <p style={{ margin: 0, fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>เป้าหมาย 90 วัน</p>
+          <p style={{ margin: 0, fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>เป้าหมาย 30 วัน</p>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
             <span style={{ fontSize: '28px', fontWeight: 900, color: '#fff' }}>
               ฿{CREATOR.targetIncome.toLocaleString('th-TH')}
@@ -313,7 +313,7 @@ export default function DemoPage() {
                 <span style={{ fontSize: '14px', fontWeight: 400, color: COLORS.textSecondary }}>/เดือน</span>
               </p>
               <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-                ถ้าทำตามแผน 90 วัน
+                ถ้าทำตามแผน 30 วัน
               </p>
             </motion.div>
           </div>

@@ -280,7 +280,7 @@ ${topLeaks.map((l, i) => `${i+1}. [${l.severity.toUpperCase()}] ${l.title}: -฿
 ปัจจุบัน: ฿${fmt(revenue.currentIncome)}/เดือน | ที่ควรได้: ฿${fmt(revenue.realistic)}/เดือน | Gap: ฿${fmt(revenue.totalMissed)}/เดือน
 
 ปัญหาที่รู้สึกอยู่: ${data.biggestProblem || 'ไม่ได้ระบุ'}
-เป้าหมาย 90 วัน: ${data.goalIn90Days || 'ไม่ได้ระบุ'}
+เป้าหมาย 30 วัน: ${data.goalIn90Days || 'ไม่ได้ระบุ'}
 
 ---
 

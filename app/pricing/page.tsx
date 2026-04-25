@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Check, ArrowLeft, ArrowRight, Zap, Star, Crown, Loader2 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/db/supabaseClient'
+import MitaLogo from '@/app/components/MitaLogo'
 
 // ── Stripe Price IDs (set in Vercel env vars) ────────────
 const PRICE_STARTER = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER ?? ''
@@ -35,7 +36,7 @@ const TIERS = [
       'Affiliate ที่เหมาะกับแนวช่องของคุณ',
       'Revenue Gap โดยประมาณ',
     ],
-    locked: ['Revenue Blocker ทั้งหมด', 'แผน 90 วัน'],
+    locked: ['Revenue Blocker ทั้งหมด', 'แผน 30 วัน'],
   },
   {
     id: 'starter',
@@ -295,7 +296,7 @@ export default function PricingPage() {
         <Link href="/" style={{ color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '14px' }}>
           <ArrowLeft size={16} />
         </Link>
-        <span style={{ fontWeight: 900, fontSize: '17px', background: 'linear-gradient(90deg, #7B61FF, #FF9F1C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>MITA+</span>
+        <MitaLogo size="sm" />
         {user && (
           <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>
             {user.email}
@@ -403,9 +404,9 @@ export default function PricingPage() {
         </motion.div>
       </div>
 
-      <footer style={{ textAlign: 'center', padding: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '12px', color: 'rgba(255,255,255,0.20)' }}>
-        <span style={{ background: 'linear-gradient(90deg, #7B61FF, #FF9F1C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900 }}>MITA+</span>
-        {' '}— Money In The Air
+      <footer style={{ textAlign: 'center', padding: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '12px', color: 'rgba(255,255,255,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+        <MitaLogo size="sm" />
+        <span style={{ opacity: 0.4 }}>— Money In The Air</span>
       </footer>
     </main>
   )

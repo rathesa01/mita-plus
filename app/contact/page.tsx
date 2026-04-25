@@ -14,7 +14,7 @@ const LINE_READY  = LINE_OA_URL.length > 0 && !LINE_OA_URL.includes('YOUR_LINE')
 // ── Plan labels ────────────────────────────────
 const PLAN_LABELS: Record<string, { label: string; price: string; color: string; emoji: string; desc: string }> = {
   free:          { label: 'Free',            price: 'ฟรี',         color: COLORS.textSecondary, emoji: '🆓', desc: 'เช็กผลวิเคราะห์ฟรีแล้ว ต้องการปลดล็อก Revenue Blocker ทั้งหมด?' },
-  starter:       { label: 'Starter',         price: '฿199/เดือน',  color: '#a78bfa',            emoji: '⭐', desc: 'ปลดล็อก Revenue Blocker ทุกตัว + แผน 90 วัน + รายงานรายเดือน' },
+  starter:       { label: 'Starter',         price: '฿199/เดือน',  color: '#a78bfa',            emoji: '⭐', desc: 'ปลดล็อก Revenue Blocker ทุกตัว + แผน 30 วัน + รายงานรายเดือน' },
   pro:           { label: 'Pro',             price: '฿499/เดือน',  color: COLORS.ctaOrange,     emoji: '👑', desc: 'มีทีมช่วยวางระบบ + Priority LINE Support + Strategy Call ทุกเดือน' },
   // legacy
   report:        { label: 'Paid Report',     price: '',            color: COLORS.textSecondary, emoji: '📄', desc: 'รับรายงานฉบับเต็ม' },

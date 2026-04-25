@@ -47,7 +47,7 @@ function getPricing(
     reportPrice: 299,
     premiumPrice: 5900,
     urgencyMessage: `เริ่มต้นด้วยแผน 299 บาท — คุ้มค่าถ้าคุณจริงจังกับการทำเงินจากคอนเทนต์`,
-    valueProposition: 'แผนทำเงินเฉพาะตัว + roadmap 90 วัน',
+    valueProposition: 'แผนทำเงินเฉพาะตัว + roadmap 30 วัน',
   }
 }
 

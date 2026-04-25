@@ -175,7 +175,7 @@ export const NON_SUBSCRIBERS: Array<{
       audienceBuyingPower: 'worker', subNiche: 'premium skincare review',
       contentDescription: 'รีวิว skincare premium ละเอียดยิบ วิเคราะห์ส่วนผสมทุกตัว',
       biggestProblem: 'มีคนดูเยอะมากแต่ไม่ได้ใช้ leverage นี้ทำเงินให้ถึงศักยภาพ',
-      goalIn90Days: 'อยาก launch คอร์สออนไลน์หรือ own product ให้ได้ภายใน 90 วัน',
+      goalIn90Days: 'อยาก launch คอร์สออนไลน์หรือ own product ให้ได้ภายใน 30 วัน',
     },
   },
 ]

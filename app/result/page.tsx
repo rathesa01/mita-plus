@@ -9,6 +9,7 @@ import { Sparkles, CheckCircle2, Clock, Phone, ArrowRight, Share2, Copy, Check a
 import type { AuditResult } from '@/types'
 
 import { COLORS, CARD, RADIUS, GLOW, SPACE } from '@/lib/tokens'
+import MitaLogo from '@/app/components/MitaLogo'
 import { CTAButton }      from '@/components/ui/CTAButton'
 import { SectionWrapper } from '@/components/ui/SectionWrapper'
 import { SectionLabel }   from '@/components/ui/SectionLabel'
@@ -108,7 +109,7 @@ function UpgradeGate({ lockedCount, lockedLossTotal, variant = 'leaks' }: {
       ) : (
         <>
           <p style={{ fontWeight: 900, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
-            แผน 90 วัน + วิธีแก้ทุกจุด
+            แผน 30 วัน + วิธีแก้ทุกจุด
           </p>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.50)', marginBottom: '16px' }}>
             ปลดล็อกแผนทำงานจริงพร้อมตัวเลข เริ่มได้เลยวันนี้
@@ -212,6 +213,122 @@ function LockedLeakCard({ leak, index }: {
           <Lock size={11} style={{ color: '#a78bfa' }} />
         </div>
       </div>
+    </motion.div>
+  )
+}
+
+// ── High Earner Redirect ───────────────────────
+function HighEarnerRedirect({ income, score, name }: { income: number; score: number; name: string }) {
+  // insight ที่เหมาะกับระดับ score
+  const insights =
+    score >= 70
+      ? [
+          'ระบบของคุณครบมากแล้ว — โอกาสใหญ่ต่อไปคือ Delegation ให้ทีมช่วย scale แทนการทำทุกอย่างคนเดียว',
+          'Creator ที่รายได้ระดับนี้มักติดเพดานเพราะ "ทำคนเดียวไม่ไหว" ไม่ใช่เพราะไม่รู้ — ลอง outsource content editing ก่อนเป็นขั้นแรก',
+        ]
+      : score >= 50
+      ? [
+          'Score ของคุณดีมาก แต่ยังมีช่องว่างด้านระบบ — ลองเพิ่ม email list หรือ LINE OA เพื่อ own audience โดยไม่พึ่ง algorithm',
+          'รายได้ระดับนี้มักโตได้เร็วกว่าด้วย Recurring revenue เช่น membership หรือ retainer sponsorship แทน one-off deal',
+        ]
+      : [
+          'รายได้ดีแล้ว แต่ฐานระบบยังขาดบางจุด — ลอง audit ว่า traffic ส่วนไหนแปลงเป็นเงินได้มากที่สุด แล้ว double down ตรงนั้น',
+          'Creator ที่รายได้เกิน 50K มักเสียโอกาสเพราะไม่มี funnel รับ audience เก่า — ทำแค่ lead magnet ง่ายๆ ก็ช่วยได้มาก',
+        ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      style={{ padding: '0 16px 24px', maxWidth: '420px', margin: '0 auto' }}
+    >
+      {/* Celebration card */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(255,159,28,0.06))',
+        border: '1px solid rgba(34,197,94,0.25)',
+        borderRadius: '20px',
+        padding: '24px 20px',
+        textAlign: 'center',
+        marginBottom: '12px',
+      }}>
+        <div style={{ fontSize: '40px', marginBottom: '10px' }}>🏆</div>
+        <p style={{ fontWeight: 900, fontSize: '19px', color: '#fff', marginBottom: '6px', lineHeight: 1.3 }}>
+          {name} ทำมาได้ดีมากเลย!
+        </p>
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: '16px' }}>
+          รายได้ <span style={{ color: '#22C55E', fontWeight: 700 }}>฿{Math.round(income).toLocaleString('th-TH')}/เดือน</span>{' '}
+          คือระดับที่ creator ส่วนใหญ่ใฝ่ฝันถึง — คุณทำมันได้แล้ว
+        </p>
+        {/* Score badge */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)',
+          borderRadius: '99px', padding: '6px 16px', fontSize: '13px',
+          color: '#22C55E', fontWeight: 700,
+        }}>
+          Score {score}/100 — ดีกว่า creator มือใหม่ส่วนใหญ่
+        </div>
+      </div>
+
+      {/* Honest note */}
+      <div style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: '16px',
+        padding: '16px',
+        marginBottom: '12px',
+      }}>
+        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px' }}>
+          หมายเหตุจาก MITA+
+        </p>
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7 }}>
+          MITA+ ออกแบบมาสำหรับ creator ที่เพิ่งเริ่มต้น — ผลวิเคราะห์ด้านล่างอาจไม่ตรงกับระดับที่คุณอยู่
+          แต่เราอยากให้กำลังใจและแชร์สิ่งที่อาจเป็นประโยชน์ในฐานะที่เรารู้
+        </p>
+      </div>
+
+      {/* Actual useful insights */}
+      <div style={{
+        background: 'rgba(123,97,255,0.05)',
+        border: '1px solid rgba(123,97,255,0.18)',
+        borderRadius: '16px',
+        padding: '16px',
+        marginBottom: '16px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+          <Sparkles size={12} style={{ color: '#a78bfa' }} />
+          <p style={{ fontSize: '12px', color: '#a78bfa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            สิ่งที่น่าคิดต่อสำหรับคุณ
+          </p>
+        </div>
+        {insights.map((txt, i) => (
+          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < insights.length - 1 ? '12px' : 0, alignItems: 'flex-start' }}>
+            <span style={{
+              background: 'rgba(123,97,255,0.15)', color: '#a78bfa',
+              width: '20px', height: '20px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '11px', fontWeight: 900, flexShrink: 0, marginTop: '1px',
+            }}>{i + 1}</span>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.65 }}>{txt}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Encouragement + audit link */}
+      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.28)', textAlign: 'center', lineHeight: 1.6, marginBottom: '12px' }}>
+        ทำต่อไปนะ — สิ่งที่คุณทำอยู่มันใช่แล้ว 💪
+      </p>
+      <a
+        href="/audit"
+        style={{
+          display: 'block', textAlign: 'center',
+          fontSize: '13px', color: 'rgba(255,255,255,0.35)',
+          textDecoration: 'none',
+        }}
+      >
+        ← แก้ไขคำตอบ
+      </a>
     </motion.div>
   )
 }
@@ -527,7 +644,7 @@ function ResultPageInner() {
         maxWidth: '420px',
         margin: '0 auto',
       }}>
-        <span className="gradient-purple-blue font-black text-lg">MITA+</span>
+        <MitaLogo size="sm" />
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '11px', color: COLORS.textSecondary }}>
             <Sparkles size={10} style={{ display: 'inline', color: COLORS.accentPurple, marginRight: '4px' }} />
@@ -606,6 +723,25 @@ function ResultPageInner() {
           )}
         </motion.div>
       </SectionWrapper>
+
+      {/* ══════════════════════════════════════
+          HIGH EARNER GATE
+          ถ้า currentIncome ≥ ฿50k → หยุดแสดงผล
+          แสดง redirect card แทน
+      ══════════════════════════════════════ */}
+      {revenueEstimation.currentIncome >= 50_000 && (
+        <HighEarnerRedirect
+          income={revenueEstimation.currentIncome}
+          score={score.total}
+          name={input.name}
+        />
+      )}
+
+      {/* ══════════════════════════════════════
+          LINE LOGIN GATE + MAIN CONTENT
+          แสดงเฉพาะ creator ที่ยังไม่ถึง ฿50k
+      ══════════════════════════════════════ */}
+      {revenueEstimation.currentIncome < 50_000 && <>
 
       {/* ══════════════════════════════════════
           LINE LOGIN GATE
@@ -950,10 +1086,10 @@ function ResultPageInner() {
       </SectionWrapper>
 
       {/* ══════════════════════════════════════
-          ⑤ แผน 90 วัน — gated for free
+          ⑤ แผน 30 วัน — gated for free
       ══════════════════════════════════════ */}
       <SectionWrapper>
-        <SectionLabel n="⑤" label="แผน 90 วัน" />
+        <SectionLabel n="⑤" label="แผน 30 วัน" />
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           <Clock size={14} style={{ color: COLORS.accentPurple }} />
           <p style={{ fontSize: '13px', color: COLORS.textSecondary }}>ดึง Revenue Gap กลับมาทีละขั้น</p>
@@ -1028,7 +1164,7 @@ function ResultPageInner() {
           </div>
           <p style={{ fontSize: '12px', color: COLORS.textSecondary, marginBottom: '16px' }}>ยกเลิกได้ทุกเดือน · ไม่มีสัญญา</p>
 
-          {['Revenue Blocker ทั้งหมด (2–5 ตัว)', 'วิธีแก้ทุกจุด พร้อม action ชัดเจน', 'แผน 90 วัน แบบเต็ม', 'รายงานรายเดือน (ส่งทาง LINE)', 'Milestone unlock ตาม progress'].map(f => (
+          {['Revenue Blocker ทั้งหมด (2–5 ตัว)', 'วิธีแก้ทุกจุด พร้อม action ชัดเจน', 'แผน 30 วัน แบบเต็ม', 'รายงานรายเดือน (ส่งทาง LINE)', 'Milestone unlock ตาม progress'].map(f => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <CheckCircle2 size={12} style={{ color: '#a78bfa', flexShrink: 0 }} />
               <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>{f}</p>
@@ -1107,11 +1243,14 @@ function ResultPageInner() {
         fontSize: '11px', color: 'rgba(255,255,255,0.18)',
         display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center',
       }}>
-        <span><span className="gradient-purple-blue font-black">MITA+</span> — Money In The Air</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><MitaLogo size="sm" /><span style={{ opacity: 0.4 }}>— Money In The Air</span></span>
         <a href="/privacy" style={{ color: 'rgba(255,255,255,0.22)', textDecoration: 'none' }}>Privacy Policy</a>
       </footer>
 
       {/* ปิด block เนื้อหาหลัก (LINE Login Gate) */}
+      </>}
+
+      {/* ปิด block High Earner Gate (<50k) */}
       </>}
 
     </main>

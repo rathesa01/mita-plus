@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, TrendingUp, CheckCircle, Zap, BarChart3, Target } from 'lucide-react'
 import { HeroSection } from '@/components/ui/HeroSection'
+import MitaLogo from '@/app/components/MitaLogo'
 
 // ── How it works ─────────────────────────────────
 const STEPS = [
@@ -39,7 +40,7 @@ const FEATURES = [
   'เหตุที่รายได้ยังไม่โตเต็มที่',
   'MITA+ วิเคราะห์เฉพาะคุณ',
   '3 วิธีเพิ่มเงิน เริ่มได้เลยวันนี้',
-  'แผน 30/60/90 วัน พร้อมตัวเลขจริง',
+  'แผน 30 วัน พร้อมตัวเลขจริง',
 ]
 
 export default function LandingPage() {
@@ -51,8 +52,8 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="text-[1.15rem] font-black gradient-brand tracking-tight no-underline">
-            MITA+
+          <Link href="/" className="no-underline flex items-center">
+            <MitaLogo size="sm" />
           </Link>
 
           {/* Right side */}
@@ -308,7 +309,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="py-6 px-5 border-t border-white/5 text-center text-white/18 text-xs flex flex-col gap-2 items-center">
-        <span><span className="gradient-brand font-black">MITA+</span> — Money In The Air</span>
+        <span className="flex items-center gap-2"><MitaLogo size="sm" /> <span className="opacity-40">— Money In The Air</span></span>
         <a href="/privacy" className="text-white/22 hover:text-white/40 transition-colors" style={{ textDecoration: 'none' }}>Privacy Policy</a>
       </footer>
     </main>

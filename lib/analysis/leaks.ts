@@ -129,29 +129,6 @@ export function detectLeaks(data: AuditFormData, revenue: RevenueEstimation): Re
     })
   }
 
-  // ── 7. SINGLE PLATFORM CONCENTRATION RISK ─────────────────────────
-  // สำหรับ high earner ที่พึ่งพา platform เดียว
-  if (data.platform !== 'multi' && data.monthlyIncome >= 50_000) {
-    const platformTH: Record<string, string> = {
-      tiktok: 'TikTok', instagram: 'Instagram',
-      youtube: 'YouTube', facebook: 'Facebook',
-    }
-    const pName = platformTH[data.platform] ?? data.platform
-    const missed = Math.round(data.monthlyIncome * 0.3) // 30% at risk
-    leaks.push({
-      id: 'wrong_monetization_model',
-      severity: 'medium',
-      title: `รายได้ทั้งหมดอยู่บน ${pName} แพลตฟอร์มเดียว`,
-      painLine: `ถ้า ${pName} เปลี่ยน algorithm พรุ่งนี้ รายได้คุณหายทันที`,
-      explanation:
-        `Creator ที่พึ่งพา platform เดียวคือ "เดิมพันทั้งหมดในตะกร้าใบเดียว" — ${pName} เคยเปลี่ยน algorithm มาหลายครั้งแล้ว และ creator ที่ไม่กระจาย platform สูญรายได้ 60-80% ในคืนเดียว`,
-      missedPerMonth: missed,
-      missedPerYear: missed * 12,
-      shockSentence: `${pName} เคยฆ่า creator ใหญ่กว่าคุณมาแล้ว — รายได้ ฿${Math.round(missed).toLocaleString('th-TH')} ที่อยู่บน platform เดียวคือความเสี่ยงที่คำนวณได้`,
-      impact: `รายได้ที่เสี่ยงถ้า platform เปลี่ยน`,
-    })
-  }
-
   // Sort by severity
   const order: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
   return leaks.sort((a, b) => order[a.severity] - order[b.severity])

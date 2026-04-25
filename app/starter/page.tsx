@@ -1,11 +1,130 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Circle, ChevronRight, Flame, Target, TrendingUp, Star, Bell, Loader2, RefreshCw } from 'lucide-react'
 import { COLORS, CARD, RADIUS } from '@/lib/tokens'
 import CheckInModal from './CheckInModal'
 import { getSupabaseClient, type UserProfile } from '@/lib/db/supabaseClient'
+import MitaLogo from '@/app/components/MitaLogo'
+
+// ── Income Graph Component ────────────────────────────────
+interface CheckinEntry {
+  week_no: number; income_range: string; income_approx: number; clips: number; date: string
+}
+
+const INCOME_RANGE_COLORS: Record<string, string> = {
+  zero: '#FF6B6B', low: '#FF9F1C', mid: '#7B61FF', high: '#22C55E',
+}
+const INCOME_RANGE_LABELS: Record<string, string> = {
+  zero: '฿0', low: '฿1–500', mid: '฿500–2K', high: '฿2K+',
+}
+
+function IncomeGraph({ checkins, weekNo }: { checkins: CheckinEntry[]; weekNo: number }) {
+  if (checkins.length === 0) return null
+  const maxApprox = 3000
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.12 }}
+      style={{ marginBottom: '16px', padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <TrendingUp size={14} style={{ color: '#22C55E' }} />
+          <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>รายได้รายสัปดาห์</p>
+        </div>
+        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>สัปดาห์ที่ {weekNo}</span>
+      </div>
+      {/* Bars */}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '60px' }}>
+        {[1, 2, 3, 4].map(wk => {
+          const entry = checkins.find(c => c.week_no === wk)
+          const h = entry ? Math.max((entry.income_approx / maxApprox) * 60, 6) : 0
+          const color = entry ? INCOME_RANGE_COLORS[entry.income_range] ?? '#7B61FF' : 'rgba(255,255,255,0.08)'
+          const label = entry ? INCOME_RANGE_LABELS[entry.income_range] ?? '?' : '—'
+          const isCurrentWeek = wk === weekNo
+          return (
+            <div key={wk} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '9px', color: entry ? color : 'rgba(255,255,255,0.2)', fontWeight: 700 }}>{label}</span>
+              <motion.div
+                initial={{ height: 0 }} animate={{ height: h > 0 ? h : 4 }}
+                transition={{ duration: 0.6, delay: wk * 0.1 }}
+                style={{
+                  width: '100%', borderRadius: '6px 6px 0 0',
+                  background: h > 0 ? color : 'rgba(255,255,255,0.05)',
+                  opacity: entry ? 1 : 0.4,
+                  outline: isCurrentWeek ? `2px solid ${color}` : 'none',
+                }}
+              />
+              <span style={{ fontSize: '9px', color: isCurrentWeek ? '#fff' : 'rgba(255,255,255,0.3)', fontWeight: isCurrentWeek ? 700 : 400 }}>W{wk}</span>
+            </div>
+          )
+        })}
+      </div>
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+        {Object.entries(INCOME_RANGE_LABELS).map(([key, label]) => (
+          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: INCOME_RANGE_COLORS[key] }} />
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)' }}>{label}</span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+// ── First Visit Banner ────────────────────────────────────
+function FirstVisitBanner({ name, onDismiss }: { name: string; onDismiss: () => void }) {
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: -20, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        style={{
+          position: 'relative', padding: '24px 20px', marginBottom: '16px',
+          background: 'linear-gradient(135deg, rgba(123,97,255,0.2), rgba(34,197,94,0.1))',
+          border: '1px solid rgba(123,97,255,0.4)',
+          borderRadius: '20px', textAlign: 'center', overflow: 'hidden',
+        }}
+      >
+        {/* Glow */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 0%, rgba(123,97,255,0.3) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ fontSize: '44px', marginBottom: '12px' }}
+        >
+          💰
+        </motion.div>
+        <p style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>
+          เงินอยู่ในอากาศ
+        </p>
+        <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
+          ยินดีต้อนรับ {name} ค่ะ 👋<br />
+          MITA+ พร้อมช่วยให้คุณ<br />
+          <strong style={{ color: '#a78bfa' }}>จับเงินนั้นให้ได้ค่ะ</strong>
+        </p>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={onDismiss}
+          style={{
+            padding: '12px 28px',
+            background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)',
+            color: '#fff', border: 'none', borderRadius: '12px',
+            fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+          }}
+        >
+          เริ่มเลยค่ะ →
+        </motion.button>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
@@ -85,13 +204,55 @@ function StatPill({ icon, label, value, color }: { icon: React.ReactNode; label:
 
 // ── Plan Tab (from real monetization plan roadmap) ───────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function PlanTab({ monPlan, displayName, onCheckIn, coachReply }: { monPlan: any; displayName: string; onCheckIn: () => void; coachReply: string | null }) {
+function PlanTab({ monPlan, displayName, onCheckIn, coachReply, hasAudit, hasChannel }: { monPlan: any; displayName: string; onCheckIn: () => void; coachReply: string | null; hasAudit: boolean; hasChannel: boolean }) {
   const [activeWeek, setActiveWeek] = useState(0)
 
   // Use real roadmap from monetization plan, or show CTA to generate
   const roadmap = monPlan?.roadmap as Array<{
     week: number; theme: string; target_thb: number; actions: string[]
   }> | null
+
+  const weekColors = ['#22C55E', '#7B61FF', '#FF9F1C', '#3ECFFF']
+
+  // ── Onboarding Status component (shown at bottom of plan tab) ──
+  const OnboardingStatus = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+      style={{
+        marginTop: '16px', padding: '14px 16px', borderRadius: '16px',
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+      }}
+    >
+      <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        สถานะการเริ่มต้น
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {[
+          { label: 'ทำ Audit วิเคราะห์ช่อง', done: hasAudit, icon: '📋', ctaHref: '/audit', ctaText: 'ทำเลย →' },
+          { label: 'เชื่อมช่อง Social Media', done: hasChannel, icon: '🔗', ctaHref: '/starter/connect', ctaText: 'เชื่อมเลย →' },
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '28px', height: '28px', borderRadius: '8px', flexShrink: 0,
+              background: item.done ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.05)',
+              border: item.done ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
+            }}>
+              {item.done ? '✅' : item.icon}
+            </div>
+            <p style={{ margin: 0, flex: 1, fontSize: '12px', fontWeight: 600, color: item.done ? 'rgba(34,197,94,0.9)' : 'rgba(255,255,255,0.55)' }}>
+              {item.label}
+            </p>
+            {!item.done && (
+              <a href={item.ctaHref} style={{ fontSize: '11px', fontWeight: 700, color: '#7B61FF', textDecoration: 'none', background: 'rgba(123,97,255,0.1)', padding: '3px 10px', borderRadius: '99px', flexShrink: 0 }}>
+                {item.ctaText}
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
 
   if (!roadmap || roadmap.length === 0) {
     return (
@@ -121,15 +282,18 @@ function PlanTab({ monPlan, displayName, onCheckIn, coachReply }: { monPlan: any
             สร้างแผนหาเงิน →
           </a>
         </div>
+        <OnboardingStatus />
       </motion.div>
     )
   }
 
-  const weekColors = ['#22C55E', '#7B61FF', '#FF9F1C', '#3ECFFF']
+  const currentWeekData = roadmap[activeWeek] ?? roadmap[0]
+  const color = weekColors[activeWeek] ?? '#7B61FF'
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      {/* Coach nudge / reply */}
+
+      {/* ── Coach reply / check-in nudge ── */}
       {coachReply ? (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -160,7 +324,7 @@ function PlanTab({ monPlan, displayName, onCheckIn, coachReply }: { monPlan: any
             borderRadius: '14px', textAlign: 'left',
           }}
         >
-          <span style={{ fontSize: '24px', flexShrink: 0 }}>🔔</span>
+          <span style={{ fontSize: '22px', flexShrink: 0 }}>🔔</span>
           <div style={{ flex: 1 }}>
             <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#FF9F1C' }}>โค้ช MITA+ รอฟังผลงานคุณอยู่</p>
             <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>กดเช็คอิน → รับ feedback ทันทีค่ะ</p>
@@ -169,91 +333,95 @@ function PlanTab({ monPlan, displayName, onCheckIn, coachReply }: { monPlan: any
         </motion.button>
       )}
 
-      {/* Week cards */}
-      {roadmap.map((week, i) => {
-        const color = weekColors[i] ?? '#7B61FF'
-        const isActive = activeWeek === i
-        return (
-          <div key={week.week}>
+      {/* ── W1-W4 Week Pill Selector ── */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+        {roadmap.map((week, i) => {
+          const wColor = weekColors[i] ?? '#7B61FF'
+          const isActive = activeWeek === i
+          return (
             <motion.button
-              onClick={() => setActiveWeek(isActive ? -1 : i)}
-              whileTap={{ scale: 0.97 }}
+              key={week.week}
+              onClick={() => setActiveWeek(i)}
+              whileTap={{ scale: 0.95 }}
               style={{
-                width: '100%', textAlign: 'left', background: 'transparent',
-                border: 'none', cursor: 'pointer', padding: 0, marginBottom: '8px',
+                flex: 1, padding: '10px 6px', border: 'none', cursor: 'pointer',
+                borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
+                background: isActive ? `${wColor}20` : 'rgba(255,255,255,0.04)',
+                outline: isActive ? `1.5px solid ${wColor}60` : '1.5px solid transparent',
+                transition: 'all 0.2s',
               }}
             >
-              <div style={{
-                ...CARD.base,
-                border: isActive ? `1px solid ${color}` : CARD.base.border,
-                boxShadow: isActive ? `0 0 20px ${color}30` : 'none',
-                padding: '14px 16px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{
-                    width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
-                    background: `${color}20`, border: `1.5px solid ${isActive ? color : color + '50'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '13px', fontWeight: 900, color,
-                  }}>
-                    {week.week}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>สัปดาห์ {week.week}</span>
-                      <span style={{ fontSize: '10px', color, background: `${color}15`, padding: '1px 8px', borderRadius: '99px' }}>
-                        {week.theme}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-                      {week.actions.length} งานที่ต้องทำ
-                    </span>
-                  </div>
-                  {week.target_thb > 0 && (
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <p style={{ margin: 0, fontSize: '14px', fontWeight: 900, color: '#22C55E' }}>฿{fmt(week.target_thb)}</p>
-                      <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>เป้า</p>
-                    </div>
-                  )}
-                  <ChevronRight size={14} style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0, transform: isActive ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
-                </div>
-              </div>
+              <span style={{ fontSize: '11px', fontWeight: 900, color: isActive ? wColor : 'rgba(255,255,255,0.5)' }}>
+                W{week.week}
+              </span>
+              <span style={{ fontSize: '9px', color: isActive ? wColor + 'cc' : 'rgba(255,255,255,0.25)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '100%', textOverflow: 'ellipsis' }}>
+                {week.theme}
+              </span>
+              {week.target_thb > 0 && (
+                <span style={{ fontSize: '9px', fontWeight: 700, color: isActive ? '#22C55E' : 'rgba(34,197,94,0.45)' }}>
+                  ฿{week.target_thb >= 1000 ? (week.target_thb / 1000).toFixed(0) + 'K' : week.target_thb}
+                </span>
+              )}
             </motion.button>
+          )
+        })}
+      </div>
 
-            {isActive && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{ ...CARD.base, padding: '16px', marginBottom: '10px' }}
-              >
-                <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  สิ่งที่ต้องทำสัปดาห์นี้
-                </p>
-                {week.actions.map((action, ai) => (
-                  <ActionItem key={ai} text={action} color={color} isLast={ai === week.actions.length - 1} />
-                ))}
-                {week.week === 1 && !coachReply && (
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={onCheckIn}
-                    style={{
-                      width: '100%', marginTop: '14px', padding: '12px',
-                      background: `${color}15`, border: `1px solid ${color}40`,
-                      borderRadius: '12px', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    }}
-                  >
-                    <Bell size={14} style={{ color }} />
-                    <span style={{ fontSize: '13px', fontWeight: 700, color }}>
-                      แจ้งผลงานให้โค้ช → รับ feedback ทันที
-                    </span>
-                  </motion.button>
-                )}
-              </motion.div>
+      {/* ── Current week actions (checklist) ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeWeek}
+          initial={{ opacity: 0, x: 12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -12 }}
+          transition={{ duration: 0.18 }}
+          style={{ ...CARD.base, padding: '16px', marginBottom: '10px', border: `1px solid ${color}30` }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: `${color}20`, border: `1.5px solid ${color}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 900, color, flexShrink: 0 }}>
+                {currentWeekData.week}
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>สัปดาห์ {currentWeekData.week}</p>
+                <span style={{ fontSize: '10px', color, background: `${color}15`, padding: '1px 8px', borderRadius: '99px', fontWeight: 600 }}>{currentWeekData.theme}</span>
+              </div>
+            </div>
+            {currentWeekData.target_thb > 0 && (
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#22C55E' }}>฿{fmt(currentWeekData.target_thb)}</p>
+                <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>เป้า</p>
+              </div>
             )}
           </div>
-        )
-      })}
+
+          <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {currentWeekData.actions.length} งานที่ต้องทำ
+          </p>
+          {currentWeekData.actions.map((action, ai) => (
+            <ActionItem key={`${activeWeek}-${ai}`} text={action} color={color} isLast={ai === currentWeekData.actions.length - 1} />
+          ))}
+
+          {/* Check-in CTA inside week card */}
+          {!coachReply && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={onCheckIn}
+              style={{
+                width: '100%', marginTop: '14px', padding: '11px',
+                background: `${color}12`, border: `1px solid ${color}35`,
+                borderRadius: '10px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
+              }}
+            >
+              <Bell size={13} style={{ color }} />
+              <span style={{ fontSize: '12px', fontWeight: 700, color }}>
+                แจ้งผลงาน → รับ feedback ทันที
+              </span>
+            </motion.button>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Content tip from plan */}
       {monPlan?.content_tip && (
@@ -268,6 +436,9 @@ function PlanTab({ monPlan, displayName, onCheckIn, coachReply }: { monPlan: any
           </p>
         </div>
       )}
+
+      {/* ── Onboarding Status ── */}
+      <OnboardingStatus />
     </motion.div>
   )
 }
@@ -396,6 +567,23 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {/* ── Accuracy warning (ถ้าเป็น mock data ยังไม่เชื่อมช่อง) ── */}
+      {!isRealData && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+          style={{
+            marginBottom: '12px', padding: '10px 14px', borderRadius: '12px',
+            background: 'rgba(255,159,28,0.07)', border: '1px solid rgba(255,159,28,0.25)',
+            display: 'flex', alignItems: 'center', gap: '8px',
+          }}
+        >
+          <span style={{ fontSize: '15px', flexShrink: 0 }}>⚠️</span>
+          <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,159,28,0.9)', lineHeight: 1.5 }}>
+            ข้อมูลนี้ยังไม่ได้ผ่านการวิเคราะห์ช่องจริง — <strong>เชื่อมช่อง</strong>เพื่อเพิ่มความแม่นยำเป็น 85%
+          </p>
+        </motion.div>
+      )}
+
       {/* Summary banner */}
       <div style={{
         padding: '14px 16px', marginBottom: '14px',
@@ -481,9 +669,20 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
               {/* Name + platform badge */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px', flexWrap: 'wrap' }}>
                 <p style={{ margin: 0, fontWeight: 700, color: '#fff', fontSize: '13px', lineHeight: 1.3 }}>{p.name}</p>
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: '99px', flexShrink: 0 }}>
-                  {p.merchant_name || p.platform}
-                </span>
+                {/* Shopee-colored badge if Shopee platform */}
+                {(() => {
+                  const label = p.merchant_name || p.platform || ''
+                  const isShopee = label.toLowerCase().includes('shopee')
+                  const isLazada = label.toLowerCase().includes('lazada')
+                  const isTikTok = label.toLowerCase().includes('tiktok')
+                  const bg = isShopee ? 'rgba(255,87,34,0.15)' : isLazada ? 'rgba(0,105,255,0.12)' : isTikTok ? 'rgba(255,0,80,0.12)' : 'rgba(255,255,255,0.06)'
+                  const clr = isShopee ? '#FF6B3D' : isLazada ? '#0066FF' : isTikTok ? '#FF2D55' : 'rgba(255,255,255,0.35)'
+                  return (
+                    <span style={{ fontSize: '9px', color: clr, background: bg, padding: '1px 6px', borderRadius: '99px', flexShrink: 0, fontWeight: 700 }}>
+                      {isShopee ? '🟠 ' : isLazada ? '🔵 ' : isTikTok ? '🎵 ' : ''}{label}
+                    </span>
+                  )
+                })()}
               </div>
 
               {/* Price + commission */}
@@ -569,9 +768,66 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
 }
 
 // ── Milestones Tab ───────────────────────────────────────
+// Circular SVG Progress Ring
+function CircleProgress({ pct, size = 120, strokeWidth = 10, color = '#7B61FF', label, subLabel }: {
+  pct: number; size?: number; strokeWidth?: number; color?: string; label: string; subLabel: string
+}) {
+  const r = (size - strokeWidth) / 2
+  const circ = 2 * Math.PI * r
+  const dash = (pct / 100) * circ
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={strokeWidth} />
+        <motion.circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={color} strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={`${circ}`}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: circ - dash }}
+          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ margin: 0, fontSize: '18px', fontWeight: 900, color, lineHeight: 1 }}>{label}</p>
+        <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{subLabel}</p>
+      </div>
+    </div>
+  )
+}
+
+// 7-day streak calendar
+function StreakCalendar({ streak }: { streak: number }) {
+  const days = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']
+  const today = new Date().getDay() // 0=Sun
+  // Map to Mon-start index
+  const todayIdx = today === 0 ? 6 : today - 1
+  return (
+    <div style={{ display: 'flex', gap: '6px', justifyContent: 'space-between' }}>
+      {days.map((d, i) => {
+        const isToday = i === todayIdx
+        const isActive = streak > 0 && i <= todayIdx && i >= Math.max(0, todayIdx - streak + 1)
+        return (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '9px', color: isToday ? '#fff' : 'rgba(255,255,255,0.3)', fontWeight: isToday ? 700 : 400 }}>{d}</span>
+            <div style={{
+              width: '28px', height: '28px', borderRadius: '8px',
+              background: isToday ? 'linear-gradient(135deg, #7B61FF, #3ECFFF)' : isActive ? 'rgba(123,97,255,0.35)' : 'rgba(255,255,255,0.05)',
+              border: isToday ? '2px solid rgba(123,97,255,0.7)' : isActive ? '1px solid rgba(123,97,255,0.3)' : '1px solid rgba(255,255,255,0.07)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {isActive && <span style={{ fontSize: '12px' }}>{isToday ? '⚡' : '✓'}</span>}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function MilestonesTab({ monPlan, currentEarned, displayName, targetIncome }: { monPlan: any; currentEarned: number; displayName: string; targetIncome: number }) {
-  const quickWins = monPlan?.quick_wins as string[] | null
+function MilestonesTab({ monPlan, currentEarned, displayName, targetIncome, streak }: { monPlan: any; currentEarned: number; displayName: string; targetIncome: number; streak: number }) {
 
   const milestones = [
     { label: 'สร้างแผนหาเงิน', target: 1, current: monPlan ? 1 : 0, unit: 'แผน', icon: '📋', done: !!monPlan },
@@ -580,12 +836,66 @@ function MilestonesTab({ monPlan, currentEarned, displayName, targetIncome }: { 
     { label: `รายได้ ฿${fmt(targetIncome)}`, target: targetIncome, current: currentEarned, unit: '฿', icon: '👑', done: currentEarned >= targetIncome },
   ]
 
+  const progressPct = targetIncome > 0 ? Math.min((currentEarned / targetIncome) * 100, 100) : 0
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <p style={{ margin: '0 0 14px', fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
-        ปลดล็อกเป้าหมายทีละขั้น — ทำได้ทุกอันแน่นอนค่ะ
-      </p>
 
+      {/* ── Circular Progress Hero ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        style={{
+          padding: '20px 18px', marginBottom: '14px', borderRadius: '20px',
+          background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(62,207,255,0.06))',
+          border: '1px solid rgba(123,97,255,0.25)',
+          display: 'flex', alignItems: 'center', gap: '16px',
+        }}
+      >
+        <CircleProgress
+          pct={progressPct}
+          size={110}
+          strokeWidth={9}
+          color={progressPct >= 100 ? '#22C55E' : '#7B61FF'}
+          label={`฿${currentEarned >= 1000 ? (currentEarned / 1000).toFixed(1) + 'K' : Math.round(currentEarned).toLocaleString()}`}
+          subLabel={`/ ฿${targetIncome >= 1000 ? (targetIncome / 1000).toFixed(0) + 'K' : targetIncome}`}
+        />
+        <div style={{ flex: 1 }}>
+          <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            ความคืบหน้า
+          </p>
+          <p style={{ margin: '0 0 8px', fontSize: '24px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
+            {Math.round(progressPct)}%
+          </p>
+          <p style={{ margin: '0 0 12px', fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+            {progressPct >= 100 ? '🎉 ถึงเป้าแล้ว!' : `เหลืออีก ฿${fmt(Math.max(0, targetIncome - currentEarned))} ค่ะ`}
+          </p>
+          {/* Streak badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(255,159,28,0.12)', border: '1px solid rgba(255,159,28,0.25)', borderRadius: '99px', padding: '3px 10px' }}>
+            <span style={{ fontSize: '13px' }}>🔥</span>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: '#FF9F1C' }}>{streak} วัน streak</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── 7-Day Streak Calendar ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        style={{
+          padding: '14px 16px', marginBottom: '14px', borderRadius: '16px',
+          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#fff' }}>📅 7 วันนี้</p>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#FF9F1C' }}>🔥 {streak} วัน</span>
+        </div>
+        <StreakCalendar streak={streak} />
+      </motion.div>
+
+      {/* ── Milestone Cards ── */}
+      <p style={{ margin: '0 0 10px', fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Milestones
+      </p>
       {milestones.map((m, i) => {
         const pct = Math.min((m.current / m.target) * 100, 100)
         return (
@@ -596,21 +906,23 @@ function MilestonesTab({ monPlan, currentEarned, displayName, targetIncome }: { 
             transition={{ delay: i * 0.08 }}
             style={{
               ...CARD.base,
-              padding: '16px', marginBottom: '10px',
+              padding: '14px 16px', marginBottom: '8px',
               background: m.done ? 'rgba(34,197,94,0.06)' : CARD.base.background,
               border: m.done ? '1px solid rgba(34,197,94,0.2)' : CARD.base.border,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: m.done ? '0' : '10px' }}>
-              <span style={{ fontSize: '28px', filter: m.done ? 'none' : 'grayscale(80%)' }}>{m.icon}</span>
+              <span style={{ fontSize: '24px', filter: m.done ? 'none' : 'grayscale(80%)' }}>
+                {m.done ? m.icon : '🔒'}
+              </span>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                  <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: m.done ? '#22C55E' : '#fff' }}>
+                  <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: m.done ? '#22C55E' : '#fff' }}>
                     {m.label}
                   </p>
                   {m.done && (
                     <span style={{ fontSize: '10px', color: '#22C55E', background: 'rgba(34,197,94,0.12)', padding: '1px 8px', borderRadius: '99px', fontWeight: 700 }}>
-                      ✓ ทำแล้ว!
+                      ✓ ปลดล็อกแล้ว!
                     </span>
                   )}
                 </div>
@@ -618,14 +930,19 @@ function MilestonesTab({ monPlan, currentEarned, displayName, targetIncome }: { 
                   {m.current.toLocaleString('th-TH')} / {m.target.toLocaleString('th-TH')} {m.unit}
                 </p>
               </div>
+              {!m.done && (
+                <span style={{ fontSize: '10px', color: 'rgba(123,97,255,0.7)', background: 'rgba(123,97,255,0.1)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700, flexShrink: 0 }}>
+                  {Math.round(pct)}%
+                </span>
+              )}
             </div>
             {!m.done && (
-              <div style={{ height: '6px', borderRadius: '99px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ height: '5px', borderRadius: '99px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
                   transition={{ duration: 1, delay: i * 0.1 }}
-                  style={{ height: '100%', borderRadius: '99px', background: '#7B61FF' }}
+                  style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #7B61FF, #3ECFFF)' }}
                 />
               </div>
             )}
@@ -633,52 +950,30 @@ function MilestonesTab({ monPlan, currentEarned, displayName, targetIncome }: { 
         )
       })}
 
-      {/* Quick wins from plan */}
-      {quickWins && quickWins.length > 0 && (
-        <div style={{
-          marginTop: '8px', padding: '16px',
-          background: 'rgba(255,159,28,0.06)', border: '1px solid rgba(255,159,28,0.2)',
+      {/* ── MITA+ Coach Card ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+        style={{
+          marginTop: '6px', padding: '16px',
+          background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(62,207,255,0.06))',
+          border: '1px solid rgba(123,97,255,0.2)',
           borderRadius: RADIUS.card,
-        }}>
-          <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 700, color: '#FF9F1C' }}>
-            ⚡ Quick Wins — ทำได้ใน 7 วัน
-          </p>
-          {quickWins.map((qw, i) => (
-            <div key={i} style={{
-              display: 'flex', gap: '10px', alignItems: 'flex-start',
-              paddingBottom: i < quickWins.length - 1 ? '10px' : 0,
-              borderBottom: i < quickWins.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-              marginBottom: i < quickWins.length - 1 ? '10px' : 0,
-            }}>
-              <span style={{
-                width: '20px', height: '20px', borderRadius: '99px', flexShrink: 0,
-                background: 'rgba(255,159,28,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '11px', fontWeight: 700, color: '#FF9F1C',
-              }}>
-                {i + 1}
-              </span>
-              <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>{qw}</p>
-            </div>
-          ))}
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🤖</div>
+          <div>
+            <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#a78bfa' }}>MITA+ Coach</p>
+            <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>ส่วนตัวสำหรับ {displayName} ค่ะ</p>
+          </div>
         </div>
-      )}
-
-      {/* Motivation box */}
-      <div style={{
-        marginTop: '10px', padding: '16px',
-        background: 'rgba(123,97,255,0.06)', border: '1px solid rgba(123,97,255,0.2)',
-        borderRadius: RADIUS.card,
-      }}>
-        <p style={{ margin: '0 0 6px', fontSize: '13px', fontWeight: 700, color: '#7B61FF' }}>
-          💌 จาก MITA+
-        </p>
-        <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7 }}>
+        <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7 }}>
           {monPlan?.audience_insight
             ? monPlan.audience_insight
             : `${displayName} เริ่มได้เลยนะคะ ทุก creator ที่ประสบความสำเร็จก็เริ่มจากศูนย์เหมือนกันค่ะ 🎯`
           }
         </p>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
@@ -941,6 +1236,317 @@ function ContentExampleTab({ userId, cachedData, niche }: { userId: string | nul
   )
 }
 
+// ── Quick Win Library ────────────────────────────────────
+// Tier 1: audit data only (ทำได้ทันที)
+// Tier 2: หลังเชื่อม channel (ส่วน upgrade CTA)
+
+interface QuickWinItem {
+  id: string
+  emoji: string
+  label: string
+  action: string
+  ctaText: string
+  ctaUrl?: string        // external link (affiliate signup)
+  copyText?: string      // copy-to-clipboard text
+  isLink: boolean
+}
+
+const AFFILIATE_BY_NICHE: Record<string, Array<{ name: string; url: string; commission: string; emoji: string }>> = {
+  food:          [{ name: 'TikTok Shop Affiliate', url: 'https://seller.tiktok.com/th/', commission: '5–15%', emoji: '🛒' }, { name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }],
+  beauty:        [{ name: 'TikTok Shop Affiliate', url: 'https://seller.tiktok.com/th/', commission: '5–20%', emoji: '🛒' }, { name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }],
+  fitness:       [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'Lazada Affiliate', url: 'https://www.lazada.co.th/affiliate/', commission: '3–8%', emoji: '🔵' }],
+  fashion:       [{ name: 'TikTok Shop Affiliate', url: 'https://seller.tiktok.com/th/', commission: '5–15%', emoji: '🛒' }, { name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }],
+  review:        [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'Lazada Affiliate', url: 'https://www.lazada.co.th/affiliate/', commission: '3–8%', emoji: '🔵' }],
+  travel:        [{ name: 'Agoda Affiliate', url: 'https://partners.agoda.com/', commission: '5–6%', emoji: '🏨' }, { name: 'Klook Affiliate', url: 'https://affiliate.klook.com/', commission: '3–5%', emoji: '🎟️' }],
+  finance:       [{ name: 'Rabbit Care', url: 'https://www.rabbitcare.com/', commission: 'ตามแพ็กเกจ', emoji: '🐰' }, { name: 'MoneyGuru TH', url: 'https://www.moneyguru.co.th/', commission: 'ตามแพ็กเกจ', emoji: '💸' }],
+  tech:          [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'Lazada Affiliate', url: 'https://www.lazada.co.th/affiliate/', commission: '3–8%', emoji: '🔵' }],
+  gaming:        [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'TikTok Shop Affiliate', url: 'https://seller.tiktok.com/th/', commission: '5–15%', emoji: '🛒' }],
+  pets:          [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'Lazada Affiliate', url: 'https://www.lazada.co.th/affiliate/', commission: '3–8%', emoji: '🔵' }],
+  education:     [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'Coursera Affiliate', url: 'https://www.coursera.org/about/partners', commission: '10–45%', emoji: '📚' }],
+  lifestyle:     [{ name: 'TikTok Shop Affiliate', url: 'https://seller.tiktok.com/th/', commission: '5–15%', emoji: '🛒' }, { name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }],
+  mom_baby:      [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'Lazada Affiliate', url: 'https://www.lazada.co.th/affiliate/', commission: '3–8%', emoji: '🔵' }],
+  cafe:          [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'TikTok Shop Affiliate', url: 'https://seller.tiktok.com/th/', commission: '5–15%', emoji: '🛒' }],
+  business:      [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'Canva Affiliate', url: 'https://www.canva.com/affiliates/', commission: '$36/ครั้ง', emoji: '🎨' }],
+  general:       [{ name: 'Shopee Affiliate', url: 'https://affiliate.shopee.co.th/', commission: '3–10%', emoji: '🟠' }, { name: 'TikTok Shop Affiliate', url: 'https://seller.tiktok.com/th/', commission: '5–15%', emoji: '🛒' }],
+}
+
+const CAPTION_BY_NICHE: Record<string, string> = {
+  food:      `🍳 ทดสอบแล้ว! เมนูนี้ทำง่ายมาก แค่ [เวลา] นาที วัตถุดิบหาได้ใน Shopee ลิงก์ใน bio นะคะ ✨ #อาหาร #ทำอาหาร #อาหารง่าย`,
+  beauty:    `✨ เปลี่ยนผิวใน 7 วัน! ครีมตัวนี้ดีเกินคาดจริงๆ ราคาไม่แพง ลิงก์ซื้อใน bio นะคะ 💄 #สกินแคร์ #ความงาม #รีวิว`,
+  fitness:   `💪 ท้าใจ! ออกกำลังกาย 15 นาทีต่อวัน ทำมาแล้ว [X] วัน เปลี่ยนไปเยอะมาก อุปกรณ์ลิงก์ใน bio 🔥 #ออกกำลังกาย #ลดน้ำหนัก`,
+  fashion:   `👗 Outfit วันนี้! ชุดนี้ใส่ได้หลายโอกาสมากค่ะ ราคาคุ้มมาก ลิงก์ช็อปใน bio เลย ✨ #แฟชั่น #ootd #แต่งตัว`,
+  review:    `⭐️ รีวิวตรงๆ ไม่ขายของ! สินค้านี้ใช้มา [X] เดือน บอกเลยว่า [ดี/ไม่ดี] เพราะ... ลิงก์ใน bio 🛒 #รีวิว #คุ้มไหม`,
+  travel:    `✈️ [จังหวัด/ประเทศ] ครั้งนี้ไม่ผิดหวัง! งบทั้งทริป [บาท] ที่พักลิงก์จองใน bio ราคาดีกว่านี้ไม่มีแล้วค่ะ 🏖️ #ท่องเที่ยว #vlog`,
+  finance:   `💰 ทำอะไรให้เงินทำงานแทน? ลองทำแบบนี้มา 3 เดือน ผลลัพธ์ที่ได้คือ... #การเงิน #ออมเงิน #ลงทุน #แชร์ความรู้`,
+  gaming:    `🎮 เล่น [ชื่อเกม] มานานมากแล้ว! เทคนิคนี้ทำให้เก่งขึ้นเร็วมาก สอนฟรีในคลิป ลิงก์ gear ใน bio 🕹️ #gaming #เกม`,
+  tech:      `📱 เปรียบเทียบ [A] vs [B] ตรงๆ หลังใช้ทั้งคู่มาเดือนกว่า! ราคาและลิงก์ซื้อใน bio ค่ะ 🔧 #รีวิว #tech #gadget`,
+  pets:      `🐾 [ชื่อน้อง] ชอบมากค่ะ! ของเล่น/อาหารตัวนี้ดีจริงๆ แนะนำเลย ลิงก์ซื้อใน bio นะคะ 🐶🐱 #สัตว์เลี้ยง #รีวิว`,
+  education: `📚 [ทักษะ] ที่คนส่วนใหญ่ยังไม่รู้ — สอนฟรีในคลิปนี้เลยค่ะ! คอร์สเรียนต่อลิงก์ใน bio 🎓 #เรียนรู้ #ความรู้`,
+  lifestyle: `🌿 เปลี่ยน routine ชีวิตประจำวันแบบนี้ รู้สึกดีขึ้นชัดเจน! ของที่ใช้ทั้งหมดลิงก์ใน bio ✨ #ไลฟ์สไตล์ #vlog`,
+  mom_baby:  `👶 แม่ๆ ต้องดู! [สินค้า/เคล็ดลับ] ช่วยได้มากมายเลยค่ะ ลิงก์สั่งซื้อใน bio 💕 #แม่และเด็ก #เลี้ยงลูก`,
+  cafe:      `☕ คาเฟ่ใหม่ที่มาต้องลอง! บรรยากาศ [ดีมาก] กาแฟ [อร่อยมาก] พิกัด + ลิงก์จองใน bio 📍 #คาเฟ่ #รีวิว #กาแฟ`,
+  business:  `💼 เริ่มธุรกิจด้วยงบน้อย? บทเรียนที่ได้จากการทำ [X] เดือน แชร์ฟรีทั้งหมดในคลิปนี้ค่ะ 🚀 #ธุรกิจ #การตลาด`,
+  general:   `✨ วันนี้มาแชร์ [หัวข้อ] ที่คิดว่าเป็นประโยชน์กับทุกคน ถ้าชอบกด Like + Follow ด้วยนะคะ 💕 #creator #ไทย`,
+}
+
+const FIRST_ACTION_BY_NICHE: Record<string, string> = {
+  food:      'ถ่ายรีวิวอาหารหรือเมนูที่ทำวันนี้ แล้วใส่ link Shopee Affiliate ของวัตถุดิบนั้นๆ ใน bio',
+  beauty:    'รีวิวผลิตภัณฑ์ที่ใช้อยู่แล้วในบ้าน 1 ชิ้น แล้วใส่ affiliate link ใน bio ก่อนโพสต์',
+  fitness:   'ถ่ายคลิปออกกำลังกาย routine วันนี้ แล้วใส่ link อุปกรณ์ที่ใช้จาก Shopee Affiliate ใน bio',
+  fashion:   'แต่งชุดที่ชอบที่สุด ถ่ายคลิป OOTD แล้วใส่ link ชุดหรือ accessories จาก Shopee/TikTok Shop ใน bio',
+  review:    'เลือกสินค้า 1 ชิ้นในบ้าน รีวิวตรงๆ 60 วินาที แล้วใส่ affiliate link ใน bio',
+  travel:    'โพสต์รูปหรือคลิปสถานที่ที่เคยไป แล้วใส่ affiliate link ที่พักจาก Agoda/Klook ใน bio',
+  finance:   'แชร์ความรู้การเงิน 1 เรื่องที่คนถามบ่อย แล้วใส่ link RabbitCare/MoneyGuru ใน bio',
+  gaming:    'สตรีมหรือคลิปเกม แล้วใส่ link อุปกรณ์ gaming จาก Shopee ใน bio',
+  tech:      'รีวิว gadget ที่ใช้อยู่แล้ว แล้วใส่ affiliate link ใน bio ก่อนโพสต์',
+  pets:      'ถ่ายน้องแมว/หมา แล้วใส่ link อาหาร/ของเล่นจาก Shopee Affiliate ใน bio',
+  education: 'สอนทักษะ 1 เรื่องที่ถนัด 60 วินาที แล้วใส่ link คอร์สเรียน ใน bio',
+  lifestyle: 'ถ่าย morning routine หรือ daily vlog แล้วใส่ link สินค้าที่ใช้จาก Shopee ใน bio',
+  mom_baby:  'แชร์ tips เลี้ยงลูก 1 เรื่อง แล้วใส่ link สินค้าเด็กจาก Shopee ใน bio',
+  cafe:      'ไปคาเฟ่ รีวิว ถ่ายบรรยากาศ แล้วใส่ link จองหรือ affiliate ที่พักใน bio',
+  business:  'แชร์บทเรียนธุรกิจ 1 เรื่อง แล้วใส่ link เครื่องมือทำธุรกิจจาก Canva/Shopee ใน bio',
+  general:   'โพสต์คอนเทนต์ที่ถนัดที่สุด แล้วใส่ Shopee Affiliate link สินค้าที่เกี่ยวข้องใน bio',
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function QuickWinSection({ audit, hasChannel, onConnectChannel }: { audit: any; hasChannel: boolean; onConnectChannel: () => void }) {
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>('affiliate') // เปิด item แรกอัตโนมัติ
+
+  const niche: string = (audit?.input?.niche ?? 'general').toLowerCase()
+  const platform: string = (audit?.input?.platform ?? '').toLowerCase()
+  const normNiche = AFFILIATE_BY_NICHE[niche] ? niche : 'general'
+
+  const affiliates = AFFILIATE_BY_NICHE[normNiche] ?? AFFILIATE_BY_NICHE.general
+  const caption = CAPTION_BY_NICHE[normNiche] ?? CAPTION_BY_NICHE.general
+  const firstAction = FIRST_ACTION_BY_NICHE[normNiche] ?? FIRST_ACTION_BY_NICHE.general
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 2500)
+    })
+  }
+
+  const platformLabel = platform === 'tiktok' ? 'TikTok' : platform === 'youtube' ? 'YouTube' : platform === 'instagram' ? 'Instagram' : platform === 'facebook' ? 'Facebook' : platform || 'Social'
+
+  const items: QuickWinItem[] = [
+    {
+      id: 'affiliate',
+      emoji: '🔗',
+      label: `สมัคร ${affiliates[0].name}`,
+      action: `รับ commission ${affiliates[0].commission} ทุกครั้งที่มีคนซื้อผ่าน link ของคุณ — ฟรี ไม่มีค่าสมัคร สมัครใช้เวลา 5 นาทีค่ะ`,
+      ctaText: `สมัครเลย →`,
+      ctaUrl: affiliates[0].url,
+      isLink: true,
+    },
+    {
+      id: 'caption',
+      emoji: '📝',
+      label: `Caption สำเร็จรูป (Copy ได้เลย)`,
+      action: `ปรับ [วงเล็บ] ให้ตรงกับ content ของคุณ แล้วโพสต์ใน ${platformLabel} วันนี้เลยค่ะ`,
+      ctaText: copiedId === 'caption' ? '✅ Copy แล้ว!' : '📋 Copy Caption',
+      copyText: caption,
+      isLink: false,
+    },
+    {
+      id: 'action',
+      emoji: '⚡',
+      label: `Action วันนี้ — ทำเดี๋ยวนี้เลย`,
+      action: firstAction,
+      ctaText: `✓ เข้าใจแล้ว`,
+      isLink: false,
+    },
+  ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.24 }}
+      style={{ marginBottom: '16px' }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '18px' }}>⚡</span>
+          <p style={{ margin: 0, fontSize: '14px', fontWeight: 900, color: '#FF9F1C' }}>Quick Wins — ทำได้ทันที</p>
+        </div>
+        {!hasChannel && (
+          <span style={{ fontSize: '10px', color: 'rgba(255,159,28,0.7)', background: 'rgba(255,159,28,0.1)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700 }}>
+            Tier 1 • Audit only
+          </span>
+        )}
+      </div>
+
+      {/* Items */}
+      {items.map((item, i) => {
+        const isOpen = expanded === item.id
+        return (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.26 + i * 0.06 }}
+            style={{ marginBottom: '8px' }}
+          >
+            {/* Row */}
+            <div
+              style={{
+                borderRadius: '14px', overflow: 'hidden',
+                border: isOpen ? '1.5px solid rgba(255,159,28,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                background: isOpen ? 'rgba(255,159,28,0.07)' : 'rgba(255,255,255,0.03)',
+                transition: 'all 0.2s',
+              }}
+            >
+              {/* Header row */}
+              <button
+                onClick={() => setExpanded(isOpen ? null : item.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '12px 14px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+                }}
+              >
+                <span style={{
+                  width: '32px', height: '32px', borderRadius: '10px', flexShrink: 0,
+                  background: isOpen ? 'rgba(255,159,28,0.2)' : 'rgba(255,255,255,0.06)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+                }}>
+                  {item.emoji}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: isOpen ? '#FF9F1C' : '#fff' }}>
+                    {item.label}
+                  </p>
+                </div>
+                <span style={{
+                  fontSize: '10px', fontWeight: 700, flexShrink: 0,
+                  color: isOpen ? '#FF9F1C' : 'rgba(255,255,255,0.3)',
+                  transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s',
+                }}>›</span>
+              </button>
+
+              {/* Expanded content */}
+              {isOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{ padding: '0 14px 14px' }}
+                >
+                  {/* Caption preview box */}
+                  {item.id === 'caption' && (
+                    <div style={{
+                      padding: '10px 12px', marginBottom: '10px',
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '10px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6,
+                      fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    }}>
+                      {caption}
+                    </div>
+                  )}
+
+                  <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.65 }}>
+                    {item.action}
+                  </p>
+
+                  {/* CTA */}
+                  {item.id === 'affiliate' && item.ctaUrl && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <a
+                        href={item.ctaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          flex: 1, display: 'block', textAlign: 'center', padding: '10px 14px',
+                          background: 'linear-gradient(135deg, #FF9F1C, #22C55E)',
+                          color: '#fff', borderRadius: '10px', fontSize: '13px', fontWeight: 700, textDecoration: 'none',
+                        }}
+                      >
+                        {item.ctaText}
+                      </a>
+                      {affiliates[1] && (
+                        <a
+                          href={affiliates[1].url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'block', textAlign: 'center', padding: '10px 14px',
+                            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                            color: 'rgba(255,255,255,0.6)', borderRadius: '10px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {affiliates[1].emoji} {affiliates[1].name.split(' ')[0]}
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {item.id === 'caption' && item.copyText && (
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleCopy(item.copyText!, 'caption')}
+                      style={{
+                        width: '100%', padding: '10px', borderRadius: '10px', cursor: 'pointer',
+                        background: copiedId === 'caption' ? 'rgba(34,197,94,0.2)' : 'rgba(255,159,28,0.15)',
+                        color: copiedId === 'caption' ? '#22C55E' : '#FF9F1C',
+                        fontSize: '13px', fontWeight: 700,
+                        border: `1px solid ${copiedId === 'caption' ? 'rgba(34,197,94,0.3)' : 'rgba(255,159,28,0.3)'}`,
+                      }}
+                    >
+                      {item.ctaText}
+                    </motion.button>
+                  )}
+
+                  {item.id === 'action' && (
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setExpanded(null)}
+                      style={{
+                        width: '100%', padding: '10px', borderRadius: '10px', cursor: 'pointer',
+                        background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
+                        color: '#22C55E', fontSize: '13px', fontWeight: 700,
+                      }}
+                    >
+                      {item.ctaText}
+                    </motion.button>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )
+      })}
+
+      {/* Tier 2 upgrade nudge (ถ้ายังไม่เชื่อม channel) */}
+      {!hasChannel && (
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={onConnectChannel}
+          style={{
+            width: '100%', padding: '11px 14px', marginTop: '4px',
+            display: 'flex', alignItems: 'center', gap: '10px',
+            background: 'linear-gradient(135deg, rgba(62,207,255,0.08), rgba(123,97,255,0.06))',
+            border: '1px dashed rgba(62,207,255,0.3)', borderRadius: '12px',
+            cursor: 'pointer', textAlign: 'left',
+          }}
+        >
+          <span style={{ fontSize: '18px', flexShrink: 0 }}>🤖</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: '0 0 1px', fontSize: '12px', fontWeight: 700, color: '#3ECFFF' }}>
+              Tier 2: เชื่อมช่อง → Quick Win แม่นขึ้น 95%
+            </p>
+            <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>
+              MITA+ จะรู้ว่าคลิปไหนดีที่สุด แนะนำ affiliate ที่ตรงกับ content จริงๆ
+            </p>
+          </div>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#3ECFFF', flexShrink: 0 }}>→</span>
+        </motion.button>
+      )}
+    </motion.div>
+  )
+}
+
 // ── Main Page ────────────────────────────────────────────
 export default function StarterPage() {
   const router = useRouter()
@@ -950,6 +1556,9 @@ export default function StarterPage() {
   const [activePlatformKey, setActivePlatformKey] = useState<string>('tiktok')
   const [checkInOpen, setCheckInOpen] = useState(false)
   const [coachReply, setCoachReply] = useState<string | null>(null)
+  const [checkinHistory, setCheckinHistory] = useState<CheckinEntry[]>([])
+  const [lastWeeklyPlan, setLastWeeklyPlan] = useState<string | null>(null)
+  const [showFirstVisit, setShowFirstVisit] = useState(false)
   const [lineConnected, setLineConnected] = useState(false)
   const [showLineSetup, setShowLineSetup] = useState(false)
   const [lineToken, setLineToken] = useState('')
@@ -964,6 +1573,16 @@ export default function StarterPage() {
     const p = data as UserProfile
     setProfile(p)
     setAuthState(p.plan === 'starter' || p.plan === 'pro' ? 'ok' : 'no_plan')
+    // Load checkin history
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wc = (p as any).weekly_checkins as { checkins?: CheckinEntry[] } | null
+    const history = wc?.checkins ?? []
+    setCheckinHistory(history)
+    // First visit: no check-ins AND no audit (brand new user)
+    if (history.length === 0) {
+      const isNew = !sessionStorage.getItem('mita_visited')
+      if (isNew) { setShowFirstVisit(true); sessionStorage.setItem('mita_visited', '1') }
+    }
   }, [supabase])
 
   useEffect(() => {
@@ -1045,14 +1664,22 @@ export default function StarterPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const affiliateData = profile?.affiliate_products as any
 
+  // weekNo = last completed week + 1 (or 1 if no check-ins)
+  const completedWeeks = checkinHistory.map(c => c.week_no)
+  const currentWeekNo = completedWeeks.length > 0 ? Math.min(Math.max(...completedWeeks) + 1, 4) : 1
+  const isFirstCheckin = checkinHistory.length === 0
+
   const liveCreator = {
     name: displayName,
     platform: audit?.input?.platform ?? MOCK_CREATOR.platform,
     followers: audit?.input?.followers ?? MOCK_CREATOR.followers,
     targetIncome: Math.round(audit?.revenueEstimation?.realistic ?? monPlan?.total_potential_max ?? MOCK_CREATOR.targetIncome),
-    currentEarned: Math.round(audit?.revenueEstimation?.currentIncome ?? 0),
+    currentEarned: Math.round(
+      checkinHistory.reduce((sum, c) => sum + (c.income_approx ?? 0), 0) ||
+      audit?.revenueEstimation?.currentIncome || 0
+    ),
     streak: MOCK_CREATOR.streak,
-    weekNo: MOCK_CREATOR.weekNo,
+    weekNo: currentWeekNo,
   }
 
   const progressPct = liveCreator.targetIncome > 0
@@ -1120,7 +1747,7 @@ export default function StarterPage() {
       }}>
         {/* Logo + plan badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="gradient-purple-blue font-black text-lg">MITA+</span>
+          <MitaLogo size="sm" />
           <span style={{ fontSize: '10px', color: '#7B61FF', background: 'rgba(123,97,255,0.12)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700 }}>
             Starter
           </span>
@@ -1178,15 +1805,22 @@ export default function StarterPage() {
 
       <div style={{ padding: '20px 16px 0' }}>
 
+        {/* ── FIRST VISIT BANNER ─────────────────── */}
+        {showFirstVisit && (
+          <FirstVisitBanner name={displayName} onDismiss={() => setShowFirstVisit(false)} />
+        )}
+
         {/* ── HEADER ──────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '16px' }}>
-          <p style={{ margin: '0 0 3px', fontSize: '12px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>
-            สวัสดี {displayName} 👋 · สัปดาห์ที่ {liveCreator.weekNo}
-          </p>
-          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
-            {audit ? (monPlan ? monPlan.headline ?? 'แผนหาเงินของคุณพร้อมแล้ว' : 'เริ่มสร้างรายได้จากช่องของคุณ') : 'ยินดีต้อนรับสู่ MITA+! 🎉'}
-          </h1>
-        </motion.div>
+        {!showFirstVisit && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '16px' }}>
+            <p style={{ margin: '0 0 3px', fontSize: '12px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>
+              สวัสดี {displayName} 👋 · สัปดาห์ที่ {liveCreator.weekNo}
+            </p>
+            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+              {audit ? (monPlan ? monPlan.headline ?? 'แผนหาเงินของคุณพร้อมแล้ว' : 'เริ่มสร้างรายได้จากช่องของคุณ') : 'ยินดีต้อนรับสู่ MITA+! 🎉'}
+            </h1>
+          </motion.div>
+        )}
 
         {/* ── REVENUE HERO CARD ───────────────────── */}
         {audit ? (
@@ -1266,6 +1900,31 @@ export default function StarterPage() {
             >
               ✨ ทำ Audit เพื่อดูตัวเลขจริงของคุณ
             </motion.button>
+          </motion.div>
+        )}
+
+        {/* ── INCOME GRAPH ────────────────────────── */}
+        {checkinHistory.length > 0 && (
+          <IncomeGraph checkins={checkinHistory} weekNo={liveCreator.weekNo} />
+        )}
+
+        {/* ── LAST WEEKLY PLAN BANNER ─────────────── */}
+        {lastWeeklyPlan && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: '14px 16px', marginBottom: '14px',
+              background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)',
+              borderRadius: '14px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#22C55E' }}>📅 แผนรายได้สัปดาห์นี้</p>
+              <button onClick={() => setLastWeeklyPlan(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: '14px', padding: 0 }}>✕</button>
+            </div>
+            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+              {lastWeeklyPlan.slice(0, 300)}{lastWeeklyPlan.length > 300 ? '...' : ''}
+            </p>
           </motion.div>
         )}
 
@@ -1660,6 +2319,15 @@ export default function StarterPage() {
           </motion.div>
         )}
 
+        {/* ── QUICK WIN LIBRARY ────────────────────── */}
+        {audit && (
+          <QuickWinSection
+            audit={audit}
+            hasChannel={hasChannel}
+            onConnectChannel={() => router.push('/starter/connect')}
+          />
+        )}
+
         {/* ── SECTION TITLE ────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>
@@ -1677,6 +2345,8 @@ export default function StarterPage() {
             displayName={displayName}
             onCheckIn={() => setCheckInOpen(true)}
             coachReply={coachReply}
+            hasAudit={!!audit}
+            hasChannel={hasChannel}
           />
         )}
 
@@ -1793,6 +2463,7 @@ export default function StarterPage() {
             currentEarned={liveCreator.currentEarned}
             displayName={displayName}
             targetIncome={liveCreator.targetIncome}
+            streak={liveCreator.streak}
           />
         )}
       </div>
@@ -1884,13 +2555,19 @@ export default function StarterPage() {
       <CheckInModal
         isOpen={checkInOpen}
         onClose={() => setCheckInOpen(false)}
-        onComplete={(msg) => { setCoachReply(msg); setCheckInOpen(false) }}
+        onComplete={(msg, result) => {
+          setCoachReply(msg)
+          setCheckInOpen(false)
+          if (result?.allCheckins) setCheckinHistory(result.allCheckins)
+          if (result?.weeklyPlan) setLastWeeklyPlan(result.weeklyPlan)
+        }}
         weekNo={liveCreator.weekNo}
         creatorName={displayName}
         niche={(audit?.input?.niche ?? 'food') as string}
         platform={(audit?.input?.platform ?? liveCreator.platform).toLowerCase() as string}
         targetIncome={liveCreator.targetIncome}
         userId={userId}
+        isFirstCheckin={isFirstCheckin}
       />
     </div>
   )
