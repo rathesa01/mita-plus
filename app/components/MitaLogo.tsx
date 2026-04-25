@@ -27,7 +27,9 @@ export default function MitaLogo({ size = 'md', className }: Props) {
       style={{ display: 'inline-block', flexShrink: 0 }}
     >
       <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+        {/* gradientUnits="userSpaceOnUse" — x1/x2 ใช้พิกัด viewBox จริง
+            ทำให้ทุก stroke ได้สีตามตำแหน่งจริงใน SVG ไม่ว่าจะตั้งหรือนอน */}
+        <linearGradient id={gradId} x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
           <stop offset="0%"   stopColor="#7B61FF" />
           <stop offset="55%"  stopColor="#9B7FFF" />
           <stop offset="100%" stopColor="#3ECFFF" />
