@@ -8,9 +8,9 @@ import { Check, ArrowLeft, ArrowRight, Zap, Star, Crown, Loader2 } from 'lucide-
 import { getSupabaseClient } from '@/lib/db/supabaseClient'
 import MitaLogo from '@/app/components/MitaLogo'
 
-// ── Stripe Price IDs (set in Vercel env vars) ────────────
-const PRICE_STARTER = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER ?? ''
-const PRICE_PRO = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO ?? ''
+// ── Stripe Price IDs (one-time payment, รองรับ PromptPay) ──
+const PRICE_STARTER = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER ?? 'price_1TQIlw6442j0IGghpY7vVE4X'
+const PRICE_PRO = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO ?? 'price_1TQIlz6442j0IGghCx3lUck6'
 
 // ── Data ─────────────────────────────────────────────────
 const TIERS = [
