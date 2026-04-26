@@ -47,11 +47,13 @@ export async function POST(req: NextRequest) {
 
     const origin = req.headers.get('origin') ?? 'https://www.mitaplus.com'
 
-    // ── One-time payment: รองรับทั้ง Card + PromptPay (สแกน QR) ──
+    // ── One-time payment: ใช้ automatic_payment_methods ──
+    // Stripe จะดึง payment methods ที่เปิดใน Dashboard มาแสดงเองอัตโนมัติ
+    // (รวม PromptPay QR, Card, Apple Pay ฯลฯ)
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: 'payment',                              // one-time (ไม่ใช่ subscription)
-      payment_method_types: ['card', 'promptpay'],  // เพิ่ม PromptPay QR
+      mode: 'payment',
+      automatic_payment_methods: { enabled: true },
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
