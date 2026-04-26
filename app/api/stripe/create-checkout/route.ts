@@ -7,16 +7,9 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
-    // Init inside try — env vars not available at module eval during build
     const secretKey = process.env.STRIPE_SECRET_KEY
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceKey = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    console.log('[create-checkout] env check:', {
-      hasStripeKey: !!secretKey,
-      hasSupabaseUrl: !!supabaseUrl,
-      hasServiceKey: !!serviceKey,
-    })
 
     if (!secretKey) throw new Error('STRIPE_SECRET_KEY is not set')
     if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set')
@@ -30,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check if user already has a Stripe customer ID
+    // Get or create Stripe customer
     const { data: profile } = await supabaseAdmin
       .from('user_profiles')
       .select('stripe_customer_id')
@@ -52,24 +45,19 @@ export async function POST(req: NextRequest) {
         .eq('id', userId)
     }
 
-    const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mitaplus.com'
+    const origin = req.headers.get('origin') ?? 'https://www.mitaplus.com'
 
-    const session = await (stripe.checkout.sessions.create as any)({
+    // ── One-time payment: รองรับทั้ง Card + PromptPay (สแกน QR) ──
+    const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: 'subscription',
-      payment_method_types: ['card'],
+      mode: 'payment',                              // one-time (ไม่ใช่ subscription)
+      payment_method_types: ['card', 'promptpay'],  // เพิ่ม PromptPay QR
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
       metadata: {
         supabase_uid: userId,
         plan: plan ?? 'starter',
-      },
-      subscription_data: {
-        metadata: {
-          supabase_uid: userId,
-          plan: plan ?? 'starter',
-        },
       },
     })
 
