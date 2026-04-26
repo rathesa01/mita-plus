@@ -74,14 +74,15 @@ const TIERS = [
     period: '/เดือน',
     tagline: 'มีทีมช่วยวางระบบให้',
     color: '#FF9F1C',
-    gradient: 'linear-gradient(135deg, rgba(255,159,28,0.18), rgba(255,159,28,0.06))',
-    border: 'rgba(255,159,28,0.40)',
-    ctaText: 'สมัคร Pro — ฿499/เดือน',
+    gradient: 'linear-gradient(135deg, rgba(255,159,28,0.08), rgba(255,159,28,0.02))',
+    border: 'rgba(255,159,28,0.20)',
+    ctaText: 'Coming Soon',
     ctaHref: null,
     ctaStyle: 'orange' as const,
     priceId: PRICE_PRO,
     planKey: 'pro' as const,
-    popular: true,
+    popular: false,
+    comingSoon: true,
     features: [
       'ทุกอย่างใน Starter +',
       '🔄 แผนหาเงิน ปรับใหม่ทุกเดือนตามผลจริง',
@@ -196,7 +197,17 @@ function TierCard({
       </div>
 
       {/* CTA */}
-      {tier.ctaStyle === 'border' ? (
+      {'comingSoon' in tier && tier.comingSoon ? (
+        // ── Coming Soon button (disabled) ──
+        <button disabled style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+          height: '52px', borderRadius: '14px', border: '1px solid rgba(255,159,28,0.25)',
+          background: 'rgba(255,159,28,0.06)', color: 'rgba(255,255,255,0.30)',
+          fontWeight: 700, fontSize: '14px', cursor: 'not-allowed', letterSpacing: '0.05em',
+        }}>
+          🔒 Coming Soon
+        </button>
+      ) : tier.ctaStyle === 'border' ? (
         <Link href={tier.ctaHref!} style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
           height: '48px', borderRadius: '14px',
@@ -227,7 +238,7 @@ function TierCard({
         </button>
       )}
 
-      {tier.id !== 'free' && (
+      {tier.id !== 'free' && !('comingSoon' in tier && tier.comingSoon) && (
         <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.22)', marginTop: '10px' }}>
           ยกเลิกได้ทุกเดือน · ไม่มีสัญญา
         </p>
