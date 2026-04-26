@@ -9,8 +9,9 @@ import { getSupabaseClient } from '@/lib/db/supabaseClient'
 import MitaLogo from '@/app/components/MitaLogo'
 
 // ── Stripe Price IDs (one-time payment, รองรับ PromptPay) ──
-const PRICE_STARTER = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER ?? 'price_1TQIlw6442j0IGghpY7vVE4X'
-const PRICE_PRO = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO ?? 'price_1TQIlz6442j0IGghCx3lUck6'
+// hardcode ตรงๆ — ไม่ใช้ env var เพราะอันเก่าใน Vercel ยังเป็น recurring
+const PRICE_STARTER = 'price_1TQIlw6442j0IGghpY7vVE4X'
+const PRICE_PRO = 'price_1TQIlz6442j0IGghCx3lUck6'
 
 // ── Data ─────────────────────────────────────────────────
 const TIERS = [
