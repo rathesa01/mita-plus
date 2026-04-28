@@ -103,7 +103,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="grid grid-cols-3 gap-4 text-center">
             {[
-              { n: '฿40K+', label: 'ศักยภาพรายได้ที่ยังไม่ถูกใช้', sub: 'benchmark อุตสาหกรรม' },
+              { n: '฿40K+', label: 'Creator แนวเดียวกับคุณมีศักยภาพรายได้', sub: '(benchmark อุตสาหกรรม)' },
               { n: '3 นาที', label: 'เวลาที่ใช้รู้ผลวิเคราะห์', sub: 'ไม่ต้องรอ' },
               { n: '5 ขั้นตอน', label: 'แผนเฉพาะตัวพร้อมใช้ทันที', sub: 'จากข้อมูลช่องจริง' },
             ].map((s) => (

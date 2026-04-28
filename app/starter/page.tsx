@@ -2707,7 +2707,7 @@ export default function StarterPage() {
                   <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)', position: 'relative', zIndex: 3 }}>
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🛍️</div>
                     <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>สินค้า MITA+ คัด 10 ชิ้น</p>
-                    <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>ศักยภาพ ฿2,400–฿8,000/เดือน (benchmark)</p>
+                    <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>ศักยภาพรายได้ ฿2,400–฿8,000/เดือน (ประมาณการจาก benchmark)</p>
                     <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>ทำ Audit เพื่อให้ MITA+ เลือกสินค้า<br/>ที่ตรงกับช่องของคุณจริงๆ</p>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #22C55E, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 4 }}>
                       ทำ Audit เพื่อ unlock →

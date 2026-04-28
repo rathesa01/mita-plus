@@ -77,7 +77,7 @@ export function HeroSection() {
           {/* Stats — desktop only */}
           <div className="hidden lg:flex gap-8 mt-10">
             {[
-              { n: '฿40K+',  label: 'ศักยภาพ benchmark/เดือน'  },
+              { n: '฿40K+',  label: 'ศักยภาพรายได้/เดือน (ตาม benchmark อุตสาหกรรม)'  },
               { n: '3 นาที', label: 'ได้ผลวิเคราะห์'       },
               { n: '100%',   label: 'ฟรี ไม่มีเงื่อนไข'   },
             ].map((s) => (
