@@ -8,10 +8,9 @@ import { Check, ArrowLeft, ArrowRight, Zap, Star, Crown, Loader2 } from 'lucide-
 import { getSupabaseClient } from '@/lib/db/supabaseClient'
 import MitaLogo from '@/app/components/MitaLogo'
 
-// ── Stripe Price IDs (one-time payment, รองรับ PromptPay) ──
-// hardcode ตรงๆ — ไม่ใช้ env var เพราะอันเก่าใน Vercel ยังเป็น recurring
-const PRICE_STARTER = 'price_1TQIlw6442j0IGghpY7vVE4X'
-const PRICE_PRO = 'price_1TQIlz6442j0IGghCx3lUck6'
+// ── Stripe Price IDs (one-time payment, รองรับ PromptPay) — LIVE MODE ──
+const PRICE_STARTER = 'price_1TR0tn4cLtA8vUZQvpSRJqDM'  // ฿199/mo live one-time
+const PRICE_PRO = 'price_1TR0to4cLtA8vUZQhaSTUiE3'       // ฿499/mo live one-time
 
 // ── Data ─────────────────────────────────────────────────
 const TIERS = [
