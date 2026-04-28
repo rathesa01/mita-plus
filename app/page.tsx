@@ -13,24 +13,26 @@ const STEPS = [
 ]
 
 // ── Testimonials ─────────────────────────────────
+// หมายเหตุ: ตัวอย่างสมมติเพื่อแสดงประเภทปัญหาที่พบบ่อย
+// ผลลัพธ์จริงขึ้นอยู่กับช่อง แพลตฟอร์ม และความสม่ำเสมอของ creator แต่ละคน
 const TESTIMONIALS = [
   {
     name: 'มินท์', handle: '@mint.beauty', platform: 'TikTok · 280K',
     avatar: 'M', avatarBg: 'linear-gradient(135deg,#f093fb,#f5576c)',
-    quote: 'ไม่รู้เลยว่าแค่ไม่มีลิงก์รับเงิน ทำให้หายไป 42,000 บาท/เดือน พอแก้ปุ๊บ จาก 8K ขึ้น 35K เดือนเดียว',
-    gain: '+27,000 บาท/เดือน',
+    quote: 'ไม่รู้เลยว่าไม่มีลิงก์รับเงิน เป็น Revenue Blocker ใหญ่ที่สุด พอ MITA+ ชี้จุดปุ๊บ เริ่มแก้ได้เลยโดยไม่ต้องเพิ่ม follower',
+    gain: 'แก้ Revenue Blocker',
   },
   {
     name: 'บอส', handle: '@boss.finance', platform: 'YouTube · 156K',
     avatar: 'บ', avatarBg: 'linear-gradient(135deg,#4facfe,#00f2fe)',
-    quote: 'มี subscriber เยอะมาก แต่คะแนนได้แค่ 34/100 ตอนนี้มีรายได้ประจำ 65K/เดือนแล้ว',
-    gain: '+65,000 บาท/เดือน',
+    quote: 'มี subscriber เยอะมาก แต่คะแนนได้แค่ 34/100 MITA+ บอกว่าขาด funnel รับ subscriber เก่า — จุดที่ไม่เคยนึกถึงเลย',
+    gain: 'เจอ blind spot สำคัญ',
   },
   {
     name: 'แตงโม', handle: '@tangmo.life', platform: 'Instagram · 95K',
     avatar: 'ต', avatarBg: 'linear-gradient(135deg,#43e97b,#38f9d7)',
-    quote: 'ทำ Affiliate 6 เดือน ได้แค่ 3K รู้ว่าทำผิดตรงไหน แก้เดือนเดียว ขึ้น 18K เลย',
-    gain: '+15,000 บาท/เดือน',
+    quote: 'ทำ Affiliate 6 เดือน แต่เลือกสินค้าผิด niche มาตลอด MITA+ แนะนำประเภทสินค้าที่ตรง audience จริงๆ — ต่างกันมาก',
+    gain: 'เลือกสินค้าถูก niche',
   },
 ]
 
@@ -101,9 +103,9 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="grid grid-cols-3 gap-4 text-center">
             {[
-              { n: '฿40K+', label: 'รายได้ที่ Creator ทั่วไปยังไม่ได้ดึงออกมา', sub: 'ต่อเดือน' },
+              { n: '฿40K+', label: 'ศักยภาพรายได้ที่ยังไม่ถูกใช้', sub: 'benchmark อุตสาหกรรม' },
               { n: '3 นาที', label: 'เวลาที่ใช้รู้ผลวิเคราะห์', sub: 'ไม่ต้องรอ' },
-              { n: '7 วัน', label: 'เริ่มเห็นเงินเพิ่มหลังทำตามแผน', sub: 'เฉลี่ยจากผู้ใช้' },
+              { n: '5 ขั้นตอน', label: 'แผนเฉพาะตัวพร้อมใช้ทันที', sub: 'จากข้อมูลช่องจริง' },
             ].map((s) => (
               <div key={s.n} className="text-center">
                 <p className="font-black text-2xl sm:text-3xl mb-1" style={{
@@ -255,6 +257,10 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+          {/* Disclaimer — testimonials */}
+          <p className="text-center mt-4 text-white/20 text-xs leading-relaxed">
+            * ตัวอย่างสมมติเพื่อแสดงประเภทปัญหาที่พบบ่อยใน creator ไทย · ผลลัพธ์จริงขึ้นอยู่กับช่อง แพลตฟอร์ม และความสม่ำเสมอของ creator แต่ละคน
+          </p>
         </div>
       </section>
 

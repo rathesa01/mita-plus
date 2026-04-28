@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   keywords: ['creator', 'ทำเงินจาก content', 'คอนเทนต์ครีเอเตอร์', 'รายได้ creator', 'MITA+', 'เพิ่มรายได้'],
   openGraph: {
     title: 'MITA+ — ทำคอนเทนต์แล้วได้เงินน้อยไปไหม?',
-    description: 'เช็กฟรีใน 3 นาที · รู้เลยว่าพลาดเงินไปเท่าไหร่ · เริ่มได้เงินเพิ่มใน 7 วัน',
+    description: 'เช็กฟรีใน 3 นาที · วิเคราะห์ศักยภาพรายได้จากช่องที่มีอยู่ · รับแผนเฉพาะตัวพร้อมใช้',
     url: BASE_URL,
     siteName: 'MITA+',
     images: [

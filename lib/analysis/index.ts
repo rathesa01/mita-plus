@@ -29,7 +29,7 @@ function getPricing(
       tier: 'premium',
       reportPrice: 999,
       premiumPrice: 29900,
-      urgencyMessage: `คุณกำลังเสียเงิน ฿${fmt(totalMissed)}/เดือน — ลงทุน 29,900 บาทวันนี้คืนทุนใน 1 เดือน`,
+      urgencyMessage: `ศักยภาพรายได้ที่ยังไม่ถูกใช้ ฿${fmt(totalMissed)}/เดือน (benchmark) — วางระบบตอนนี้เพื่อเริ่มดึงมันออกมา`,
       valueProposition: 'เราวางระบบ Funnel + Monetization ให้ครบ ใน 30 วัน',
     }
   }

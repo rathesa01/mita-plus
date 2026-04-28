@@ -57,7 +57,7 @@ export function buildActionPlan(
     day60.push({
       action: secondRec.title,
       example: secondRec.exampleAction,
-      expectedOutcome: `เพิ่ม revenue stream ที่ 2 — ฿${fmt(secondRec.estimatedRevenueLow)}–${fmt(secondRec.estimatedRevenueHigh)}/เดือน`,
+      expectedOutcome: `เปิด revenue stream ที่ 2 — ศักยภาพ ฿${fmt(secondRec.estimatedRevenueLow)}–${fmt(secondRec.estimatedRevenueHigh)}/เดือน (ประมาณการจาก benchmark อุตสาหกรรม)`,
       revenueImpact: secondRec.estimatedRevenueLow,
     })
   }
@@ -81,7 +81,7 @@ export function buildActionPlan(
     day90.push({
       action: thirdRec.title,
       example: thirdRec.exampleAction,
-      expectedOutcome: `Revenue stream ที่ 3 — ฿${fmt(thirdRec.estimatedRevenueLow)}–${fmt(thirdRec.estimatedRevenueHigh)}/เดือน`,
+      expectedOutcome: `เปิด revenue stream ที่ 3 — ศักยภาพ ฿${fmt(thirdRec.estimatedRevenueLow)}–${fmt(thirdRec.estimatedRevenueHigh)}/เดือน (ประมาณการจาก benchmark อุตสาหกรรม)`,
       revenueImpact: thirdRec.estimatedRevenueLow,
     })
   }

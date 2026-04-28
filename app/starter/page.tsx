@@ -128,6 +128,30 @@ function FirstVisitBanner({ name, onDismiss }: { name: string; onDismiss: () => 
 
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
+// ── Commission rate lookup (frontend fallback) ─────────────
+const COMMISSION_MAP: Record<string, number> = {
+  ความงาม: 8, สกินแคร์: 8, แต่งหน้า: 8, beauty: 8, skincare: 8,
+  แฟชั่น: 6, เสื้อผ้า: 6, fashion: 6,
+  เครื่องประดับ: 7, jewelry: 7,
+  สัตว์เลี้ยง: 6, แมว: 6, สุนัข: 6, pets: 6,
+  ฟิตเนส: 6, ออกกำลังกาย: 6, fitness: 6, sports: 6,
+  แม่และเด็ก: 6, mom_baby: 6,
+  ของแต่งบ้าน: 5, บ้าน: 5, home: 5,
+  อาหาร: 5, ทำอาหาร: 5, เบเกอรี่: 5, food: 5, คาเฟ่: 5, cafe: 5,
+  ท่องเที่ยว: 5, travel: 5,
+  สุขภาพ: 5, health: 5,
+  การศึกษา: 4, หนังสือ: 4, education: 4,
+  เทคโนโลยี: 4, กล้อง: 4, tech: 4, gadgets: 4,
+  เกม: 4, gaming: 4,
+  รถยนต์: 4, automotive: 4,
+}
+function lookupCommission(niche: string): number {
+  return COMMISSION_MAP[niche] ?? COMMISSION_MAP[niche?.toLowerCase()] ?? 5
+}
+function calcCommThb(price: number, rate: number): number {
+  return Math.round(price * rate / 100)
+}
+
 function categoryEmoji(category: string, categoryTh?: string): string {
   const map: Record<string, string> = {
     beauty: '💄', skincare: '🌿', health: '💊', fitness: '💪',
@@ -473,11 +497,76 @@ function ActionItem({ text, color, isLast }: { text: string; color: string; isLa
 
 // ── Products Tab ─────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// ── Involve Asia offer type ───────────────────────────────
+interface IAOffer {
+  offer_id:          number
+  offer_name:        string
+  logo:              string
+  category:          string
+  category_th:       string
+  commission:        string
+  directory_page:    string   // ← ลิงก์สมัครโปรแกรมที่ Involve Asia
+  preview_url:       string
+  is_match:          boolean
+  requires_approval: boolean
+}
+
 function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateData: any; userId: string | null; niche: string; platform: string; onRefresh: () => void }) {
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
   const [refreshedToday, setRefreshedToday] = useState(() => isToday(affiliateData?.generated_at))
+  // localData: override affiliateData immediately from API response (avoid Supabase read lag)
+  const [localData, setLocalData] = useState<any>(null)
+  const displayData = localData ?? affiliateData
+
+  // ── Involve Asia offers ───────────────────────────────────
+  const [iaOffers, setIaOffers] = useState<IAOffer[]>([])
+  const [iaLoading, setIaLoading] = useState(true)
+  const [iaError, setIaError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const n = niche || 'general'
+    fetch(`/api/affiliate/involve-asia?niche=${encodeURIComponent(n)}`)
+      .then(r => r.json())
+      .then(json => {
+        if (json.success) setIaOffers(json.data ?? [])
+        else setIaError(json.error ?? 'โหลดไม่ได้')
+      })
+      .catch(() => setIaError('ไม่สามารถโหลดโปรแกรมได้'))
+      .finally(() => setIaLoading(false))
+  }, [niche])
+
+  // ── Auto-upgrade old cache → v2 ──────────────────────────
+  const isOldFormat = (affiliateData?.products?.length ?? 0) > 0 &&
+    affiliateData?.data_source !== 'ai_product_types'
+  useEffect(() => {
+    if (!isOldFormat || !userId) return
+    const upgrade = async () => {
+      setGenerating(true)
+      try {
+        const res = await fetch('/api/affiliate/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, force: false }),
+        })
+        const json = await res.json().catch(() => ({}))
+        if (json.data?.products?.length > 0) {
+          setLocalData(json.data)  // แสดงผลทันที
+        }
+        if (json.success && !json.cached) {
+          setLastRefreshed(new Date())
+          Promise.resolve(onRefresh()).catch(() => {})
+        }
+      } catch (_) {
+        // Silently ignore — show old data as fallback
+      } finally {
+        setGenerating(false)
+      }
+    }
+    upgrade()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOldFormat, userId])
 
   function timeAgo(date: Date): string {
     const diff = Math.floor((Date.now() - date.getTime()) / 1000)
@@ -486,23 +575,48 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
     return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`
   }
 
-  const generate = async () => {
+  const generate = async (forceOverride = false) => {
     const isDev = process.env.NODE_ENV === 'development'
-    if (!userId || (refreshedToday && !isDev)) return
+    const hasProducts = (displayData?.products?.length ?? 0) > 0
+    // อนุญาตให้ generate เสมอถ้ายังไม่มีสินค้า
+    if (!userId || (refreshedToday && hasProducts && !isDev && !forceOverride)) return
     setGenerating(true)
     setGenError(null)
     try {
       const res = await fetch('/api/affiliate/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, force: true, dev: process.env.NODE_ENV === 'development' }),
+        body: JSON.stringify({ userId, force: hasProducts, dev: isDev }),
       })
       const json = await res.json().catch(() => ({}))
       if (json.rateLimited) { setRefreshedToday(true); return }
       if (!res.ok) throw new Error(json.error ?? `API error ${res.status}`)
+
+      // ถ้า API คืน cached ที่ว่างเปล่า → force regenerate ทันที
+      if (json.cached && !(json.data?.products?.length > 0)) {
+        const res2 = await fetch('/api/affiliate/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, force: true, dev: isDev }),
+        })
+        const json2 = await res2.json().catch(() => ({}))
+        if (json2.data?.products?.length > 0) setLocalData(json2.data)
+        setLastRefreshed(new Date())
+        Promise.resolve(onRefresh()).catch(() => {})
+        return
+      }
+
+      // ใช้ข้อมูลจาก API response ทันที — ไม่รอ Supabase read
+      if (json.data?.products?.length > 0) {
+        setLocalData(json.data)
+      } else if (!json.data?.products?.length) {
+        setGenError('AI ไม่สามารถสร้างสินค้าได้ ลองใหม่อีกครั้งค่ะ')
+        return
+      }
       setLastRefreshed(new Date())
-      setRefreshedToday(true)
-      await onRefresh()
+      if (hasProducts) setRefreshedToday(true)
+      // sync กลับไป parent ใน background
+      Promise.resolve(onRefresh()).catch(() => {})
     } catch (err) {
       setGenError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด ลองใหม่อีกครั้งค่ะ')
     } finally {
@@ -510,15 +624,19 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
     }
   }
 
-  // Involve Asia product shape
-  const products = affiliateData?.products as Array<{
-    id: string; name: string; brand: string; image_url: string;
-    price: number; commission_rate: number; commission_thb: number;
-    product_url: string; merchant_name: string; platform: string;
-    category: string; category_th: string; why_fits: string; content_idea: string; rank: number;
+  // v2 AI product types shape — ใช้ displayData (localData ?? affiliateData)
+  const products = displayData?.products as Array<{
+    id: string; name_th: string; name_en: string; name_display: string;
+    category_th: string;
+    price_min: number; price_max: number; price_display: string;
+    commission_rate: number; commission_thb: number;
+    why_fits: string; content_idea: string; rank: number;
+    shopee_search: string; lazada_search: string;
+    shopee_aff_url: string; lazada_aff_url: string;
   }> | null
 
-  const isRealData = affiliateData?.data_source === 'involve_asia'
+  const isAiProductTypes = displayData?.data_source === 'ai_product_types'
+  const isRealData = isAiProductTypes
 
   if (!products || products.length === 0) {
     return (
@@ -537,7 +655,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
           </p>
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={generate}
+            onClick={() => generate()}
             disabled={generating || !userId}
             style={{
               padding: '13px 28px',
@@ -562,27 +680,38 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
     )
   }
 
-  const earnPerMonth = affiliateData.total_monthly_min ?? 0
-  const earnMax = affiliateData.total_monthly_max ?? 0
+  // คำนวณรายได้ประมาณการ — ถ้า cache เก่าไม่มีข้อมูลให้คำนวณใหม่
+  const nicheKey = displayData?.based_on_niche ?? niche ?? 'general'
+  const baseRate = lookupCommission(nicheKey)
+  const computedMonthly = (products ?? []).reduce((sum: number, p: any) => {
+    const rate = p.commission_rate > 0 ? p.commission_rate : baseRate
+    const priceAvg = ((p.price_min ?? 200) + (p.price_max ?? 800)) / 2
+    const commThb = p.commission_thb > 0 ? p.commission_thb : calcCommThb(priceAvg, rate)
+    return sum + commThb * 0.3  // ประมาณ 0.3 ชิ้น/เดือน/สินค้า (conservative)
+  }, 0)
+  const earnPerMonth = (displayData?.total_monthly_min ?? 0) > 0
+    ? displayData.total_monthly_min
+    : Math.round(computedMonthly * 0.5)
+  const earnMax = (displayData?.total_monthly_max ?? 0) > 0
+    ? displayData.total_monthly_max
+    : Math.round(computedMonthly * 2)
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      {/* ── Accuracy warning (ถ้าเป็น mock data ยังไม่เชื่อมช่อง) ── */}
-      {!isRealData && (
-        <motion.div
-          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-          style={{
-            marginBottom: '12px', padding: '10px 14px', borderRadius: '12px',
-            background: 'rgba(255,159,28,0.07)', border: '1px solid rgba(255,159,28,0.25)',
-            display: 'flex', alignItems: 'center', gap: '8px',
-          }}
-        >
-          <span style={{ fontSize: '15px', flexShrink: 0 }}>⚠️</span>
-          <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,159,28,0.9)', lineHeight: 1.5 }}>
-            ข้อมูลนี้ยังไม่ได้ผ่านการวิเคราะห์ช่องจริง — <strong>เชื่อมช่อง</strong>เพื่อเพิ่มความแม่นยำเป็น 85%
-          </p>
-        </motion.div>
-      )}
+      {/* ── How-to note — always show for product types ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+        style={{
+          marginBottom: '12px', padding: '10px 14px', borderRadius: '12px',
+          background: 'rgba(123,97,255,0.07)', border: '1px solid rgba(123,97,255,0.2)',
+          display: 'flex', alignItems: 'center', gap: '8px',
+        }}
+      >
+        <span style={{ fontSize: '15px', flexShrink: 0 }}>🛍️</span>
+        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(200,185,255,0.9)', lineHeight: 1.5 }}>
+          MITA+ เลือก<strong>ประเภทสินค้า</strong>ที่เหมาะกับช่องคุณ — กดปุ่มค้นหาแล้วสร้าง affiliate link ของตัวเองได้เลยค่ะ
+        </p>
+      </motion.div>
 
       {/* Summary banner */}
       <div style={{
@@ -593,8 +722,8 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
       }}>
         <div>
           <p style={{ margin: '0 0 2px', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-            MITA+ คัด {products.length} สินค้าสำหรับคุณโดยเฉพาะ
-            {isRealData && <span style={{ marginLeft: 6, color: '#22C55E', fontWeight: 700 }}>● สินค้าจริง</span>}
+            MITA+ คัด {products.length} ประเภทสินค้าตาม niche ของคุณ
+            {isAiProductTypes && <span style={{ marginLeft: 6, color: '#22C55E', fontWeight: 700 }}>● AI วิเคราะห์แล้ว</span>}
           </p>
           <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#22C55E' }}>
             ฿{fmt(earnPerMonth)} – ฿{fmt(earnMax)}/เดือน
@@ -613,7 +742,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
           ) : (
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={generate}
+              onClick={() => generate()}
               disabled={generating}
               style={{
                 display: 'flex', alignItems: 'center', gap: '5px',
@@ -629,7 +758,7 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
         </div>
       </div>
 
-      {affiliateData.tip && (
+      {displayData?.tip && (
         <div style={{
           padding: '10px 14px', marginBottom: '14px',
           background: 'rgba(255,159,28,0.07)', border: '1px solid rgba(255,159,28,0.2)',
@@ -637,121 +766,190 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
         }}>
           <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
             <span style={{ color: '#FF9F1C', fontWeight: 700 }}>💡 เคล็ดลับ: </span>
-            {affiliateData.tip}
+            {displayData.tip}
           </p>
         </div>
       )}
 
-      {/* Product cards */}
-      {products.map((p, i) => (
-        <motion.div
-          key={p.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.06 }}
-          style={{ ...CARD.base, padding: '14px', marginBottom: '8px' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-            {/* Rank badge + product image */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <ProductImage imageUrl={p.image_url} category={p.category ?? ''} categoryTh={p.category_th} name={p.name} />
+      {/* Product cards — v2 AI product types */}
+      {products.map((p, i) => {
+        const anyP = p as any
+        // Support both v2 (name_th/name_en) and old cache (name)
+        const nameTh = p.name_th || anyP.name_display?.split(' / ')?.[0] || anyP.name || ''
+        const nameEn = p.name_en || anyP.name_display?.split(' / ')?.[1] || ''
+        const catTh  = p.category_th || anyP.category || ''
+        const rate   = p.commission_rate > 0 ? p.commission_rate : baseRate
+        const priceAvg = p.price_min != null
+          ? ((p.price_min) + (p.price_max ?? p.price_min * 2)) / 2
+          : anyP.price ?? 500
+        const commThb = p.commission_thb > 0 ? p.commission_thb : calcCommThb(priceAvg, rate)
+        const priceLabel = p.price_display ||
+          (p.price_min != null
+            ? `฿${p.price_min.toLocaleString('th-TH')} – ฿${(p.price_max ?? 0).toLocaleString('th-TH')}`
+            : anyP.price ? `฿${anyP.price.toLocaleString('th-TH')}` : '')
+        return (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.06 }}
+            style={{ ...CARD.base, padding: '14px', marginBottom: '8px' }}
+          >
+            {/* Header row: rank + name */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
+              {/* Rank badge */}
               <span style={{
-                position: 'absolute', top: -5, left: -5,
-                width: '18px', height: '18px', borderRadius: '99px',
-                background: '#7B61FF', fontSize: '10px', fontWeight: 900, color: '#fff',
+                flexShrink: 0, width: '24px', height: '24px', borderRadius: '99px',
+                background: 'linear-gradient(135deg, #7B61FF, #22C55E)',
+                fontSize: '11px', fontWeight: 900, color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginTop: '1px',
               }}>
-                {p.rank}
+                {p.rank || i + 1}
               </span>
-            </div>
 
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Name + platform badge */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px', flexWrap: 'wrap' }}>
-                <p style={{ margin: 0, fontWeight: 700, color: '#fff', fontSize: '13px', lineHeight: 1.3 }}>{p.name}</p>
-                {/* Shopee-colored badge if Shopee platform */}
-                {(() => {
-                  const label = p.merchant_name || p.platform || ''
-                  const isShopee = label.toLowerCase().includes('shopee')
-                  const isLazada = label.toLowerCase().includes('lazada')
-                  const isTikTok = label.toLowerCase().includes('tiktok')
-                  const bg = isShopee ? 'rgba(255,87,34,0.15)' : isLazada ? 'rgba(0,105,255,0.12)' : isTikTok ? 'rgba(255,0,80,0.12)' : 'rgba(255,255,255,0.06)'
-                  const clr = isShopee ? '#FF6B3D' : isLazada ? '#0066FF' : isTikTok ? '#FF2D55' : 'rgba(255,255,255,0.35)'
-                  return (
-                    <span style={{ fontSize: '9px', color: clr, background: bg, padding: '1px 6px', borderRadius: '99px', flexShrink: 0, fontWeight: 700 }}>
-                      {isShopee ? '🟠 ' : isLazada ? '🔵 ' : isTikTok ? '🎵 ' : ''}{label}
-                    </span>
-                  )
-                })()}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Thai name */}
+                <p style={{ margin: '0 0 1px', fontWeight: 800, color: '#fff', fontSize: '14px', lineHeight: 1.3 }}>
+                  {nameTh || '—'}
+                </p>
+                {/* English name */}
+                {nameEn ? (
+                  <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                    {nameEn}
+                  </p>
+                ) : null}
               </div>
 
-              {/* Price + commission */}
-              <p style={{ margin: '0 0 5px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
-                ฿{p.price.toLocaleString('th-TH')}
-                <span style={{ marginLeft: 6, color: '#22C55E', fontWeight: 700 }}>
-                  · ได้ ฿{p.commission_thb}/ชิ้น ({p.commission_rate}%)
+              {/* Category badge */}
+              {catTh && (
+                <span style={{
+                  flexShrink: 0, fontSize: '9px', color: 'rgba(255,255,255,0.45)',
+                  background: 'rgba(255,255,255,0.07)', padding: '2px 7px',
+                  borderRadius: '99px', fontWeight: 600,
+                }}>
+                  {catTh}
                 </span>
-              </p>
-
-              {/* Why fits */}
-              {p.why_fits && (
-                <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
-                  🎯 {p.why_fits}
-                </p>
-              )}
-
-              {/* Content idea */}
-              {p.content_idea && (
-                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(123,97,255,0.8)', lineHeight: 1.5, fontStyle: 'italic' }}>
-                  💡 {p.content_idea}
-                </p>
               )}
             </div>
-          </div>
 
-          {/* CTA: ดูสินค้า */}
-          {p.product_url && (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => window.open(p.product_url, '_blank', 'noopener,noreferrer')}
-              style={{
-                width: '100%', marginTop: '12px', padding: '10px',
-                background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)',
-                borderRadius: '10px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                color: '#22C55E', fontSize: '12px', fontWeight: 700,
-              }}
-            >
-              ดูสินค้า → {p.merchant_name || p.platform}
-            </motion.button>
-          )}
-        </motion.div>
-      ))}
+            {/* Price + commission row */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '8px 10px', marginBottom: '8px',
+              background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)',
+              borderRadius: '10px',
+            }}>
+              <div>
+                <p style={{ margin: '0 0 1px', fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>ช่วงราคา</p>
+                <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>
+                  {priceLabel || '—'}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ margin: '0 0 1px', fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>ได้รับต่อชิ้น</p>
+                <p style={{ margin: 0, fontSize: '13px', fontWeight: 900, color: '#22C55E' }}>
+                  ~฿{commThb} <span style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(34,197,94,0.7)' }}>({rate}%)</span>
+                </p>
+              </div>
+            </div>
 
-      {/* Shopee Affiliate guide */}
+            {/* Why fits */}
+            {p.why_fits && (
+              <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                🎯 {p.why_fits}
+              </p>
+            )}
+
+            {/* Content idea */}
+            {p.content_idea && (
+              <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'rgba(123,97,255,0.8)', lineHeight: 1.5, fontStyle: 'italic' }}>
+                💡 {p.content_idea}
+              </p>
+            )}
+
+            {/* CTA: Search buttons — fallback to keyword search if no stored URL */}
+            {(() => {
+              const kw = encodeURIComponent(nameEn || nameTh || '')
+              const shopeeUrl = p.shopee_search || anyP.product_url || (kw ? `https://shopee.co.th/search?keyword=${kw}` : '')
+              const lazadaUrl = p.lazada_search || (kw ? `https://www.lazada.co.th/catalog/?q=${kw}` : '')
+              return (
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {shopeeUrl && (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => window.open(shopeeUrl, '_blank', 'noopener,noreferrer')}
+                  style={{
+                    flex: 1, padding: '9px 6px',
+                    background: 'rgba(255,87,34,0.1)', border: '1px solid rgba(255,87,34,0.25)',
+                    borderRadius: '9px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    color: '#FF6B3D', fontSize: '11px', fontWeight: 700,
+                  }}
+                >
+                  🟠 ค้นหาใน Shopee
+                </motion.button>
+              )}
+              {lazadaUrl && (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => window.open(lazadaUrl, '_blank', 'noopener,noreferrer')}
+                  style={{
+                    flex: 1, padding: '9px 6px',
+                    background: 'rgba(0,105,255,0.08)', border: '1px solid rgba(0,105,255,0.2)',
+                    borderRadius: '9px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    color: '#4D8EFF', fontSize: '11px', fontWeight: 700,
+                  }}
+                >
+                  🔵 ค้นหาใน Lazada
+                </motion.button>
+              )}
+            </div>
+              )
+            })()}
+          </motion.div>
+        )
+      })}
+
+      {/* Affiliate Signup Guide */}
       <div style={{
         marginTop: '12px', padding: '14px',
         background: 'rgba(255,159,28,0.06)', border: '1px solid rgba(255,159,28,0.2)',
         borderRadius: RADIUS.card,
       }}>
-        <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, color: '#FF9F1C' }}>
-          💰 รับ commission โดยตรงจาก Shopee
+        <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 700, color: '#FF9F1C' }}>
+          💰 วิธีรับเงิน — สมัคร Affiliate ก่อน
         </p>
         <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-          สมัคร Shopee Affiliate → สร้าง tracking link ของตัวเอง → เงินเข้าบัญชีคุณตรงๆ ไม่ผ่านใคร
+          1) สมัคร Shopee/Lazada Affiliate  2) ค้นหาสินค้าด้านบน  3) สร้าง link ของตัวเอง  4) เงินเข้าตรงไม่ผ่านใคร
         </p>
-        <a
-          href="https://affiliate.shopee.co.th"
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            display: 'block', textAlign: 'center', padding: '9px',
-            background: '#FF9F1C', color: '#fff', borderRadius: '9px',
-            fontSize: '12px', fontWeight: 700, textDecoration: 'none',
-          }}
-        >
-          สมัคร Shopee Affiliate →
-        </a>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <a
+            href="https://affiliate.shopee.co.th"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              flex: 1, display: 'block', textAlign: 'center', padding: '9px',
+              background: '#FF5722', color: '#fff', borderRadius: '9px',
+              fontSize: '11px', fontWeight: 700, textDecoration: 'none',
+            }}
+          >
+            🟠 Shopee Affiliate
+          </a>
+          <a
+            href="https://affiliate.lazada.co.th"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              flex: 1, display: 'block', textAlign: 'center', padding: '9px',
+              background: '#0066FF', color: '#fff', borderRadius: '9px',
+              fontSize: '11px', fontWeight: 700, textDecoration: 'none',
+            }}
+          >
+            🔵 Lazada Affiliate
+          </a>
+        </div>
       </div>
 
       <div style={{
@@ -760,9 +958,147 @@ function ProductsTab({ affiliateData, userId, niche, onRefresh }: { affiliateDat
         borderRadius: RADIUS.card, textAlign: 'center',
       }}>
         <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>
-          🔄 MITA+ อัพเดทสินค้าให้อัตโนมัติทุกสัปดาห์ตามแนวช่องของคุณค่ะ
+          🔄 MITA+ อัพเดทประเภทสินค้าให้ทุกวันตาม niche ของคุณค่ะ
         </p>
       </div>
+
+      {/* ── Involve Asia Premium Programs ─────────────────── */}
+      <div style={{ marginTop: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+          <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>
+            โปรแกรม Affiliate พรีเมียม
+          </p>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+        </div>
+        <p style={{ margin: '0 0 12px', fontSize: '11px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
+          แบรนด์จริงในไทย — สมัครฟรีที่ Involve Asia แล้วได้ link ตัวเองมาแชร์ได้เลย commission เข้าคุณโดยตรงค่ะ
+        </p>
+
+        {iaLoading && (
+          <div style={{ textAlign: 'center', padding: '20px 0', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
+            <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', display: 'inline-block', marginRight: '6px' }} />
+            กำลังโหลด...
+          </div>
+        )}
+
+        {!iaLoading && iaError && (
+          <div style={{
+            padding: '12px', borderRadius: '12px', textAlign: 'center',
+            background: 'rgba(255,107,107,0.07)', border: '1px solid rgba(255,107,107,0.2)',
+          }}>
+            <p style={{ margin: 0, fontSize: '11px', color: '#FF6B6B' }}>⚠️ {iaError}</p>
+          </div>
+        )}
+
+        {!iaLoading && !iaError && (
+          <>
+            {/* Matched offers first */}
+            {iaOffers.filter(o => o.is_match).length > 0 && (
+              <div style={{ marginBottom: '8px' }}>
+                <p style={{ margin: '0 0 8px', fontSize: '10px', color: '#7B61FF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ⭐ ตรง niche ของคุณ
+                </p>
+                {iaOffers.filter(o => o.is_match).map(offer => (
+                  <IAOfferCard key={offer.offer_id} offer={offer} />
+                ))}
+              </div>
+            )}
+
+            {/* Other offers */}
+            {iaOffers.filter(o => !o.is_match).length > 0 && (
+              <div>
+                {iaOffers.filter(o => o.is_match).length > 0 && (
+                  <p style={{ margin: '12px 0 8px', fontSize: '10px', color: 'rgba(255,255,255,0.25)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    โปรแกรมอื่นๆ
+                  </p>
+                )}
+                {iaOffers.filter(o => !o.is_match).map(offer => (
+                  <IAOfferCard key={offer.offer_id} offer={offer} />
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)' }}>
+              <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
+                💡 สมัครฟรีที่ Involve Asia → รับ affiliate link ของตัวเองมา → แชร์ใน bio/คลิป → commission เข้าคุณตรงค่ะ ไม่ผ่านใคร
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Involve Asia Offer Card ───────────────────────────────
+function IAOfferCard({ offer }: { offer: IAOffer }) {
+  const handleJoin = () => {
+    const url = offer.directory_page || `https://app.involve.asia/publisher/offers`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        ...CARD.base,
+        padding: '12px 14px',
+        marginBottom: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+      }}
+    >
+      {/* Logo */}
+      <div style={{
+        width: '44px', height: '44px', borderRadius: '10px',
+        background: 'rgba(255,255,255,0.06)',
+        flexShrink: 0, overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {offer.logo ? (
+          <img src={offer.logo} alt={offer.offer_name}
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+        ) : (
+          <span style={{ fontSize: '20px' }}>🛍️</span>
+        )}
+      </div>
+
+      {/* Info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <p style={{ margin: 0, fontWeight: 700, color: '#fff', fontSize: '13px' }}>{offer.offer_name}</p>
+          {offer.requires_approval && (
+            <span style={{ fontSize: '9px', color: 'rgba(255,159,28,0.8)', background: 'rgba(255,159,28,0.1)', padding: '1px 6px', borderRadius: '99px', fontWeight: 600 }}>
+              ต้องขออนุมัติ
+            </span>
+          )}
+        </div>
+        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+          {offer.category_th}
+          <span style={{ marginLeft: 8, color: '#22C55E', fontWeight: 700 }}>{offer.commission}</span>
+        </p>
+      </div>
+
+      {/* CTA → ไปสมัครที่ Involve Asia ตรง */}
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={handleJoin}
+        style={{
+          flexShrink: 0, padding: '8px 12px',
+          background: 'rgba(123,97,255,0.15)',
+          border: '1px solid rgba(123,97,255,0.3)',
+          borderRadius: '9px', color: '#7B61FF',
+          fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        ไปสมัคร →
+      </motion.button>
     </motion.div>
   )
 }
@@ -2371,7 +2707,7 @@ export default function StarterPage() {
                   <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '16px', padding: '20px 24px', textAlign: 'center', backdropFilter: 'blur(8px)', position: 'relative', zIndex: 3 }}>
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🛍️</div>
                     <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 900, color: '#fff' }}>สินค้า MITA+ คัด 10 ชิ้น</p>
-                    <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>Creator แนวนี้ทำ ฿2,400–฿8,000/เดือน</p>
+                    <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#22C55E', fontWeight: 700 }}>ศักยภาพ ฿2,400–฿8,000/เดือน (benchmark)</p>
                     <p style={{ margin: '0 0 16px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>ทำ Audit เพื่อให้ MITA+ เลือกสินค้า<br/>ที่ตรงกับช่องของคุณจริงๆ</p>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/audit')} style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #22C55E, #7B61FF)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 4 }}>
                       ทำ Audit เพื่อ unlock →

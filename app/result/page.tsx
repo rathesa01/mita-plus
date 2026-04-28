@@ -105,6 +105,9 @@ function UpgradeGate({ lockedCount, lockedLossTotal, variant = 'leaks' }: {
           <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.30)', marginBottom: '16px' }}>
             = -฿{Math.round(lockedLossTotal * 12).toLocaleString('th-TH')}/ปี
           </p>
+          <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.20)', marginBottom: '8px', lineHeight: 1.5 }}>
+            * ประมาณการจาก benchmark อุตสาหกรรม · ผลจริงขึ้นอยู่กับ creator แต่ละคน
+          </p>
         </>
       ) : (
         <>
@@ -798,7 +801,7 @@ function ResultPageInner() {
         <SectionLabel n="①" label="รายได้ที่หลุดมือทุกวัน" />
         <MoneyHero
           perMonth={displayLeakTotal}
-          label="รายได้ที่คุณเพิ่มได้ ถ้าทำตามแผนนี้"
+          label="ศักยภาพรายได้ตาม benchmark (ประมาณการ)"
           type="gain"
         />
 

@@ -39,6 +39,9 @@ export function MoneyHero({ perMonth, label = 'รายได้ที่คุ
       <p style={{ color: 'rgba(255,255,255,0.40)', fontSize: '13px' }}>
         /เดือน = <span style={{ color, fontWeight: 700 }}>+฿{fmt(perMonth * 12)}/ปี</span>
       </p>
+      <p style={{ color: 'rgba(255,255,255,0.18)', fontSize: '10px', marginTop: '8px', lineHeight: 1.5 }}>
+        ประมาณการจาก benchmark อุตสาหกรรม · ผลจริงขึ้นอยู่กับ creator แต่ละคน
+      </p>
     </motion.div>
   )
 }
