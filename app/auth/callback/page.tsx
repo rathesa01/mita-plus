@@ -42,8 +42,10 @@ function CallbackInner() {
     }
 
     // ── PKCE: Supabase SDK จัดการ code exchange อัตโนมัติผ่าน onAuthStateChange ──
+    // FIX: handle INITIAL_SESSION ด้วย — ถ้า exchange เสร็จก่อน subscribe SDK จะ fire
+    // INITIAL_SESSION (ไม่ใช่ SIGNED_IN) → ต้อง handle ทั้ง 2 event
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         await redirectByPlan(supabase, session.user.id, router.replace)
       } else if (event === 'SIGNED_OUT') {
         setStatus('error')
