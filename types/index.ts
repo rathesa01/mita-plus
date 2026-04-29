@@ -203,6 +203,34 @@ export interface PricingRecommendation {
   valueProposition: string
 }
 
+// ── DASHBOARD V2 (P-010) ─────────────────────────────────
+export type DashboardTab = 'plan' | 'products' | 'clips' | 'milestones'
+
+export interface WeekPlan {
+  week:       number
+  theme:      string
+  target_thb: number
+  actions:    string[]
+}
+
+export interface DashboardV2Props {
+  user: {
+    name:         string
+    score:        number
+    dayInJourney: number
+  }
+  plan:        { roadmap: WeekPlan[] } | null
+  currentWeek: number
+  checkins:    Array<{ income_approx: number }>
+  coachReply:  string | null
+  hasAudit:    boolean
+  hasChannel:  boolean
+  audit:       AuditResult | null
+  activeTab:   DashboardTab
+  onCheckIn:   () => void
+  onTabChange: (tab: DashboardTab) => void
+}
+
 // ── FULL RESULT ───────────────────────────────
 export interface AuditResult {
   id: string
