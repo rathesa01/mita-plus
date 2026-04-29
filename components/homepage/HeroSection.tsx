@@ -125,10 +125,6 @@ export function HomepageHero() {
               <TrustSignals />
             </motion.div>
 
-            {/* Stats — desktop only (below trust signals) */}
-            <motion.div variants={item} className="hidden lg:block" style={{ marginTop: '4px' }}>
-              <StatsRow stats={STATS} />
-            </motion.div>
           </motion.div>
 
           {/* ── RIGHT / IMAGE ─── */}
@@ -137,8 +133,8 @@ export function HomepageHero() {
           </div>
         </div>
 
-        {/* Stats — mobile only (below image) */}
-        <div className="lg:hidden">
+        {/* Stats — single row below grid, always visible (no duplicate) */}
+        <div style={{ marginTop: '8px' }}>
           <StatsRow stats={STATS} />
         </div>
 

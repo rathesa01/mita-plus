@@ -59,7 +59,7 @@ export function TopNav() {
           >
             <Link href="#how-it-works" style={linkStyle}>how it works</Link>
             <Link href="/pricing" style={linkStyle}>pricing</Link>
-            <Link href="/login" style={linkStyle}>login</Link>
+            <Link href="/login" style={linkStyle}>เข้าสู่ระบบ</Link>
 
             <Link
               href="/audit"
@@ -76,11 +76,11 @@ export function TopNav() {
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.82')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
-              start free
+              เริ่มฟรี
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger — className controls visibility, NO display in inline style */}
           <button
             type="button"
             className="flex md:hidden"
@@ -91,7 +91,6 @@ export function TopNav() {
               border: 'none',
               cursor: 'pointer',
               padding: '8px',
-              display: 'flex',
               flexDirection: 'column',
               gap: '4px',
             }}
@@ -134,7 +133,7 @@ export function TopNav() {
           {[
             { href: '#how-it-works', label: 'how it works' },
             { href: '/pricing',      label: 'pricing' },
-            { href: '/login',        label: 'login' },
+            { href: '/login',        label: 'เข้าสู่ระบบ' },
           ].map(({ href, label }) => (
             <Link
               key={href}
@@ -160,7 +159,7 @@ export function TopNav() {
               textAlign: 'center',
             }}
           >
-            start free →
+            เริ่มฟรี →
           </Link>
         </div>
       )}

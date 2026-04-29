@@ -52,23 +52,22 @@ export default function LandingPage() {
   return (
     <main className="overflow-x-hidden min-h-screen">
 
-      {/* ══ LIGHT HERO ZONE ══════════════════════════════════════════════════ */}
+      {/* ══ LIGHT HERO ZONE + TRANSITION (cream wrapper) ════════════════════ */}
       <div style={{ background: '#FFFAF5' }}>
         <TopNav />
         <HomepageHero />
+        {/* Transition gradient — inside cream wrapper เพื่อไม่ให้มี dark gap */}
+        <div
+          aria-hidden="true"
+          style={{
+            height: '80px',
+            display: 'block',
+            background: 'linear-gradient(180deg, #FFFAF5 0%, #08080f 100%)',
+          }}
+        />
       </div>
 
-      {/* ══ TRANSITION GRADIENT (cream → dark) ══════════════════════════════ */}
-      <div
-        aria-hidden="true"
-        style={{
-          height: '80px',
-          flexShrink: 0,
-          background: 'linear-gradient(180deg, #FFFAF5 0%, #08080f 100%)',
-        }}
-      />
-
-      {/* ══ DARK SECTIONS (unchanged — remark: P-007 will update these) ════ */}
+      {/* ══ DARK SECTIONS (remark: P-007 will redesign these) ══════════════ */}
       <div className="bg-[#08080f] text-white">
 
         {/* ── HOW IT WORKS ─────────────────────────── */}
