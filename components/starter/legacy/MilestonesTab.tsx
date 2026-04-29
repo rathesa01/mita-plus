@@ -11,7 +11,7 @@ function fmt(n: number): string { return n.toLocaleString('th-TH') }
 
 // ── CircleProgress ─────────────────────────────────────────────────────────────
 export function CircleProgress({
-  pct, size = 120, strokeWidth = 10, color = '#7B61FF', label, subLabel,
+  pct, size = 120, strokeWidth = 10, color = '#7F77DD', label, subLabel,
 }: {
   pct: number; size?: number; strokeWidth?: number; color?: string; label: string; subLabel: string
 }) {
@@ -55,8 +55,8 @@ export function StreakCalendar({ streak }: { streak: number }) {
             <span style={{ fontSize: '9px', color: isToday ? '#fff' : 'rgba(255,255,255,0.3)', fontWeight: isToday ? 700 : 400 }}>{d}</span>
             <div style={{
               width: '28px', height: '28px', borderRadius: '8px',
-              background: isToday ? 'linear-gradient(135deg, #7B61FF, #3ECFFF)' : isActive ? 'rgba(123,97,255,0.35)' : 'rgba(255,255,255,0.05)',
-              border: isToday ? '2px solid rgba(123,97,255,0.7)' : isActive ? '1px solid rgba(123,97,255,0.3)' : '1px solid rgba(255,255,255,0.07)',
+              background: isToday ? 'linear-gradient(135deg, #7F77DD, #D85A30)' : isActive ? 'rgba(127,119,221,0.35)' : 'rgba(255,255,255,0.05)',
+              border: isToday ? '2px solid rgba(127,119,221,0.7)' : isActive ? '1px solid rgba(127,119,221,0.3)' : '1px solid rgba(255,255,255,0.07)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {isActive && <span style={{ fontSize: '12px' }}>{isToday ? '⚡' : '✓'}</span>}
@@ -98,13 +98,13 @@ export default function MilestonesTab({
       {/* Circular Progress Hero */}
       <motion.div
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        style={{ padding: '20px 18px', marginBottom: '14px', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(62,207,255,0.06))', border: '1px solid rgba(123,97,255,0.25)', display: 'flex', alignItems: 'center', gap: '16px' }}
+        style={{ padding: '20px 18px', marginBottom: '14px', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(127,119,221,0.12), rgba(216,90,48,0.06))', border: '1px solid rgba(127,119,221,0.25)', display: 'flex', alignItems: 'center', gap: '16px' }}
       >
         <CircleProgress
           pct={progressPct}
           size={110}
           strokeWidth={9}
-          color={progressPct >= 100 ? '#22C55E' : '#7B61FF'}
+          color={progressPct >= 100 ? '#22C55E' : '#7F77DD'}
           label={`฿${currentEarned >= 1000 ? (currentEarned / 1000).toFixed(1) + 'K' : Math.round(currentEarned).toLocaleString()}`}
           subLabel={`/ ฿${targetIncome >= 1000 ? (targetIncome / 1000).toFixed(0) + 'K' : targetIncome}`}
         />
@@ -124,7 +124,7 @@ export default function MilestonesTab({
       {/* 7-Day Streak Calendar */}
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        style={{ padding: '14px 16px', marginBottom: '14px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+        style={{ padding: '14px 16px', marginBottom: '14px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(127,119,221,0.12)' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#fff' }}>📅 7 วันนี้</p>
@@ -168,7 +168,7 @@ export default function MilestonesTab({
                 </p>
               </div>
               {!m.done && (
-                <span style={{ fontSize: '10px', color: 'rgba(123,97,255,0.7)', background: 'rgba(123,97,255,0.1)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700, flexShrink: 0 }}>
+                <span style={{ fontSize: '10px', color: 'rgba(127,119,221,0.7)', background: 'rgba(127,119,221,0.1)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700, flexShrink: 0 }}>
                   {Math.round(pct)}%
                 </span>
               )}
@@ -179,7 +179,7 @@ export default function MilestonesTab({
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
                   transition={{ duration: 1, delay: i * 0.1 }}
-                  style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #7B61FF, #3ECFFF)' }}
+                  style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #7F77DD, #D85A30)' }}
                 />
               </div>
             )}
@@ -190,12 +190,12 @@ export default function MilestonesTab({
       {/* MITA+ Coach Card */}
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-        style={{ marginTop: '6px', padding: '16px', background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(62,207,255,0.06))', border: '1px solid rgba(123,97,255,0.2)', borderRadius: RADIUS.card }}
+        style={{ marginTop: '6px', padding: '16px', background: 'linear-gradient(135deg, rgba(127,119,221,0.12), rgba(216,90,48,0.06))', border: '1px solid rgba(127,119,221,0.2)', borderRadius: RADIUS.card }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🤖</div>
+          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7F77DD, #D85A30)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🤖</div>
           <div>
-            <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#a78bfa' }}>MITA+ Coach</p>
+            <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#7F77DD' }}>MITA+ Coach</p>
             <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>ส่วนตัวสำหรับ {displayName} ค่ะ</p>
           </div>
         </div>

@@ -74,7 +74,7 @@ export default function ContentExampleTab({
   if (loading) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '48px 0' }}>
-        <Loader2 size={28} style={{ color: '#7B61FF', animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
+        <Loader2 size={28} style={{ color: '#7F77DD', animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
         <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
           MITA+ กำลังหาคลิปตัวอย่างและเขียน script...
         </p>
@@ -92,7 +92,7 @@ export default function ContentExampleTab({
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => generate(false)}
-          style={{ padding: '10px 24px', background: '#7B61FF', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '10px 24px', background: '#7F77DD', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
         >
           ลองใหม่
         </motion.button>
@@ -110,7 +110,7 @@ export default function ContentExampleTab({
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', textAlign: 'left' }}>
           {['🔍 ค้นหาคลิปดังในแนวช่องของคุณ', '✍️ MITA+ เขียน Hook + Script + CTA', '⏰ บอกเวลาที่ควรโพสต์', '🛍️ แนะนำสินค้าที่โปรโมตในคลิป'].map((t, i) => (
-            <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
+            <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: '10px' }}>
               <span style={{ fontSize: '13px' }}>{t}</span>
             </div>
           ))}
@@ -119,7 +119,7 @@ export default function ContentExampleTab({
           whileTap={{ scale: 0.97 }}
           onClick={() => generate(false)}
           disabled={!userId}
-          style={{ width: '100%', padding: '14px', border: 'none', borderRadius: '12px', cursor: userId ? 'pointer' : 'not-allowed', background: userId ? 'linear-gradient(135deg, #7B61FF, #3ECFFF)' : 'rgba(255,255,255,0.06)', color: userId ? '#fff' : 'rgba(255,255,255,0.3)', fontSize: '14px', fontWeight: 800 }}
+          style={{ width: '100%', padding: '14px', border: 'none', borderRadius: '12px', cursor: userId ? 'pointer' : 'not-allowed', background: userId ? 'linear-gradient(135deg, #7F77DD, #D85A30)' : 'rgba(255,255,255,0.06)', color: userId ? '#fff' : 'rgba(255,255,255,0.3)', fontSize: '14px', fontWeight: 800 }}
         >
           {userId ? '✨ สร้างคลิปตัวอย่างของฉัน' : 'กรุณา Login ก่อนค่ะ'}
         </motion.button>
@@ -139,14 +139,14 @@ export default function ContentExampleTab({
           <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>MITA+ คัด 10 คลิปสำหรับคุณโดยเฉพาะ</p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-          {lastRefreshed && !refreshedToday && <p style={{ margin: 0, fontSize: '9px', color: 'rgba(62,207,255,0.8)', fontWeight: 600 }}>✨ อัปเดต{timeAgo(lastRefreshed)}</p>}
+          {lastRefreshed && !refreshedToday && <p style={{ margin: 0, fontSize: '9px', color: 'rgba(127,119,221,0.8)', fontWeight: 600 }}>✨ อัปเดต{timeAgo(lastRefreshed)}</p>}
           {refreshedToday
             ? <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.3)', textAlign: 'right', lineHeight: 1.4 }}>🔒 รีเฟรชแล้ววันนี้<br />มาใหม่พรุ่งนี้ค่ะ</p>
             : (
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => generate(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', background: loading ? 'rgba(62,207,255,0.1)' : 'rgba(255,255,255,0.06)', border: `1px solid ${loading ? 'rgba(62,207,255,0.3)' : 'rgba(255,255,255,0.1)'}`, color: loading ? '#3ECFFF' : 'rgba(255,255,255,0.5)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', background: loading ? 'rgba(127,119,221,0.1)' : 'rgba(255,255,255,0.06)', border: `1px solid ${loading ? 'rgba(127,119,221,0.3)' : 'rgba(255,255,255,0.1)'}`, color: loading ? '#7F77DD' : 'rgba(255,255,255,0.5)' }}
               >
                 <RefreshCw size={11} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
                 {loading ? 'กำลังอัปเดต...' : 'รีเฟรช'}
@@ -168,7 +168,7 @@ export default function ContentExampleTab({
             target="_blank"
             rel="noopener noreferrer"
             whileTap={{ scale: 0.98 }}
-            style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '12px', textDecoration: 'none', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+            style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '12px', textDecoration: 'none', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(127,119,221,0.12)' }}
           >
             <div style={{ position: 'relative', flexShrink: 0, width: '80px', height: '52px', borderRadius: '8px', overflow: 'hidden', background: '#1a1a2e' }}>
               {v.thumbnail
@@ -194,7 +194,7 @@ export default function ContentExampleTab({
 
       {/* Script */}
       <div style={{ background: 'rgba(123,97,255,0.07)', border: '1px solid rgba(123,97,255,0.2)', borderRadius: RADIUS.card, padding: '16px', marginBottom: '12px' }}>
-        <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#7B61FF' }}>
+        <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#7F77DD' }}>
           📝 Script คลิปของคุณ (ปรับจากตัวอย่างด้านบน)
         </p>
 
@@ -208,11 +208,11 @@ export default function ContentExampleTab({
 
         {/* Middle */}
         <div style={{ marginBottom: '12px' }}>
-          <span style={{ fontSize: '10px', fontWeight: 700, color: '#3ECFFF', textTransform: 'uppercase' }}>เนื้อหากลาง</span>
+          <span style={{ fontSize: '10px', fontWeight: 700, color: '#7F77DD', textTransform: 'uppercase' }}>เนื้อหากลาง</span>
           <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {data.script.middle.map((m, i) => (
               <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                <span style={{ flexShrink: 0, width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(62,207,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#3ECFFF' }}>{i + 1}</span>
+                <span style={{ flexShrink: 0, width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(127,119,221,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#7F77DD' }}>{i + 1}</span>
                 <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>{m}</p>
               </div>
             ))}
@@ -244,8 +244,8 @@ export default function ContentExampleTab({
 
       {/* Why it works */}
       {data.script.why && (
-        <div style={{ padding: '12px 14px', background: 'rgba(62,207,255,0.04)', border: '1px solid rgba(62,207,255,0.12)', borderRadius: '12px' }}>
-          <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#3ECFFF' }}>💡 ทำไม script นี้ถึง work</p>
+        <div style={{ padding: '12px 14px', background: 'rgba(127,119,221,0.04)', border: '1px solid rgba(127,119,221,0.12)', borderRadius: '12px' }}>
+          <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#7F77DD' }}>💡 ทำไม script นี้ถึง work</p>
           <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>{data.script.why}</p>
         </div>
       )}

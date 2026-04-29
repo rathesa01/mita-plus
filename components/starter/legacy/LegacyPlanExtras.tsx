@@ -1,6 +1,7 @@
 'use client'
 // ── P-010-fix1 · Legacy Plan-tab extras ──────────────────────────────────────
 // Ported from app/starter/page.legacy.tsx
+// P-010-fix2: Migrated from dark palette → cream palette (Plan tab runs on cream BG)
 // Components: IncomeGraph · FirstVisitBanner · QuickWinSection
 
 import { useState } from 'react'
@@ -11,9 +12,23 @@ import type { CheckinEntry } from '@/types'
 // Re-export so existing imports from this file keep working
 export type { CheckinEntry }
 
+// ── Design tokens (cream palette) ────────────────────────────────────────────
+const C = {
+  text:        '#1D1D1F',     // Apple near-black
+  muted:       '#6B6B6B',     // readable on cream
+  subtle:      '#8A8A8A',     // secondary labels
+  faint:       '#BEBEBE',     // empty / placeholder
+  cardBg:      'rgba(0,0,0,0.025)',
+  cardBorder:  'rgba(0,0,0,0.07)',
+  cardBgHover: 'rgba(0,0,0,0.04)',
+  coral:       '#D85A30',
+  orange:      '#FF9F1C',
+  purple:      '#7F77DD',     // brand purple (replaces #3ECFFF neon)
+}
+
 // ── Income Graph ─────────────────────────────────────────────────────────────
 const INCOME_RANGE_COLORS: Record<string, string> = {
-  zero: '#FF6B6B', low: '#FF9F1C', mid: '#7B61FF', high: '#22C55E',
+  zero: '#FF6B6B', low: '#FF9F1C', mid: '#7F77DD', high: '#22C55E',
 }
 const INCOME_RANGE_LABELS: Record<string, string> = {
   zero: '฿0', low: '฿1–500', mid: '฿500–2K', high: '฿2K+',
@@ -27,36 +42,36 @@ export function IncomeGraph({ checkins, weekNo }: { checkins: CheckinEntry[]; we
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.12 }}
-      style={{ marginBottom: '16px', padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ marginBottom: '16px', padding: '16px', borderRadius: '16px', background: '#fff', border: `1px solid ${C.cardBorder}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <TrendingUp size={14} style={{ color: '#22C55E' }} />
-          <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>รายได้รายสัปดาห์</p>
+          <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: C.text }}>รายได้รายสัปดาห์</p>
         </div>
-        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>สัปดาห์ที่ {weekNo}</span>
+        <span style={{ fontSize: '10px', color: C.subtle }}>สัปดาห์ที่ {weekNo}</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '60px' }}>
         {[1, 2, 3, 4].map(wk => {
           const entry = checkins.find(c => c.week_no === wk)
           const h = entry ? Math.max((entry.income_approx / maxApprox) * 60, 6) : 0
-          const color = entry ? (INCOME_RANGE_COLORS[entry.income_range] ?? '#7B61FF') : 'rgba(255,255,255,0.08)'
+          const color = entry ? (INCOME_RANGE_COLORS[entry.income_range] ?? C.purple) : 'rgba(0,0,0,0.08)'
           const label = entry ? (INCOME_RANGE_LABELS[entry.income_range] ?? '?') : '—'
           const isCurrentWeek = wk === weekNo
           return (
             <div key={wk} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontSize: '9px', color: entry ? color : 'rgba(255,255,255,0.2)', fontWeight: 700 }}>{label}</span>
+              <span style={{ fontSize: '9px', color: entry ? color : C.faint, fontWeight: 700 }}>{label}</span>
               <motion.div
                 initial={{ height: 0 }} animate={{ height: h > 0 ? h : 4 }}
                 transition={{ duration: 0.6, delay: wk * 0.1 }}
                 style={{
                   width: '100%', borderRadius: '6px 6px 0 0',
-                  background: h > 0 ? color : 'rgba(255,255,255,0.05)',
+                  background: h > 0 ? color : 'rgba(0,0,0,0.06)',
                   opacity: entry ? 1 : 0.4,
                   outline: isCurrentWeek ? `2px solid ${color}` : 'none',
                 }}
               />
-              <span style={{ fontSize: '9px', color: isCurrentWeek ? '#fff' : 'rgba(255,255,255,0.3)', fontWeight: isCurrentWeek ? 700 : 400 }}>W{wk}</span>
+              <span style={{ fontSize: '9px', color: isCurrentWeek ? C.text : C.subtle, fontWeight: isCurrentWeek ? 700 : 400 }}>W{wk}</span>
             </div>
           )
         })}
@@ -65,7 +80,7 @@ export function IncomeGraph({ checkins, weekNo }: { checkins: CheckinEntry[]; we
         {Object.entries(INCOME_RANGE_LABELS).map(([key, label]) => (
           <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: INCOME_RANGE_COLORS[key] }} />
-            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)' }}>{label}</span>
+            <span style={{ fontSize: '9px', color: C.subtle }}>{label}</span>
           </div>
         ))}
       </div>
@@ -84,12 +99,12 @@ export function FirstVisitBanner({ name, onDismiss }: { name: string; onDismiss:
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
         style={{
           position: 'relative', padding: '24px 20px', marginBottom: '16px',
-          background: 'linear-gradient(135deg, rgba(123,97,255,0.2), rgba(34,197,94,0.1))',
-          border: '1px solid rgba(123,97,255,0.4)',
+          background: 'linear-gradient(135deg, rgba(127,119,221,0.12), rgba(216,90,48,0.07))',
+          border: '1px solid rgba(127,119,221,0.25)',
           borderRadius: '20px', textAlign: 'center', overflow: 'hidden',
         }}
       >
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 0%, rgba(123,97,255,0.3) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 0%, rgba(127,119,221,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <motion.div
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
@@ -97,20 +112,20 @@ export function FirstVisitBanner({ name, onDismiss }: { name: string; onDismiss:
         >
           💰
         </motion.div>
-        <p style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: 900, color: '#fff' }}>
+        <p style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: 900, color: C.text }}>
           เงินอยู่ในอากาศ
         </p>
-        <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
+        <p style={{ margin: '0 0 16px', fontSize: '13px', color: C.muted, lineHeight: 1.7 }}>
           ยินดีต้อนรับ {name} ค่ะ 👋<br />
           MITA+ พร้อมช่วยให้คุณ<br />
-          <strong style={{ color: '#a78bfa' }}>จับเงินนั้นให้ได้ค่ะ</strong>
+          <strong style={{ color: C.purple }}>จับเงินนั้นให้ได้ค่ะ</strong>
         </p>
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={onDismiss}
           style={{
             padding: '12px 28px',
-            background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)',
+            background: `linear-gradient(135deg, ${C.purple}, ${C.coral})`,
             color: '#fff', border: 'none', borderRadius: '12px',
             fontSize: '14px', fontWeight: 700, cursor: 'pointer',
           }}
@@ -194,8 +209,8 @@ export function QuickWinSection({ audit, hasChannel, onConnectChannel }: { audit
   const platform: string = (audit?.input?.platform ?? '').toLowerCase()
   const normNiche = AFFILIATE_BY_NICHE[niche] ? niche : 'general'
 
-  const affiliates = AFFILIATE_BY_NICHE[normNiche] ?? AFFILIATE_BY_NICHE.general
-  const caption    = CAPTION_BY_NICHE[normNiche]    ?? CAPTION_BY_NICHE.general
+  const affiliates  = AFFILIATE_BY_NICHE[normNiche] ?? AFFILIATE_BY_NICHE.general
+  const caption     = CAPTION_BY_NICHE[normNiche]   ?? CAPTION_BY_NICHE.general
   const firstAction = FIRST_ACTION_BY_NICHE[normNiche] ?? FIRST_ACTION_BY_NICHE.general
 
   const handleCopy = (text: string, id: string) => {
@@ -246,10 +261,10 @@ export function QuickWinSection({ audit, hasChannel, onConnectChannel }: { audit
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '18px' }}>⚡</span>
-          <p style={{ margin: 0, fontSize: '14px', fontWeight: 900, color: '#FF9F1C' }}>Quick Wins — ทำได้ทันที</p>
+          <p style={{ margin: 0, fontSize: '14px', fontWeight: 900, color: C.orange }}>Quick Wins — ทำได้ทันที</p>
         </div>
         {!hasChannel && (
-          <span style={{ fontSize: '10px', color: 'rgba(255,159,28,0.7)', background: 'rgba(255,159,28,0.1)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700 }}>
+          <span style={{ fontSize: '10px', color: 'rgba(255,159,28,0.85)', background: 'rgba(255,159,28,0.1)', padding: '2px 8px', borderRadius: '99px', fontWeight: 700 }}>
             Tier 1 • Audit only
           </span>
         )}
@@ -267,50 +282,50 @@ export function QuickWinSection({ audit, hasChannel, onConnectChannel }: { audit
           >
             <div style={{
               borderRadius: '14px', overflow: 'hidden',
-              border: isOpen ? '1.5px solid rgba(255,159,28,0.5)' : '1px solid rgba(255,255,255,0.08)',
-              background: isOpen ? 'rgba(255,159,28,0.07)' : 'rgba(255,255,255,0.03)',
+              border: isOpen ? '1.5px solid rgba(255,159,28,0.45)' : `1px solid ${C.cardBorder}`,
+              background: isOpen ? 'rgba(255,159,28,0.05)' : C.cardBg,
               transition: 'all 0.2s',
             }}>
               <button
                 onClick={() => setExpanded(isOpen ? null : item.id)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}
               >
-                <span style={{ width: '32px', height: '32px', borderRadius: '10px', flexShrink: 0, background: isOpen ? 'rgba(255,159,28,0.2)' : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+                <span style={{ width: '32px', height: '32px', borderRadius: '10px', flexShrink: 0, background: isOpen ? 'rgba(255,159,28,0.15)' : C.cardBgHover, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
                   {item.emoji}
                 </span>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: isOpen ? '#FF9F1C' : '#fff' }}>{item.label}</p>
+                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: isOpen ? C.orange : C.text }}>{item.label}</p>
                 </div>
-                <span style={{ fontSize: '10px', fontWeight: 700, flexShrink: 0, color: isOpen ? '#FF9F1C' : 'rgba(255,255,255,0.3)', transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>›</span>
+                <span style={{ fontSize: '10px', fontWeight: 700, flexShrink: 0, color: isOpen ? C.orange : C.subtle, transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>›</span>
               </button>
 
               {isOpen && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ padding: '0 14px 14px' }}>
                   {item.id === 'caption' && (
-                    <div style={{ padding: '10px 12px', marginBottom: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    <div style={{ padding: '10px 12px', marginBottom: '10px', background: 'rgba(0,0,0,0.025)', border: `1px solid ${C.cardBorder}`, borderRadius: '10px', fontSize: '12px', color: C.muted, lineHeight: 1.6, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                       {caption}
                     </div>
                   )}
-                  <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.65 }}>{item.action}</p>
+                  <p style={{ margin: '0 0 10px', fontSize: '12px', color: C.muted, lineHeight: 1.65 }}>{item.action}</p>
                   {item.id === 'affiliate' && item.ctaUrl && (
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <a href={item.ctaUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, display: 'block', textAlign: 'center', padding: '10px 14px', background: 'linear-gradient(135deg, #FF9F1C, #22C55E)', color: '#fff', borderRadius: '10px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>
+                      <a href={item.ctaUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, display: 'block', textAlign: 'center', padding: '10px 14px', background: `linear-gradient(135deg, ${C.orange}, #22C55E)`, color: '#fff', borderRadius: '10px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>
                         {item.ctaText}
                       </a>
                       {affiliates[1] && (
-                        <a href={affiliates[1].url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', borderRadius: '10px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                        <a href={affiliates[1].url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', padding: '10px 14px', background: 'rgba(0,0,0,0.03)', border: `1px solid rgba(0,0,0,0.09)`, color: C.muted, borderRadius: '10px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                           {affiliates[1].emoji} {affiliates[1].name.split(' ')[0]}
                         </a>
                       )}
                     </div>
                   )}
                   {item.id === 'caption' && item.copyText && (
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => handleCopy(item.copyText!, 'caption')} style={{ width: '100%', padding: '10px', borderRadius: '10px', cursor: 'pointer', background: copiedId === 'caption' ? 'rgba(34,197,94,0.2)' : 'rgba(255,159,28,0.15)', color: copiedId === 'caption' ? '#22C55E' : '#FF9F1C', fontSize: '13px', fontWeight: 700, border: `1px solid ${copiedId === 'caption' ? 'rgba(34,197,94,0.3)' : 'rgba(255,159,28,0.3)'}` }}>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => handleCopy(item.copyText!, 'caption')} style={{ width: '100%', padding: '10px', borderRadius: '10px', cursor: 'pointer', background: copiedId === 'caption' ? 'rgba(34,197,94,0.12)' : 'rgba(255,159,28,0.1)', color: copiedId === 'caption' ? '#22C55E' : C.orange, fontSize: '13px', fontWeight: 700, border: `1px solid ${copiedId === 'caption' ? 'rgba(34,197,94,0.25)' : 'rgba(255,159,28,0.25)'}` }}>
                       {item.ctaText}
                     </motion.button>
                   )}
                   {item.id === 'action' && (
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => setExpanded(null)} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => setExpanded(null)} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'rgba(0,0,0,0.03)', border: `1px solid rgba(0,0,0,0.08)`, color: C.muted, fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
                       {item.ctaText}
                     </motion.button>
                   )}
@@ -322,13 +337,13 @@ export function QuickWinSection({ audit, hasChannel, onConnectChannel }: { audit
       })}
 
       {!hasChannel && (
-        <motion.button whileTap={{ scale: 0.98 }} onClick={onConnectChannel} style={{ width: '100%', padding: '11px 14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '10px', background: 'linear-gradient(135deg, rgba(62,207,255,0.08), rgba(123,97,255,0.06))', border: '1px dashed rgba(62,207,255,0.3)', borderRadius: '12px', cursor: 'pointer', textAlign: 'left' }}>
+        <motion.button whileTap={{ scale: 0.98 }} onClick={onConnectChannel} style={{ width: '100%', padding: '11px 14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '10px', background: `linear-gradient(135deg, rgba(127,119,221,0.07), rgba(216,90,48,0.04))`, border: `1px dashed rgba(127,119,221,0.28)`, borderRadius: '12px', cursor: 'pointer', textAlign: 'left' }}>
           <span style={{ fontSize: '18px', flexShrink: 0 }}>🤖</span>
           <div style={{ flex: 1 }}>
-            <p style={{ margin: '0 0 1px', fontSize: '12px', fontWeight: 700, color: '#3ECFFF' }}>Tier 2: เชื่อมช่อง → Quick Win แม่นขึ้น 95%</p>
-            <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>MITA+ จะรู้ว่าคลิปไหนดีที่สุด แนะนำ affiliate ที่ตรงกับ content จริงๆ</p>
+            <p style={{ margin: '0 0 1px', fontSize: '12px', fontWeight: 700, color: C.purple }}>Tier 2: เชื่อมช่อง → Quick Win แม่นขึ้น 95%</p>
+            <p style={{ margin: 0, fontSize: '10px', color: C.subtle, lineHeight: 1.4 }}>MITA+ จะรู้ว่าคลิปไหนดีที่สุด แนะนำ affiliate ที่ตรงกับ content จริงๆ</p>
           </div>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#3ECFFF', flexShrink: 0 }}>→</span>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: C.purple, flexShrink: 0 }}>→</span>
         </motion.button>
       )}
     </motion.div>

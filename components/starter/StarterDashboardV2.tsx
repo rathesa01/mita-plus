@@ -424,14 +424,31 @@ function PlanTab({
 
 /* ───────────────── Dark Tab Wrapper ───────────────── */
 
-function DarkWrapper({ children }: { children: React.ReactNode }) {
+function DarkWrapper({ children, label }: { children: React.ReactNode; label?: string }) {
   return (
-    <div
-      data-theme='dark'
-      style={{ background: '#0B0B0F', borderRadius: '20px', padding: '16px', minHeight: '200px' }}
-    >
-      {children}
-    </div>
+    <>
+      {label && (
+        <div style={{ padding: '0 4px 10px', display: 'flex', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8A8A', fontWeight: 500 }}>
+            {label}
+          </span>
+        </div>
+      )}
+      <div
+        data-theme='dark'
+        style={{
+          background: 'linear-gradient(180deg, #1A1A22 0%, #0B0B0F 80px)',
+          margin: '0 -4px',
+          padding: '20px 16px',
+          borderRadius: '20px',
+          border: '1px solid rgba(127, 119, 221, 0.12)',
+          boxShadow: '0 8px 32px rgba(11, 11, 15, 0.08)',
+          minHeight: '200px',
+        }}
+      >
+        {children}
+      </div>
+    </>
   )
 }
 
@@ -447,7 +464,7 @@ function ProductsFeatureGate() {
       </p>
       <a
         href='/audit'
-        style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(135deg, #7B61FF, #22C55E)', color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
+        style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(135deg, #7F77DD, #D85A30)', color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
       >
         ทำ Audit ฟรี 3 นาที →
       </a>
@@ -465,7 +482,7 @@ function ClipsFeatureGate() {
       </p>
       <a
         href='/audit'
-        style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)', color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
+        style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(135deg, #7F77DD, #D85A30)', color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
       >
         ทำ Audit ฟรี 3 นาที →
       </a>
@@ -654,7 +671,7 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
 
               {/* ── Products Tab ── */}
               {activeTab === 'products' && (
-                <DarkWrapper>
+                <DarkWrapper label='สินค้าที่แนะนำสำหรับช่องคุณ'>
                   {!hasAudit
                     ? <ProductsFeatureGate />
                     : (
@@ -677,7 +694,7 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
 
               {/* ── Clips Tab ── */}
               {activeTab === 'clips' && (
-                <DarkWrapper>
+                <DarkWrapper label='ตัวอย่างคลิปจากนายช่องที่ทำเงินได้'>
                   {!hasAudit
                     ? <ClipsFeatureGate />
                     : (
@@ -693,7 +710,7 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
 
               {/* ── Milestones Tab ── */}
               {activeTab === 'milestones' && (
-                <DarkWrapper>
+                <DarkWrapper label='เป้าหมายและความก้าวหน้าของคุณ'>
                   <MilestonesTab
                     monPlan={plan}
                     currentEarned={safeCurrentEarned}
