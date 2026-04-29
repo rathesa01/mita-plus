@@ -124,6 +124,25 @@ const BUYING_POWER: Array<{ value: AuditFormData['audienceBuyingPower']; label: 
   { value: 'mixed', label: 'ผสม' },
 ]
 
+// P-008-fix6: Chip ranges — income + engagement
+const INCOME_RANGES: Array<{ value: number; label: string }> = [
+  { value: 0,     label: '฿0 (ยังไม่มี)' },
+  { value: 250,   label: '< ฿500' },
+  { value: 1250,  label: '฿500–2K' },
+  { value: 3000,  label: '฿2K–5K' },
+  { value: 7500,  label: '฿5K–15K' },
+  { value: 20000, label: '฿15K–30K' },
+  { value: 50000, label: '฿30K+' },
+]
+
+const ENGAGEMENT_RANGES: Array<{ value: number; label: string; sub: string }> = [
+  { value: 0.5, label: 'ต่ำ',     sub: '< 1%' },
+  { value: 2,   label: 'ปานกลาง', sub: '1–3%' },
+  { value: 4,   label: 'ดี',      sub: '3–7%' },
+  { value: 7,   label: 'สูง',     sub: '7%+' },
+  { value: -1,  label: 'ไม่รู้',   sub: 'ให้ AI เดาให้' },
+]
+
 const STEP_META = [
   {
     title: 'ตั้งค่าช่องของคุณ',
@@ -167,11 +186,10 @@ function validateStep(step: number, data: AuditFormData): Errors {
   if (step === 1) {
     if (data.followers < 0) e.followers = 'ตัวเลขต้องไม่ติดลบ'
     if (data.avgViews < 0) e.avgViews = 'ตัวเลขต้องไม่ติดลบ'
-    if (data.engagementRate < 0 || data.engagementRate > 100)
-      e.engagementRate = '0–100 เท่านั้น'
+    // P-008-fix6: engagementRate is now a chip selection — no range validation needed
   }
   if (step === 2) {
-    if (data.monthlyIncome < 0) e.monthlyIncome = 'ตัวเลขต้องไม่ติดลบ'
+    // P-008-fix6: monthlyIncome is now a chip selection — no range validation needed
     if (data.currentIncomeSources.length === 0)
       e.currentIncomeSources = "เลือกอย่างน้อย 1 ข้อ (หรือ 'ยังไม่มี')"
   }
@@ -586,6 +604,95 @@ function SubNicheChipGrid({
   )
 }
 
+// P-008-fix6: Number chip grid (non-generic — T=number)
+function NumberChipGrid({
+  value,
+  options,
+  onChange,
+}: {
+  value: number
+  options: Array<{ value: number; label: string }>
+  onChange: (v: number) => void
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {options.map((opt) => {
+        const active = value === opt.value
+        return (
+          <button
+            type="button"
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={[
+              'rounded-xl border px-3 py-2.5 text-sm font-medium transition-all',
+              active
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border bg-background text-foreground hover:border-foreground/40',
+            ].join(' ')}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// P-008-fix6: Engagement chip — 2-line with sub-label
+function EngagementChipGrid({
+  value,
+  onChange,
+}: {
+  value: number
+  onChange: (v: number) => void
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+      {ENGAGEMENT_RANGES.map((opt) => {
+        const active = value === opt.value
+        return (
+          <button
+            type="button"
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={[
+              'rounded-xl border px-2 py-2.5 text-center text-sm transition-all',
+              active
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border bg-background text-foreground hover:border-foreground/40',
+            ].join(' ')}
+          >
+            <div className="font-medium leading-tight">{opt.label}</div>
+            <div
+              className={`mt-0.5 text-xs leading-tight ${
+                active ? 'text-background/60' : 'text-muted-foreground'
+              }`}
+            >
+              {opt.sub}
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// P-008-fix6: AssetSummaryCue — helper text under "คุณมีอะไรอยู่บ้าง?" (novice-friendly)
+function AssetSummaryCue({ hasProduct, hasFunnel, hasAffiliate, hasClosingSystem }: {
+  hasProduct: boolean; hasFunnel: boolean; hasAffiliate: boolean; hasClosingSystem: boolean
+}) {
+  const count = [hasProduct, hasFunnel, hasAffiliate, hasClosingSystem].filter(Boolean).length
+  if (count === 0) return (
+    <p className="mt-2 text-xs text-muted-foreground">ยังไม่มีเลยก็ไม่เป็นไรค่ะ — AI จะแนะนำให้เริ่มจากศูนย์ 🙌</p>
+  )
+  if (count >= 3) return (
+    <p className="mt-2 text-xs text-muted-foreground">ดีมากค่ะ! มีอุปกรณ์ครบ — AI จะโฟกัสการเพิ่ม conversion ให้ 🚀</p>
+  )
+  return (
+    <p className="mt-2 text-xs text-muted-foreground">มีบ้างแล้วค่ะ — AI จะช่วยเติมที่ยังขาดอยู่ให้</p>
+  )
+}
+
 /* ══════════════════════════════════════════════════
    Step components
 ══════════════════════════════════════════════════ */
@@ -703,6 +810,22 @@ function Step2({
   errors: Errors
   update: <K extends keyof AuditFormData>(k: K, v: AuditFormData[K]) => void
 }) {
+  // P-008-fix6: local engChipVal tracks display selection separately
+  // -1 sentinel = "ไม่รู้" → stores 2 (ปานกลาง) in data.engagementRate
+  const [engChipVal, setEngChipVal] = useState<number>(() => {
+    const r = data.engagementRate
+    if (!r || r <= 0) return -1
+    if (r <= 1)  return 0.5
+    if (r <= 3)  return 2
+    if (r <= 6)  return 4
+    return 7
+  })
+
+  const handleEngChip = (v: number) => {
+    setEngChipVal(v)
+    update('engagementRate', v === -1 ? 2 : v)
+  }
+
   return (
     <>
       <Field label="จำนวน follower" error={errors.followers}>
@@ -732,21 +855,13 @@ function Step2({
           onChange={(v) => update('postingFrequency', v)}
         />
       </Field>
+      {/* P-008-fix6: engagement chip grid replaces text input */}
       <Field
-        label="Engagement rate (%)"
-        hint="like + comment + share หารด้วย view × 100"
+        label="เลือก Engagement rate"
+        hint="ไม่ต้องรู้ตัวเลขแน่นอน — เลือกระดับที่ใกล้เคียงพอค่ะ"
         error={errors.engagementRate}
       >
-        <input
-          type="number"
-          step="0.1"
-          min={0}
-          max={100}
-          className={inputCls(!!errors.engagementRate)}
-          placeholder="เช่น 3.5"
-          value={data.engagementRate || ''}
-          onChange={(e) => update('engagementRate', Number(e.target.value) || 0)}
-        />
+        <EngagementChipGrid value={engChipVal} onChange={handleEngChip} />
       </Field>
     </>
   )
@@ -784,17 +899,16 @@ function Step3({
           onToggle={(v) => toggle('currentIncomeSources', v)}
         />
       </Field>
-      <Field label="รายได้ต่อเดือน (บาท)" error={errors.monthlyIncome}>
-        <input
-          type="number"
-          min={0}
-          className={inputCls(!!errors.monthlyIncome)}
-          placeholder="เช่น 15000"
-          value={data.monthlyIncome || ''}
-          onChange={(e) => update('monthlyIncome', Number(e.target.value) || 0)}
+      {/* P-008-fix6: monthlyIncome chip grid replaces text input */}
+      <Field label="เลือก รายได้ต่อเดือน" hint="จากช่องทั้งหมดรวมกันค่ะ" error={errors.monthlyIncome}>
+        <NumberChipGrid
+          value={data.monthlyIncome}
+          options={INCOME_RANGES}
+          onChange={(v) => update('monthlyIncome', v)}
         />
       </Field>
-      <Field label="คุณมีอะไรอยู่บ้าง?">
+      {/* P-008-fix6: updated label + hint + AssetSummaryCue */}
+      <Field label="มีอุปกรณ์หาเงินอะไรบ้างแล้ว?" hint="ติ๊กให้ครบ — AI ใช้ตรงนี้วางแผนให้ค่ะ">
         <div className="space-y-2">
           {checks.map((c) => {
             const v = data[c.key] as boolean
@@ -823,6 +937,12 @@ function Step3({
             )
           })}
         </div>
+        <AssetSummaryCue
+          hasProduct={data.hasProduct}
+          hasFunnel={data.hasFunnel}
+          hasAffiliate={data.hasAffiliate}
+          hasClosingSystem={data.hasClosingSystem}
+        />
       </Field>
     </>
   )

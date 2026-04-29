@@ -11,7 +11,7 @@ export const DEFAULT_FORM_DATA: AuditFormData = {
   followers: 0,
   avgViews: 0,
   postingFrequency: '3-5x_week',
-  engagementRate: 3,
+  engagementRate: 2, // P-008-fix6: default maps to "ปานกลาง" chip (1–3%)
   currentIncomeSources: ['none'],
   monthlyIncome: 0,
   hasProduct: false,
