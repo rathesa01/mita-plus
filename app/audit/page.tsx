@@ -1,854 +1,853 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+// ── P-008-adapt · AuditFormV2 from Lovable.dev → adapted for MITA+ Next.js ──
+// Source: Lovable "Mita AI Studio" 2026-04-29 · adapted by มะนาว Claude Code
+// Changes vs Lovable original:
+//   - Added 'use client' directive
+//   - Import types: @/types/audit → @/types
+//   - DEFAULT_FORM_DATA: @/lib/forms/auditDefaults (extracted from old page.tsx)
+//   - Logo: text span → <MitaLogo size="sm" />
+//   - ReactNode: imported from react (not React.ReactNode)
+//   - globals.css: --color-brand-purple alias added for text-brand-purple
+
+import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import type { AuditFormData, Platform, Niche, PostingFrequency, IncomeSource, ContentDuration, TriedAndFailed, AudienceBuyingPower } from '@/types'
+import {
+  Sparkles,
+  Heart,
+  GraduationCap,
+  Wallet,
+  Smile,
+  Dumbbell,
+  ChevronRight,
+  ChevronLeft,
+  Mail,
+  User,
+  Loader2,
+  Check,
+  Plus,
+} from 'lucide-react'
+import { type AuditFormData } from '@/types'
+import { DEFAULT_FORM_DATA } from '@/lib/forms/auditDefaults'
 import MitaLogo from '@/app/components/MitaLogo'
 
-// ── Loading Screen ─────────────────────────────────────────
-const LOADING_STEPS = [
-  { text: 'กำลังวิเคราะห์ Audience & Reach...', pct: 15 },
-  { text: 'ตรวจหา Revenue Blocker ในระบบ...', pct: 35 },
-  { text: 'คำนวณ Revenue Gap ต่อเดือน...', pct: 55 },
-  { text: 'MITA+ กำลังสร้างแผนทำเงินให้คุณ...', pct: 75 },
-  { text: 'เตรียม Report สำหรับคุณโดยเฉพาะ...', pct: 92 },
+const STORAGE_KEY = 'mita_audit_draft'
+
+const PLATFORMS: Array<{ value: AuditFormData['platform']; label: string }> = [
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'multi', label: 'หลายแพลตฟอร์ม' },
 ]
 
-function AnalyzingScreen({ name, done }: { name: string; done: boolean }) {
-  const [stepIdx, setStepIdx] = useState(0)
-  const [pct, setPct] = useState(0)
-  const [longWait, setLongWait] = useState(false)
-
-  // Cycle through steps on a fixed schedule
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = []
-    LOADING_STEPS.forEach((s, i) => {
-      timers.push(setTimeout(() => { setStepIdx(i); setPct(s.pct) }, i * 1600))
-    })
-    // After 10s show "still working" message if API hasn't returned yet
-    timers.push(setTimeout(() => setLongWait(true), 10_000))
-    return () => timers.forEach(clearTimeout)
-  }, [])
-
-  // When API is done → jump to 100% immediately
-  useEffect(() => {
-    if (done) {
-      setStepIdx(LOADING_STEPS.length - 1)
-      setPct(100)
-      setLongWait(false)
-    }
-  }, [done])
-
-  const displayText = done
-    ? '✅ แผนของคุณพร้อมแล้วค่ะ!'
-    : longWait
-    ? 'MITA+ กำลังสร้างแผนให้คุณอยู่...'
-    : LOADING_STEPS[stepIdx]?.text
-
-  return (
-    <div className="bg-[#08080f] min-h-screen text-white flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm text-center">
-        {/* Spinner / done icon */}
-        <div className="relative mx-auto w-16 h-16 mb-10">
-          <div className="absolute inset-0 rounded-full border-2 border-white/5" />
-          {done ? (
-            <div className="absolute inset-0 rounded-full border-2 border-emerald-400 flex items-center justify-center">
-              <span className="text-emerald-400 text-2xl">✓</span>
-            </div>
-          ) : (
-            <>
-              <div className="absolute inset-0 rounded-full border-t-2 border-violet-400 animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-              </div>
-            </>
-          )}
-        </div>
-
-        <h2 className="text-xl font-black mb-1.5">
-          {done ? 'แผนของคุณพร้อมแล้ว!' : `กำลังสร้างแผนให้ ${name}`}
-        </h2>
-        <p className="text-white/35 text-sm mb-10">
-          {done
-            ? 'กำลังพาคุณไปดูแผนค่ะ...'
-            : 'MITA+ กำลังวิเคราะห์ช่องและสร้างแผนเฉพาะตัวให้คุณ'}
-        </p>
-
-        {/* Progress bar */}
-        <div className="h-px bg-white/8 rounded-full mb-5 overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-violet-500 to-amber-400 rounded-full"
-            animate={{ width: `${pct}%` }}
-            transition={{ duration: done ? 0.4 : 0.9, ease: 'easeOut' }}
-          />
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={done ? 'done' : longWait ? 'wait' : stepIdx}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
-            className={`text-sm h-5 ${done ? 'text-emerald-400 font-semibold' : longWait ? 'text-amber-400' : 'text-white/38'}`}
-          >
-            {displayText}
-          </motion.p>
-        </AnimatePresence>
-
-        <p className={`font-black text-base mt-5 ${done ? 'text-emerald-400' : 'text-violet-400'}`}>{pct}%</p>
-      </div>
-    </div>
-  )
-}
-
-// ── Constants ─────────────────────────────────────────────
-const TOTAL_STEPS = 4
-
-const PLATFORMS: { value: Platform; label: string; emoji: string }[] = [
-  { value: 'tiktok', label: 'TikTok', emoji: '🎵' },
-  { value: 'instagram', label: 'Instagram', emoji: '📸' },
-  { value: 'youtube', label: 'YouTube', emoji: '▶️' },
-  { value: 'facebook', label: 'Facebook', emoji: '📘' },
-  { value: 'multi', label: 'หลายแพลตฟอร์ม', emoji: '🌐' },
+const POPULAR_NICHES: Array<{
+  value: AuditFormData['niche']
+  label: string
+  Icon: typeof Heart
+}> = [
+  { value: 'lifestyle', label: 'Lifestyle', Icon: Heart },
+  { value: 'education', label: 'Education', Icon: GraduationCap },
+  { value: 'finance', label: 'Finance', Icon: Wallet },
+  { value: 'entertainment', label: 'Entertainment', Icon: Smile },
+  { value: 'fitness', label: 'Fitness', Icon: Dumbbell },
 ]
 
-const NICHES: { value: Niche; label: string }[] = [
-  { value: 'lifestyle', label: 'ไลฟ์สไตล์' },
-  { value: 'beauty', label: 'ความงาม' },
-  { value: 'food', label: 'อาหาร' },
-  { value: 'fitness', label: 'ออกกำลังกาย / ฟิตเนส' },
-  { value: 'health', label: 'สุขภาพ / wellness' },
-  { value: 'travel', label: 'ท่องเที่ยว' },
-  { value: 'mom_baby', label: 'แม่และเด็ก 👶' },
-  { value: 'gaming', label: 'เกม / Gaming 🎮' },
-  { value: 'cafe', label: 'คาเฟ่ / กาแฟ ☕' },
-  { value: 'automotive', label: 'รถยนต์ / ยานยนต์ 🚗' },
-  { value: 'entertainment', label: 'ความบันเทิง' },
-  { value: 'education', label: 'การศึกษา / สอน' },
-  { value: 'finance', label: 'การเงิน / ลงทุน' },
-  { value: 'business', label: 'ธุรกิจ / การตลาด' },
+const ALL_NICHES: Array<{ value: AuditFormData['niche']; label: string }> = [
+  { value: 'lifestyle', label: 'Lifestyle' },
+  { value: 'education', label: 'Education' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'entertainment', label: 'Entertainment' },
+  { value: 'beauty', label: 'Beauty' },
+  { value: 'fitness', label: 'Fitness' },
+  { value: 'business', label: 'Business' },
+  { value: 'food', label: 'Food' },
+  { value: 'travel', label: 'Travel' },
+  { value: 'mom_baby', label: 'แม่และเด็ก' },
+  { value: 'gaming', label: 'Gaming' },
+  { value: 'cafe', label: 'Cafe' },
+  { value: 'health', label: 'Health' },
+  { value: 'automotive', label: 'Automotive' },
   { value: 'other', label: 'อื่นๆ' },
 ]
 
-const SUB_NICHES: Record<string, { value: string; label: string; desc: string }[]> = {
-  lifestyle: [
-    { value: 'daily_vlog', label: 'Vlog ชีวิตประจำวัน', desc: 'ชีวิต กิจวัตร เดลี่' },
-    { value: 'home_deco', label: 'แต่งบ้าน / Minimalism', desc: 'ตกแต่งพื้นที่ จัดบ้าน' },
-    { value: 'productivity', label: 'Productivity / พัฒนาตัวเอง', desc: 'ระบบชีวิต นิสัยดี' },
-    { value: 'fashion', label: 'แฟชั่น / การแต่งตัว', desc: 'Outfit OOTD สไตล์' },
-    { value: 'relationship', label: 'ความสัมพันธ์ / ครอบครัว', desc: 'คู่รัก ครอบครัว' },
-    { value: 'lifestyle_other', label: 'ไลฟ์สไตล์อื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  education: [
-    { value: 'language', label: 'สอนภาษา', desc: 'อังกฤษ ญี่ปุ่น จีน ฯลฯ' },
-    { value: 'coding_tech', label: 'Coding / Tech', desc: 'โปรแกรม AI เทคโนโลยี' },
-    { value: 'career_skill', label: 'ทักษะอาชีพ', desc: 'ทำงาน ทักษะมืออาชีพ' },
-    { value: 'exam_prep', label: 'ติว / เตรียมสอบ', desc: 'GAT PAT TOEIC สอบต่างๆ' },
-    { value: 'general_knowledge', label: 'ความรู้ทั่วไป / สาระ', desc: 'วิทยาศาสตร์ ประวัติ ฯลฯ' },
-    { value: 'education_other', label: 'การศึกษาอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  finance: [
-    { value: 'stock_invest', label: 'หุ้น / กองทุน', desc: 'ลงทุนในตลาด SET กองทุน' },
-    { value: 'crypto', label: 'Crypto / DeFi', desc: 'Bitcoin Ethereum Web3' },
-    { value: 'saving', label: 'ออมเงิน / วางแผนการเงิน', desc: 'งบ ออม FIRE' },
-    { value: 'credit_bank', label: 'รีวิวบัตรเครดิต / ธนาคาร', desc: 'บัตรเครดิต สิทธิประโยชน์' },
-    { value: 'side_income', label: 'สร้างรายได้เสริม', desc: 'งาน part-time freelance online' },
-    { value: 'finance_other', label: 'การเงินอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  beauty: [
-    { value: 'makeup_tutorial', label: 'สอนแต่งหน้า', desc: 'Tutorial look step-by-step' },
-    { value: 'skincare', label: 'Skincare / รีวิวสกินแคร์', desc: 'routine ครีม เซรั่ม' },
-    { value: 'beauty_review', label: 'รีวิวสินค้าความงาม', desc: 'haul รีวิวรวม ซื้อของ' },
-    { value: 'haircare', label: 'เส้นผม / Hair care', desc: 'ทรงผม ดูแลผม' },
-    { value: 'nail', label: 'เล็บ / Nail art', desc: 'ทาเล็บ ออกแบบเล็บ' },
-    { value: 'beauty_other', label: 'ความงามอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  fitness: [
-    { value: 'workout', label: 'Workout / ออกกำลังกาย', desc: 'ท่าออกกำลัง gym home workout' },
-    { value: 'yoga_pilates', label: 'Yoga / Pilates', desc: 'ยืดเหยียด mindful' },
-    { value: 'nutrition', label: 'โภชนาการ / อาหารสุขภาพ', desc: 'clean eating แคลอรี่ diet' },
-    { value: 'running_sport', label: 'วิ่ง / กีฬา', desc: 'วิ่ง ปั่นจักรยาน กีฬา' },
-    { value: 'mental_health', label: 'Mental health / สุขภาพจิต', desc: 'stress จิตใจ mindfulness' },
-    { value: 'fitness_other', label: 'สุขภาพอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  business: [
-    { value: 'startup_sme', label: 'เริ่มต้นธุรกิจ / SME', desc: 'เปิดร้าน ธุรกิจใหม่' },
-    { value: 'marketing_social', label: 'Marketing / Social Media', desc: 'โฆษณา content strategy' },
-    { value: 'freelance', label: 'Freelance / WFH', desc: 'งานฟรีแลนซ์ remote work' },
-    { value: 'ecommerce', label: 'E-commerce / ขายออนไลน์', desc: 'Shopee Lazada TikTok Shop' },
-    { value: 'career', label: 'Career / สมัครงาน', desc: 'resume interview พัฒนาอาชีพ' },
-    { value: 'business_other', label: 'ธุรกิจอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  food: [
-    { value: 'eating_mukbang', label: 'กินรีวิว / Mukbang', desc: 'นั่งกิน ลองกิน กินเล่น' },
-    { value: 'restaurant_review', label: 'รีวิวร้านอาหาร', desc: 'แนะนำร้าน ออกไปกิน' },
-    { value: 'cooking_tutorial', label: 'สอนทำอาหาร / สูตรอาหาร', desc: 'สูตร ขั้นตอนทำอาหาร' },
-    { value: 'healthy_food', label: 'อาหารสุขภาพ / คลีน', desc: 'clean food สุขภาพ diet' },
-    { value: 'street_food', label: 'สตรีทฟู้ด / ของกิน', desc: 'ของกินแปลก ตลาด street' },
-    { value: 'food_other', label: 'อาหารอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  travel: [
-    { value: 'domestic_travel', label: 'ท่องเที่ยวในไทย', desc: 'จังหวัด ที่เที่ยวไทย' },
-    { value: 'international_travel', label: 'ท่องเที่ยวต่างประเทศ', desc: 'เที่ยวนอก ประเทศต่างๆ' },
-    { value: 'budget_travel', label: 'Budget travel / เที่ยวประหยัด', desc: 'เที่ยวถูก backpack' },
-    { value: 'luxury_travel', label: 'Luxury travel', desc: 'โรงแรมหรู business class' },
-    { value: 'solo_travel', label: 'Solo travel / เดี่ยว', desc: 'เที่ยวคนเดียว ผู้หญิงเดินทาง' },
-    { value: 'travel_other', label: 'ท่องเที่ยวอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  entertainment: [
-    { value: 'comedy', label: 'ตลก / Comedy', desc: 'สเก็ตช์ ตลก ขำขัน' },
-    { value: 'reaction', label: 'รีแอค / Commentary', desc: 'react video comment' },
-    { value: 'gaming', label: 'เกม / Gaming', desc: 'เล่นเกม review เกม' },
-    { value: 'music', label: 'ดนตรี / ร้องเพลง', desc: 'cover ร้องเพลง ดนตรี' },
-    { value: 'movie_series', label: 'รีวิวหนัง / ซีรีส์', desc: 'วิจารณ์ recap เนื้อเรื่อง' },
-    { value: 'entertainment_other', label: 'ความบันเทิงอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  mom_baby: [
-    { value: 'newborn', label: 'ทารก / แรกเกิด 0-1 ปี', desc: 'ของใช้เด็กแรกเกิด นม ผ้าอ้อม' },
-    { value: 'toddler', label: 'เด็กเล็ก 1-5 ปี', desc: 'ของเล่น พัฒนาการ เสื้อผ้าเด็ก' },
-    { value: 'parenting_tips', label: 'เลี้ยงลูก / Parenting tips', desc: 'เทคนิคเลี้ยงลูก พัฒนาการ' },
-    { value: 'maternity', label: 'คุณแม่ตั้งครรภ์ / Maternity', desc: 'ของใช้แม่ท้อง prenatal' },
-    { value: 'breastfeeding', label: 'นมแม่ / Breastfeeding', desc: 'เครื่องปั๊มนม อุปกรณ์ให้นม' },
-    { value: 'kids_edu', label: 'การศึกษาเด็ก / ของเล่นเสริมพัฒนาการ', desc: 'ของเล่น educational toy' },
-    { value: 'mom_baby_other', label: 'แม่และเด็กอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  gaming: [
-    { value: 'mobile_gaming', label: 'มือถือ / Mobile Gaming', desc: 'ROV PUBG Free Fire Genshin' },
-    { value: 'pc_gaming', label: 'PC / Console Gaming', desc: 'PC Steam PS5 Xbox' },
-    { value: 'game_review', label: 'รีวิวเกม / Game Review', desc: 'แนะนำเกมใหม่ รีวิว' },
-    { value: 'gaming_setup', label: 'Gaming Setup / อุปกรณ์', desc: 'peripherals setup desk tour' },
-    { value: 'esports', label: 'E-sports / การแข่งขัน', desc: 'ทัวร์นาเมนต์ pro scene' },
-    { value: 'gaming_other', label: 'เกมอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  cafe: [
-    { value: 'cafe_review', label: 'รีวิวคาเฟ่', desc: 'แนะนำคาเฟ่สวย บรรยากาศดี' },
-    { value: 'coffee_brew', label: 'ชงกาแฟ / Specialty Coffee', desc: 'Pour Over V60 Aeropress' },
-    { value: 'bubble_tea', label: 'บับเบิ้ลที / ชานมไข่มุก', desc: 'รีวิว ทำเอง ลองสูตร' },
-    { value: 'home_cafe', label: 'Home Cafe / ทำเครื่องดื่มที่บ้าน', desc: 'ทำกาแฟ ชาเอง สูตร' },
-    { value: 'bakery_cafe', label: 'เบเกอรี่ / ขนม', desc: 'เบเกอรี่ ขนมคาเฟ่ ทำขนม' },
-    { value: 'cafe_other', label: 'คาเฟ่อื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  health: [
-    { value: 'supplement', label: 'อาหารเสริม / Supplement', desc: 'วิตามิน โปรตีน คอลลาเจน' },
-    { value: 'traditional_medicine', label: 'แพทย์แผนไทย / สมุนไพร', desc: 'ยาสมุนไพร นวด ไทย' },
-    { value: 'mental_wellness', label: 'สุขภาพจิต / Mindfulness', desc: 'meditation สติ ลดเครียด' },
-    { value: 'medical_device', label: 'เครื่องมือแพทย์ / อุปกรณ์สุขภาพ', desc: 'เครื่องวัดความดัน น้ำตาล' },
-    { value: 'skin_health', label: 'โรคผิวหนัง / สุขภาพผิว', desc: 'สิว ผด ผื่น แพ้' },
-    { value: 'health_other', label: 'สุขภาพอื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  automotive: [
-    { value: 'car_review', label: 'รีวิวรถยนต์', desc: 'ลองขับ ทดสอบ รีวิวรถใหม่' },
-    { value: 'car_accessories', label: 'อุปกรณ์ตกแต่งรถ', desc: 'กล้องหน้ารถ ที่วางโทรศัพท์' },
-    { value: 'car_care', label: 'ดูแลรักษารถ / Car Care', desc: 'ขัดเงา เคลือบ ดูแลสี' },
-    { value: 'motorbike', label: 'มอเตอร์ไซค์ / Motorbike', desc: 'รีวิวรถ big bike สกู๊ตเตอร์' },
-    { value: 'ev_car', label: 'รถไฟฟ้า / EV', desc: 'Tesla BYD MG ชาร์จ EV' },
-    { value: 'automotive_other', label: 'ยานยนต์อื่นๆ', desc: 'ไม่มีใน list' },
-  ],
-  other: [
-    { value: 'pet', label: 'สัตว์เลี้ยง', desc: 'หมา แมว นก กระต่าย' },
-    { value: 'diy_craft', label: 'งานฝีมือ / DIY', desc: 'ทำของ ประดิษฐ์ handmade' },
-    { value: 'gadget_tech', label: 'Gadget / Tech review', desc: 'รีวิวมือถือ อุปกรณ์ tech' },
-    { value: 'music', label: 'ดนตรี / ร้องเพลง', desc: 'เล่นดนตรี cover ร้องเพลง' },
-    { value: 'other_other', label: 'อื่นๆ ที่ไม่ใน list', desc: 'บอกใน "ปัญหาหลัก"' },
-  ],
-}
+const AUDIENCE_TYPES: Array<{ value: AuditFormData['audienceType']; label: string }> = [
+  { value: 'general', label: 'คนทั่วไป' },
+  { value: 'niche', label: 'เฉพาะกลุ่ม' },
+  { value: 'professional', label: 'สายอาชีพ' },
+  { value: 'mixed', label: 'ผสม' },
+]
 
-const FREQUENCIES: { value: PostingFrequency; label: string }[] = [
-  { value: 'daily', label: 'ทุกวัน (30+/เดือน)' },
+const POSTING_FREQ: Array<{ value: AuditFormData['postingFrequency']; label: string }> = [
+  { value: 'daily', label: 'ทุกวัน' },
   { value: '3-5x_week', label: '3–5 ครั้ง/สัปดาห์' },
   { value: '1-2x_week', label: '1–2 ครั้ง/สัปดาห์' },
-  { value: 'monthly', label: 'ไม่สม่ำเสมอ / น้อยมาก' },
+  { value: 'monthly', label: 'เดือนละไม่กี่ครั้ง' },
 ]
 
-
-const INCOME_SOURCES: { value: IncomeSource; label: string }[] = [
-  { value: 'ads_revenue', label: 'ค่า Ads จากแพลตฟอร์ม' },
-  { value: 'sponsorship', label: 'Sponsorship / รีวิว' },
-  { value: 'affiliate', label: 'Affiliate / ค่าคอม' },
-  { value: 'own_product', label: 'สินค้า/คอร์สของตัวเอง' },
-  { value: 'coaching', label: 'Coaching / Consulting' },
-  { value: 'merchandise', label: 'Merchandise' },
-  { value: 'subscription', label: 'Membership / Subscription' },
-  { value: 'none', label: 'ยังไม่มีรายได้' },
+const INCOME_SOURCES: Array<{
+  value: AuditFormData['currentIncomeSources'][number]
+  label: string
+}> = [
+  { value: 'ads_revenue', label: 'Ads Revenue' },
+  { value: 'sponsorship', label: 'Sponsorship' },
+  { value: 'affiliate', label: 'Affiliate' },
+  { value: 'own_product', label: 'ขายของเอง' },
+  { value: 'coaching', label: 'Coaching' },
+  { value: 'merchandise', label: 'Merch' },
+  { value: 'subscription', label: 'Subscription' },
+  { value: 'none', label: 'ยังไม่มี' },
 ]
 
-const CONTENT_DURATIONS: { value: ContentDuration; label: string }[] = [
-  { value: 'under_3months', label: 'น้อยกว่า 3 เดือน' },
-  { value: '3-12months', label: '3 เดือน – 1 ปี' },
-  { value: '1-2years', label: '1 – 2 ปี' },
-  { value: 'over_2years', label: 'มากกว่า 2 ปี' },
+const CONTENT_DURATION: Array<{ value: AuditFormData['contentDuration']; label: string }> = [
+  { value: 'under_3months', label: '< 3 เดือน' },
+  { value: '3-12months', label: '3–12 เดือน' },
+  { value: '1-2years', label: '1–2 ปี' },
+  { value: 'over_2years', label: '> 2 ปี' },
 ]
 
-const TRIED_AND_FAILED: { value: TriedAndFailed; label: string }[] = [
-  { value: 'affiliate', label: 'Affiliate / ลิงก์ค่าคอม' },
-  { value: 'sponsorship', label: 'หา Sponsor / ติดต่อแบรนด์' },
-  { value: 'own_product', label: 'ขายสินค้า / คอร์สตัวเอง' },
-  { value: 'coaching', label: 'Coaching / ให้คำปรึกษา' },
-  { value: 'live_selling', label: 'ไลฟ์ขายของ' },
-  { value: 'none_tried', label: 'ยังไม่เคยลองเลย' },
+const TRIED_FAILED: Array<{ value: AuditFormData['triedAndFailed'][number]; label: string }> = [
+  { value: 'affiliate', label: 'Affiliate' },
+  { value: 'sponsorship', label: 'Sponsorship' },
+  { value: 'own_product', label: 'ขายของเอง' },
+  { value: 'coaching', label: 'Coaching' },
+  { value: 'live_selling', label: 'Live ขายของ' },
+  { value: 'none_tried', label: 'ยังไม่ได้ลอง' },
 ]
 
-const AUDIENCE_BUYING_POWERS: { value: AudienceBuyingPower; label: string; desc: string }[] = [
-  { value: 'student', label: 'นักเรียน / นักศึกษา', desc: 'อายุ 15-22 ปี' },
-  { value: 'worker', label: 'คนทำงาน / มนุษย์เงินเดือน', desc: 'มีรายได้ประจำ' },
-  { value: 'homemaker', label: 'แม่บ้าน / พ่อบ้าน', desc: 'ดูแลบ้านและครอบครัว' },
-  { value: 'business_owner', label: 'เจ้าของธุรกิจ / ฟรีแลนซ์', desc: 'รายได้ไม่แน่นอน' },
-  { value: 'mixed', label: 'หลากหลาย / ไม่แน่ใจ', desc: 'มีหลายกลุ่ม' },
+const BUYING_POWER: Array<{ value: AuditFormData['audienceBuyingPower']; label: string }> = [
+  { value: 'student', label: 'นักเรียน/นักศึกษา' },
+  { value: 'worker', label: 'วัยทำงาน' },
+  { value: 'homemaker', label: 'แม่บ้าน' },
+  { value: 'business_owner', label: 'เจ้าของกิจการ' },
+  { value: 'mixed', label: 'ผสม' },
 ]
 
-const defaultForm: AuditFormData = {
-  name: '',
-  email: '',
-  platform: 'tiktok',
-  niche: 'lifestyle',
-  audienceType: 'general',
-  followers: 0,
-  avgViews: 0,
-  postingFrequency: '3-5x_week',
-  engagementRate: 3,
-  currentIncomeSources: ['none'],
-  monthlyIncome: 0,
-  hasProduct: false,
-  hasFunnel: false,
-  hasAffiliate: false,
-  hasClosingSystem: false,
-  contentDuration: '3-12months' as ContentDuration,
-  triedAndFailed: ['none_tried'] as TriedAndFailed[],
-  audienceBuyingPower: 'mixed' as AudienceBuyingPower,
-  subNiche: '',
-  contentDescription: '',
-  biggestProblem: '',
-  goalIn90Days: '',
+const STEP_META = [
+  {
+    title: 'ตั้งค่าช่องของคุณ',
+    subtitle: 'บอกเราแค่นี้ — AI จะสร้างแผนเฉพาะคุณค่ะ',
+    eta: 'เหลืออีก ~1 นาที',
+  },
+  {
+    title: 'ตัวเลขช่องคุณ',
+    subtitle: 'ใช้แค่ 4 ตัวเลข — ไม่เชื่อมบัญชีจริง',
+    eta: 'เหลืออีก ~45 วินาที',
+  },
+  {
+    title: 'รายได้ตอนนี้',
+    subtitle: 'ตอบตามจริง · ข้อมูลของคุณ ไม่ส่งใคร',
+    eta: 'เหลืออีก ~30 วินาที',
+  },
+  {
+    title: 'เป้าหมาย 90 วัน',
+    subtitle: 'ตั้งเป้าให้ AI ปรับแผนให้คุณ',
+    eta: 'เหลืออีก ~15 วินาที',
+  },
+]
+
+const LOADING_MESSAGES = [
+  'กำลังวิเคราะห์ niche ของคุณ...',
+  'เปรียบเทียบกับ creator ใน benchmark...',
+  'คำนวณ revenue gap...',
+  'เลือกช่องทางที่เหมาะกับคุณ...',
+  'สร้างแผนปฏิบัติ 90 วัน...',
+]
+
+type Errors = Partial<Record<keyof AuditFormData, string>>
+
+function validateStep(step: number, data: AuditFormData): Errors {
+  const e: Errors = {}
+  if (step === 0) {
+    if (!data.name.trim()) e.name = 'กรอกชื่อหน่อยค่ะ'
+    if (!data.email.trim()) e.email = 'กรอกอีเมลด้วยนะคะ'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = 'รูปแบบอีเมลไม่ถูกต้อง'
+  }
+  if (step === 1) {
+    if (data.followers < 0) e.followers = 'ตัวเลขต้องไม่ติดลบ'
+    if (data.avgViews < 0) e.avgViews = 'ตัวเลขต้องไม่ติดลบ'
+    if (data.engagementRate < 0 || data.engagementRate > 100)
+      e.engagementRate = '0–100 เท่านั้น'
+  }
+  if (step === 2) {
+    if (data.monthlyIncome < 0) e.monthlyIncome = 'ตัวเลขต้องไม่ติดลบ'
+    if (data.currentIncomeSources.length === 0)
+      e.currentIncomeSources = "เลือกอย่างน้อย 1 ข้อ (หรือ 'ยังไม่มี')"
+  }
+  if (step === 3) {
+    if (!data.subNiche.trim()) e.subNiche = 'บอก sub-niche ของคุณหน่อยค่ะ'
+    if (!data.goalIn90Days.trim()) e.goalIn90Days = 'ตั้งเป้า 90 วันด้วยนะคะ'
+  }
+  return e
 }
 
-// ── UI Components ─────────────────────────────────────────
-function Chip({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm ${
-        selected
-          ? 'border-violet-500/60 bg-violet-500/10 text-white'
-          : 'border-white/8 bg-white/2 text-white/45 hover:border-white/18 hover:text-white/75'
-      }`}
-    >
-      {children}
-    </button>
-  )
-}
+export default function AuditFormV2() {
+  const [step, setStep] = useState(0)
+  const [data, setData] = useState<AuditFormData>(DEFAULT_FORM_DATA)
+  const [errors, setErrors] = useState<Errors>({})
+  const [showAllNiches, setShowAllNiches] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [loadingIdx, setLoadingIdx] = useState(0)
+  const hydrated = useRef(false)
 
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="card rounded-xl p-4">
-      <p className="text-white/65 text-sm mb-3">{label}</p>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => onChange(true)}
-          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-            value
-              ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400'
-              : 'border border-white/8 text-white/30 hover:border-white/18'
-          }`}
-        >
-          มี
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange(false)}
-          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-            !value
-              ? 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
-              : 'border border-white/8 text-white/30 hover:border-white/18'
-          }`}
-        >
-          ไม่มี
-        </button>
-      </div>
-    </div>
-  )
-}
+  // Hydrate from localStorage (resume draft)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) setData({ ...DEFAULT_FORM_DATA, ...JSON.parse(raw) })
+    } catch {
+      /* ignore */
+    }
+    hydrated.current = true
+  }, [])
 
-const STEP_LABELS = ['ตัวคุณ', 'ช่องของคุณ', 'รายได้', 'เป้าหมาย']
+  // Auto-save to localStorage
+  useEffect(() => {
+    if (!hydrated.current) return
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    } catch {
+      /* ignore */
+    }
+  }, [data])
 
-export default function AuditPage() {
-  const router = useRouter()
-  const [step, setStep] = useState(1)
-  const [form, setForm] = useState<AuditFormData>(defaultForm)
-  const [loading, setLoading] = useState(false)
-  const [apiDone, setApiDone] = useState(false)
-  const [apiError, setApiError] = useState<string | false>(false)
+  // Cycle loading messages while submitting
+  useEffect(() => {
+    if (!submitting) return
+    setLoadingIdx(0)
+    const id = window.setInterval(() => {
+      setLoadingIdx((i) => Math.min(i + 1, LOADING_MESSAGES.length - 1))
+    }, 2000)
+    return () => window.clearInterval(id)
+  }, [submitting])
 
-  const update = <K extends keyof AuditFormData>(key: K, val: AuditFormData[K]) =>
-    setForm((f) => ({ ...f, [key]: val }))
-
-  const toggleIncomeSource = (src: IncomeSource) => {
-    if (src === 'none') { update('currentIncomeSources', ['none']); return }
-    const current = form.currentIncomeSources.filter((s) => s !== 'none')
-    update('currentIncomeSources', current.includes(src) ? current.filter((s) => s !== src) : [...current, src])
+  const update = <K extends keyof AuditFormData>(key: K, value: AuditFormData[K]) => {
+    setData((d) => ({ ...d, [key]: value }))
+    setErrors((e) => ({ ...e, [key]: undefined }))
   }
 
-  const toggleTriedAndFailed = (item: TriedAndFailed) => {
-    if (item === 'none_tried') { update('triedAndFailed', ['none_tried']); return }
-    const current = form.triedAndFailed.filter(s => s !== 'none_tried')
-    const next = current.includes(item) ? current.filter(s => s !== item) : [...current, item]
-    // ถ้า unselect จนหมด → fallback เป็น none_tried (Zod ต้องการ min 1)
-    update('triedAndFailed', next.length === 0 ? ['none_tried'] : next)
+  const toggleArr = <K extends 'currentIncomeSources' | 'triedAndFailed'>(
+    key: K,
+    value: AuditFormData[K][number],
+  ) => {
+    setData((d) => {
+      const arr = d[key] as AuditFormData[K]
+      const has = (arr as readonly string[]).includes(value as string)
+      const next = has
+        ? (arr as readonly string[]).filter((v) => v !== value)
+        : [...(arr as readonly string[]), value]
+      return { ...d, [key]: next as AuditFormData[K] }
+    })
+    setErrors((e) => ({ ...e, [key]: undefined }))
   }
 
-  const canNext = () => {
-    if (step === 1) return form.name.trim().length > 0
-    if (step === 2) return form.followers > 0 && form.avgViews > 0
-    return true
+  const next = () => {
+    const e = validateStep(step, data)
+    setErrors(e)
+    if (Object.keys(e).length > 0) return
+    if (step < 3) setStep(step + 1)
+    else void submit()
   }
 
-  const handleSubmit = async () => {
-    setLoading(true)
-    setApiDone(false)
-    setApiError(false)
+  const back = () => {
+    if (step > 0) setStep(step - 1)
+  }
+
+  const submit = async () => {
+    setSubmitting(true)
+    setSubmitError(null)
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, email: (form.email ?? '').trim() }),
+        body: JSON.stringify(data),
       })
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}))
-        const msg = errBody?.error ?? errBody?.details ? JSON.stringify(errBody.details) : `HTTP ${res.status}`
-        console.error('[MITA+] API error', res.status, errBody)
-        throw new Error(msg)
+      if (res.status === 429) {
+        setSubmitError('ลองอีกครั้งใน 1 นาที')
+        setSubmitting(false)
+        return
       }
-      const result = await res.json()
-      // เก็บใน sessionStorage เป็น fallback (กรณี DB ไม่ได้ save)
-      sessionStorage.setItem('mita_result', JSON.stringify(result))
-      // Signal loading screen → 100%, then navigate after brief celebration moment
-      setApiDone(true)
-      // ใช้ id จาก result เพื่อ shareable URL — fallback ไป /result ถ้าไม่มี id
-      const dest = result.id ? `/result?id=${result.id}` : '/result'
-      setTimeout(() => router.push(dest), 800)
+      if (!res.ok) throw new Error('เกิดข้อผิดพลาด ลองใหม่อีกครั้งค่ะ')
+      const json = (await res.json()) as { id: string }
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+      } catch {
+        /* ignore */
+      }
+      window.location.href = `/result?id=${encodeURIComponent(json.id)}`
     } catch (err) {
-      console.error('[MITA+] Submit error:', err)
-      setLoading(false)
-      setApiError(err instanceof Error ? err.message : 'Unknown error')
+      setSubmitError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด')
+      setSubmitting(false)
     }
   }
 
-  if (loading) return <AnalyzingScreen name={form.name || 'Creator'} done={apiDone} />
+  const progress = useMemo(() => ((step + 1) / 4) * 100, [step])
+  const meta = STEP_META[step]
 
   return (
-    <main className="bg-[#08080f] min-h-screen text-white flex flex-col">
+    <div className="min-h-screen bg-background text-foreground font-sans">
+      <div className="mx-auto max-w-2xl px-5 py-8 md:py-14">
 
-      {/* Header */}
-      <div className="border-b border-white/5 px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={() => step > 1 ? setStep(s => s - 1) : router.push('/')}
-          className="text-white/30 hover:text-white transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <MitaLogo size="sm" />
+        {/* ── Logo ── */}
+        <div className="mb-8 flex items-center justify-center">
+          <MitaLogo size="sm" />
+        </div>
 
-        {/* Step dots */}
-        <div className="ml-auto flex items-center gap-2">
-          {STEP_LABELS.map((label, i) => {
-            const n = i + 1
-            const done = n < step
-            const active = n === step
-            return (
-              <div key={label} className="flex items-center gap-2">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                  done ? 'bg-emerald-500 text-black' : active ? 'bg-violet-500 text-white' : 'bg-white/8 text-white/25'
-                }`}>
-                  {done ? <Check size={10} /> : n}
-                </div>
-                {i < STEP_LABELS.length - 1 && (
-                  <div className={`w-6 h-px transition-all ${done ? 'bg-emerald-500/50' : 'bg-white/8'}`} />
-                )}
+        {/* ── Progress bar ── */}
+        <div className="mb-8">
+          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span className="font-medium tracking-tight text-foreground">{step + 1}/4</span>
+            <span>{meta.eta}</span>
+          </div>
+          <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+            <motion.div
+              className="h-full rounded-full bg-coral"
+              initial={false}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            />
+          </div>
+        </div>
+
+        {/* ── Step header ── */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`header-${step}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            className="mb-6"
+          >
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{meta.title}</h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">{meta.subtitle}</p>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ── Step card ── */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`step-${step}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] md:p-7"
+          >
+            {step === 0 && (
+              <Step1
+                data={data}
+                errors={errors}
+                update={update}
+                showAll={showAllNiches}
+                setShowAll={setShowAllNiches}
+              />
+            )}
+            {step === 1 && <Step2 data={data} errors={errors} update={update} />}
+            {step === 2 && (
+              <Step3 data={data} errors={errors} update={update} toggle={toggleArr} />
+            )}
+            {step === 3 && (
+              <Step4 data={data} errors={errors} update={update} toggle={toggleArr} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {submitError && (
+          <p className="mt-4 text-center text-sm text-destructive">{submitError}</p>
+        )}
+
+        {/* ── Navigation ── */}
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={back}
+            disabled={step === 0 || submitting}
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            ย้อนกลับ
+          </button>
+          <button
+            type="button"
+            onClick={next}
+            disabled={submitting}
+            className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background transition-transform hover:scale-[1.02] disabled:opacity-60"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                กำลังประมวลผล...
+              </>
+            ) : step === 3 ? (
+              <>
+                วิเคราะห์ฟรี
+                <ChevronRight className="h-4 w-4" />
+              </>
+            ) : (
+              <>
+                ถัดไป
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          ข้อมูลของคุณถูกเก็บอัตโนมัติ · กลับมาทำต่อได้ทุกเมื่อ
+        </p>
+      </div>
+
+      {/* ── Loading overlay ── */}
+      <AnimatePresence>
+        {submitting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+          >
+            <div className="mx-5 max-w-sm text-center">
+              <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-bg">
+                <Sparkles className="h-7 w-7 text-coral-text" />
               </div>
+              <h2 className="text-xl font-semibold tracking-tight">AI กำลังวิเคราะห์</h2>
+              <div className="mt-4 h-6 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={loadingIdx}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className="text-sm text-muted-foreground"
+                  >
+                    {LOADING_MESSAGES[loadingIdx]}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════
+   Reusable primitives
+══════════════════════════════════════════════════ */
+
+function Field({
+  label,
+  hint,
+  error,
+  children,
+}: {
+  label: string
+  hint?: string
+  error?: string
+  children: ReactNode
+}) {
+  return (
+    <div className="mb-5 last:mb-0">
+      <label className="mb-1.5 block text-sm font-medium tracking-tight">{label}</label>
+      {children}
+      {hint && !error && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
+      {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+function inputCls(hasError?: boolean) {
+  return [
+    'w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition-colors',
+    'placeholder:text-muted-foreground',
+    'focus:border-coral focus:ring-2 focus:ring-coral/20',
+    hasError ? 'border-destructive' : 'border-border',
+  ].join(' ')
+}
+
+function ChipGrid<T extends string>({
+  value,
+  options,
+  onChange,
+  cols = 2,
+}: {
+  value: T
+  options: Array<{ value: T; label: string }>
+  onChange: (v: T) => void
+  cols?: 2 | 3
+}) {
+  return (
+    <div className={`grid gap-2 ${cols === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      {options.map((opt) => {
+        const active = value === opt.value
+        return (
+          <button
+            type="button"
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={[
+              'rounded-xl border px-3 py-2.5 text-sm font-medium transition-all',
+              active
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border bg-background text-foreground hover:border-foreground/40',
+            ].join(' ')}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function MultiChipGrid<T extends string>({
+  values,
+  options,
+  onToggle,
+  cols = 2,
+}: {
+  values: readonly T[]
+  options: Array<{ value: T; label: string }>
+  onToggle: (v: T) => void
+  cols?: 2 | 3
+}) {
+  return (
+    <div className={`grid gap-2 ${cols === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      {options.map((opt) => {
+        const active = values.includes(opt.value)
+        return (
+          <button
+            type="button"
+            key={opt.value}
+            onClick={() => onToggle(opt.value)}
+            className={[
+              'flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all',
+              active
+                ? 'border-coral bg-coral-bg text-coral-text'
+                : 'border-border bg-background text-foreground hover:border-foreground/40',
+            ].join(' ')}
+          >
+            <span>{opt.label}</span>
+            {active && <Check className="h-4 w-4 shrink-0" />}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════
+   Step components
+══════════════════════════════════════════════════ */
+
+function Step1({
+  data,
+  errors,
+  update,
+  showAll,
+  setShowAll,
+}: {
+  data: AuditFormData
+  errors: Errors
+  update: <K extends keyof AuditFormData>(k: K, v: AuditFormData[K]) => void
+  showAll: boolean
+  setShowAll: (v: boolean) => void
+}) {
+  const nicheList = showAll ? ALL_NICHES : null
+  return (
+    <>
+      <Field label="ชื่อของคุณ" error={errors.name}>
+        <div className="relative">
+          <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            className={`${inputCls(!!errors.name)} pl-10`}
+            placeholder="พิมพ์ชื่อ..."
+            value={data.name}
+            onChange={(e) => update('name', e.target.value)}
+          />
+        </div>
+      </Field>
+      <Field label="อีเมล" hint="ใช้ส่งผลให้คุณ — ไม่ส่ง spam" error={errors.email}>
+        <div className="relative">
+          <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="email"
+            className={`${inputCls(!!errors.email)} pl-10`}
+            placeholder="you@email.com"
+            value={data.email}
+            onChange={(e) => update('email', e.target.value)}
+          />
+        </div>
+      </Field>
+      <Field label="แพลตฟอร์มหลัก">
+        <ChipGrid
+          value={data.platform}
+          options={PLATFORMS}
+          onChange={(v) => update('platform', v)}
+          cols={3}
+        />
+      </Field>
+      <Field label="Niche ของคุณ">
+        {!showAll ? (
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            {POPULAR_NICHES.map(({ value, label, Icon }) => {
+              const active = data.niche === value
+              return (
+                <button
+                  type="button"
+                  key={value}
+                  onClick={() => update('niche', value)}
+                  className={[
+                    'flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all',
+                    active
+                      ? 'border-foreground bg-foreground text-background'
+                      : 'border-border bg-background text-foreground hover:border-foreground/40',
+                  ].join(' ')}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {label}
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Plus className="h-4 w-4" />
+              ดูทั้งหมด
+            </button>
+          </div>
+        ) : (
+          <ChipGrid
+            value={data.niche}
+            options={nicheList!}
+            onChange={(v) => update('niche', v)}
+            cols={3}
+          />
+        )}
+      </Field>
+      <Field label="ผู้ติดตามส่วนใหญ่">
+        <ChipGrid
+          value={data.audienceType}
+          options={AUDIENCE_TYPES}
+          onChange={(v) => update('audienceType', v)}
+        />
+      </Field>
+    </>
+  )
+}
+
+function Step2({
+  data,
+  errors,
+  update,
+}: {
+  data: AuditFormData
+  errors: Errors
+  update: <K extends keyof AuditFormData>(k: K, v: AuditFormData[K]) => void
+}) {
+  return (
+    <>
+      <Field label="จำนวน follower" error={errors.followers}>
+        <input
+          type="number"
+          min={0}
+          className={inputCls(!!errors.followers)}
+          placeholder="เช่น 5000"
+          value={data.followers || ''}
+          onChange={(e) => update('followers', Number(e.target.value) || 0)}
+        />
+      </Field>
+      <Field label="ยอด view เฉลี่ย/คลิป" error={errors.avgViews}>
+        <input
+          type="number"
+          min={0}
+          className={inputCls(!!errors.avgViews)}
+          placeholder="เช่น 1200"
+          value={data.avgViews || ''}
+          onChange={(e) => update('avgViews', Number(e.target.value) || 0)}
+        />
+      </Field>
+      <Field label="โพสต์บ่อยแค่ไหน">
+        <ChipGrid
+          value={data.postingFrequency}
+          options={POSTING_FREQ}
+          onChange={(v) => update('postingFrequency', v)}
+        />
+      </Field>
+      <Field
+        label="Engagement rate (%)"
+        hint="like + comment + share หารด้วย view × 100"
+        error={errors.engagementRate}
+      >
+        <input
+          type="number"
+          step="0.1"
+          min={0}
+          max={100}
+          className={inputCls(!!errors.engagementRate)}
+          placeholder="เช่น 3.5"
+          value={data.engagementRate || ''}
+          onChange={(e) => update('engagementRate', Number(e.target.value) || 0)}
+        />
+      </Field>
+    </>
+  )
+}
+
+function Step3({
+  data,
+  errors,
+  update,
+  toggle,
+}: {
+  data: AuditFormData
+  errors: Errors
+  update: <K extends keyof AuditFormData>(k: K, v: AuditFormData[K]) => void
+  toggle: <K extends 'currentIncomeSources' | 'triedAndFailed'>(
+    k: K,
+    v: AuditFormData[K][number],
+  ) => void
+}) {
+  const checks: Array<{ key: keyof AuditFormData; label: string }> = [
+    { key: 'hasProduct', label: 'มีสินค้าหรือบริการของตัวเอง' },
+    { key: 'hasFunnel', label: 'มี funnel หรือ landing page' },
+    { key: 'hasAffiliate', label: 'เคยทำ affiliate' },
+    { key: 'hasClosingSystem', label: 'มีระบบปิดการขาย' },
+  ]
+  return (
+    <>
+      <Field
+        label="ช่องทางรายได้ตอนนี้ (เลือกได้หลายข้อ)"
+        error={errors.currentIncomeSources}
+      >
+        <MultiChipGrid
+          values={data.currentIncomeSources}
+          options={INCOME_SOURCES}
+          onToggle={(v) => toggle('currentIncomeSources', v)}
+        />
+      </Field>
+      <Field label="รายได้ต่อเดือน (บาท)" error={errors.monthlyIncome}>
+        <input
+          type="number"
+          min={0}
+          className={inputCls(!!errors.monthlyIncome)}
+          placeholder="เช่น 15000"
+          value={data.monthlyIncome || ''}
+          onChange={(e) => update('monthlyIncome', Number(e.target.value) || 0)}
+        />
+      </Field>
+      <Field label="คุณมีอะไรอยู่บ้าง?">
+        <div className="space-y-2">
+          {checks.map((c) => {
+            const v = data[c.key] as boolean
+            return (
+              <button
+                type="button"
+                key={c.key}
+                onClick={() => update(c.key, !v as never)}
+                className={[
+                  'flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all',
+                  v
+                    ? 'border-coral bg-coral-bg text-coral-text'
+                    : 'border-border bg-background hover:border-foreground/40',
+                ].join(' ')}
+              >
+                <span>{c.label}</span>
+                <span
+                  className={[
+                    'flex h-5 w-5 items-center justify-center rounded-md border transition-colors',
+                    v ? 'border-coral bg-coral text-white' : 'border-border',
+                  ].join(' ')}
+                >
+                  {v && <Check className="h-3.5 w-3.5" />}
+                </span>
+              </button>
             )
           })}
         </div>
-      </div>
+      </Field>
+    </>
+  )
+}
 
-      {/* Progress bar */}
-      <div className="h-px bg-white/5">
-        <motion.div
-          className="h-full bg-gradient-to-r from-violet-500 to-amber-400"
-          animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
-          transition={{ duration: 0.4 }}
+function Step4({
+  data,
+  errors,
+  update,
+  toggle,
+}: {
+  data: AuditFormData
+  errors: Errors
+  update: <K extends keyof AuditFormData>(k: K, v: AuditFormData[K]) => void
+  toggle: <K extends 'currentIncomeSources' | 'triedAndFailed'>(
+    k: K,
+    v: AuditFormData[K][number],
+  ) => void
+}) {
+  return (
+    <>
+      <Field label="ทำคอนเทนต์มานานแค่ไหน">
+        <ChipGrid
+          value={data.contentDuration}
+          options={CONTENT_DURATION}
+          onChange={(v) => update('contentDuration', v)}
         />
-      </div>
-
-      <div className="flex-1 flex items-start justify-center px-4 py-8">
-        <div className="w-full max-w-[420px]">
-          <AnimatePresence mode="wait">
-
-            {/* ── STEP 1: PROFILE ── */}
-            {step === 1 && (
-              <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">ตั้งค่าช่องของคุณ</h1>
-                <p className="text-white/38 text-sm mb-8">บอกเราแค่นี้ — AI จะสร้างแผนเฉพาะคุณค่ะ</p>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ชื่อ / ชื่อแชนแนล</label>
-                    <input
-                      value={form.name}
-                      onChange={(e) => update('name', e.target.value)}
-                      placeholder="ชื่อของคุณ..."
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                      อีเมล <span className="text-white/20 normal-case font-normal">(รับผลวิเคราะห์ก่อนใคร)</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => update('email', e.target.value)}
-                      placeholder="your@email.com"
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">Platform หลัก</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {PLATFORMS.map((p) => (
-                        <Chip key={p.value} selected={form.platform === p.value} onClick={() => update('platform', p.value)}>
-                          <div className="text-lg mb-0.5">{p.emoji}</div>
-                          <div className="text-xs font-medium">{p.label}</div>
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">แนวช่อง / ประเภทคอนเทนต์</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {NICHES.map((n) => (
-                        <Chip
-                          key={n.value}
-                          selected={form.niche === n.value}
-                          onClick={() => {
-                            update('niche', n.value)
-                            update('subNiche' as any, '')
-                          }}
-                        >
-                          {n.label}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Sub-niche — dynamic ตาม niche ที่เลือก */}
-                  {SUB_NICHES[form.niche] && (
-                    <div>
-                      <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                        ทำ Content เกี่ยวกับอะไรโดยเฉพาะ?
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {(SUB_NICHES[form.niche] ?? []).map((s) => (
-                          <Chip
-                            key={s.value}
-                            selected={(form as any).subNiche === s.value}
-                            onClick={() => update('subNiche' as any, s.value)}
-                          >
-                            <div className="font-semibold text-xs leading-tight">{s.label}</div>
-                            <div className="text-white/35 text-xs mt-0.5 leading-tight">{s.desc}</div>
-                          </Chip>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Content description — free text สำหรับ personalization */}
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-1 block">
-                      บอกให้ละเอียดขึ้นอีกนิด <span className="text-white/20 normal-case font-normal">(ไม่บังคับ)</span>
-                    </label>
-                    <p className="text-white/25 text-xs mb-2">ยิ่งบอกละเอียด ผลวิเคราะห์ยิ่งตรงกับช่องคุณมากขึ้น</p>
-                    <textarea
-                      value={(form as any).contentDescription ?? ''}
-                      onChange={(e) => update('contentDescription' as any, e.target.value)}
-                      placeholder={'เช่น:\n• สอนทำขนมไทย แนะนำอุปกรณ์ทำขนม\n• รีวิวร้านก๋วยเตี๋ยวทั่วกรุงเทพ\n• เลี้ยงแมว 3 ตัว ทำคลิปตลกๆ\n• สอนภาษาอังกฤษสำหรับวัยทำงาน'}
-                      rows={3}
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all resize-none text-sm"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STEP 2: PERFORMANCE ── */}
-            {step === 2 && (
-              <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">ช่องของคุณเป็นยังไงบ้าง?</h1>
-                <p className="text-white/38 text-sm mb-8">บอกตามจริงเลย — ไม่ต้องกลัวตัวเลขเล็ก เราเคยเห็นช่อง 0 followers เป็นเงินได้มาแล้ว</p>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">จำนวน Followers / Subscribers</label>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={form.followers || ''}
-                      onChange={(e) => update('followers', Number(e.target.value))}
-                      placeholder="เช่น 50000"
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ยอดวิวเฉลี่ยต่อโพสต์ / วิดีโอ</label>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={form.avgViews || ''}
-                      onChange={(e) => update('avgViews', Number(e.target.value))}
-                      placeholder="เช่น 15000"
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">โพสต์บ่อยแค่ไหน?</label>
-                    <div className="space-y-2">
-                      {FREQUENCIES.map((f) => (
-                        <Chip key={f.value} selected={form.postingFrequency === f.value} onClick={() => update('postingFrequency', f.value)}>
-                          {f.label}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">คนที่ดูคอนเทนต์คุณมีปฏิกิริยายังไง?</label>
-                    <div className="space-y-2">
-                      {([
-                        { label: 'น้อยมาก', desc: 'คนดูเฉยๆ ไม่ค่อยทำอะไร', rate: 1.5 },
-                        { label: 'ปานกลาง', desc: 'มีคนกด Like บ้าง', rate: 3.5 },
-                        { label: 'ดี', desc: 'มีทั้ง Like และ Comment สม่ำเสมอ', rate: 6 },
-                        { label: 'สูงมาก', desc: 'คนมีส่วนร่วม แชร์ และพูดถึงเยอะ', rate: 10 },
-                      ] as { label: string; desc: string; rate: number }[]).map((opt) => (
-                        <Chip
-                          key={opt.rate}
-                          selected={form.engagementRate === opt.rate}
-                          onClick={() => update('engagementRate', opt.rate)}
-                        >
-                          <span className="font-semibold">{opt.label}</span>
-                          <span className="text-white/38 text-xs ml-2">— {opt.desc}</span>
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                      คนที่ดูคอนเทนต์คุณส่วนใหญ่คือ?
-                    </label>
-                    <div className="space-y-2">
-                      {AUDIENCE_BUYING_POWERS.map((a) => (
-                        <Chip key={a.value} selected={form.audienceBuyingPower === a.value} onClick={() => update('audienceBuyingPower', a.value)}>
-                          <span className="font-semibold">{a.label}</span>
-                          <span className="text-white/38 text-xs ml-2">— {a.desc}</span>
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STEP 3: MONETIZATION ── */}
-            {step === 3 && (
-              <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">ตอนนี้คุณหาเงินจาก content ยังไงบ้าง?</h1>
-                <p className="text-white/38 text-sm mb-8">ตอบตามความจริงเลยนะ — ยังไม่มีรายได้เลยก็โอเค นั่นแหละที่เราช่วยได้</p>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ตอนนี้มีรายได้จากช่องทางไหนบ้าง? (เลือกได้หลายอย่าง)</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {INCOME_SOURCES.map((src) => (
-                        <Chip key={src.value} selected={form.currentIncomeSources.includes(src.value)} onClick={() => toggleIncomeSource(src.value)}>
-                          {src.label}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">มีรายได้จาก content เดือนละเท่าไหร่? (บาท)</label>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={form.monthlyIncome || ''}
-                      onChange={(e) => update('monthlyIncome', Math.max(0, Number(e.target.value) || 0))}
-                      placeholder="ถ้ายังไม่มีรายได้เลย ใส่ 0 ได้เลย"
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all text-sm"
-                    />
-                    {form.monthlyIncome > 0 && (
-                      <p className="text-violet-400/60 text-xs mt-1.5 font-medium">
-                        ฿{form.monthlyIncome.toLocaleString('th-TH')} บาท/เดือน
-                      </p>
-                    )}
-                    <p className="text-white/20 text-xs mt-1">รายได้จาก content เท่านั้น ไม่รวมเงินเดือนหรืองานอื่น</p>
-
-                    {/* ── High Earner Notice ── */}
-                    {form.monthlyIncome > 30000 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/6 p-4"
-                      >
-                        <p className="text-amber-400 font-bold text-sm mb-1">
-                          {form.monthlyIncome >= 50000 ? '🏆 ทำได้ดีมากเลย!' : '💡 หมายเหตุเล็กน้อย'}
-                        </p>
-                        <p className="text-white/55 text-xs leading-relaxed">
-                          {form.monthlyIncome >= 50000
-                            ? 'รายได้ระดับนี้คุณทำมาได้ดีมากแล้ว — MITA+ เหมาะกับ creator ที่เพิ่งเริ่ม เราจะยังวิเคราะห์ให้ แต่อาจมีบางส่วนที่คุณรู้อยู่แล้ว'
-                            : 'MITA+ เหมาะกับ creator ที่กำลังเริ่มสร้างรายได้จาก content ผลวิเคราะห์จะตรงที่สุดสำหรับคนที่ยังอยู่ในช่วงนี้'}
-                        </p>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-3 block">ตอนนี้มีระบบอะไรแล้วบ้าง?</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Toggle label="มีสินค้า/บริการของตัวเอง?" value={form.hasProduct} onChange={(v) => update('hasProduct', v)} />
-                      <Toggle label="มี Funnel / Landing Page?" value={form.hasFunnel} onChange={(v) => update('hasFunnel', v)} />
-                      <Toggle label="มี Affiliate / พาร์ทเนอร์?" value={form.hasAffiliate} onChange={(v) => update('hasAffiliate', v)} />
-                      <Toggle label="มีระบบปิดการขาย / DM?" value={form.hasClosingSystem} onChange={(v) => update('hasClosingSystem', v)} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                      เคยลองวิธีไหนมาบ้างแต่ยังไม่ work? <span className="text-white/20 normal-case font-normal">(เลือกได้หลายอย่าง)</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {TRIED_AND_FAILED.map((t) => (
-                        <Chip key={t.value} selected={form.triedAndFailed.includes(t.value)} onClick={() => toggleTriedAndFailed(t.value)}>
-                          {t.label}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STEP 4: GOALS ── */}
-            {step === 4 && (
-              <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                <h1 className="text-2xl font-black mb-1">อยากได้อะไรจาก content?</h1>
-                <p className="text-white/38 text-sm mb-8">ยิ่งบอกตรงๆ แผนที่ได้ยิ่งเวิร์ค — ไม่มีคำตอบที่ผิด</p>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">
-                      ทำ Content มาแล้วนานแค่ไหน?
-                    </label>
-                    <div className="space-y-2">
-                      {CONTENT_DURATIONS.map((d) => (
-                        <Chip key={d.value} selected={form.contentDuration === d.value} onClick={() => update('contentDuration', d.value)}>
-                          {d.label}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">ปัญหาที่กวนใจที่สุดตอนนี้คืออะไร?</label>
-                    <textarea
-                      value={form.biggestProblem}
-                      onChange={(e) => update('biggestProblem', e.target.value)}
-                      placeholder="เช่น: มีคนดูเยอะแต่ไม่รู้จะขายอะไร, มีสินค้าแต่ไม่มีคนซื้อ, ไม่รู้จะเริ่มจากตรงไหน..."
-                      rows={3}
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all resize-none text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2 block">อยากได้อะไรใน 30 วันนับจากนี้?</label>
-                    <textarea
-                      value={form.goalIn90Days}
-                      onChange={(e) => update('goalIn90Days', e.target.value)}
-                      placeholder="เช่น: รายได้ 50,000 บาท/เดือน หรือ เปิดคอร์สแรก หรือ Passive income 20K..."
-                      rows={3}
-                      className="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-violet-500/40 focus:bg-white/5 transition-all resize-none text-sm"
-                    />
-                  </div>
-
-                  <div className="card rounded-xl p-4 border-violet-500/15" style={{ borderColor: 'rgba(139,92,246,0.15)', background: 'rgba(139,92,246,0.04)' }}>
-                    <p className="text-violet-300 font-semibold text-sm mb-1">✨ พร้อมแล้ว!</p>
-                    <p className="text-white/38 text-xs">MITA+ จะวิเคราะห์ช่องทางรายได้ที่คุณยังขาดอยู่ และสร้างแผนทีละขั้นสำหรับคุณโดยเฉพาะ</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* API Error */}
-          {apiError && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-6 rounded-2xl border border-rose-500/30 bg-rose-500/8 px-4 py-3 flex items-start gap-3"
-            >
-              <span className="text-rose-400 text-base shrink-0 mt-0.5">⚠️</span>
-              <div>
-                <p className="text-rose-300 font-semibold text-sm">วิเคราะห์ไม่สำเร็จ</p>
-                <p className="text-white/40 text-xs mt-0.5">เกิดข้อผิดพลาด — ลองใหม่อีกครั้งได้เลยค่ะ</p>
-                {typeof apiError === 'string' && apiError !== 'true' && (
-                  <p className="text-rose-400/60 text-xs mt-1 font-mono break-all">{apiError}</p>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Navigation — sticky in thumb zone */}
-          <div className="mt-8 flex gap-3 pb-6">
-            {step > 1 && (
-              <button
-                onClick={() => setStep(s => s - 1)}
-                className="flex items-center justify-center gap-2 h-14 px-5 rounded-2xl border border-white/8 text-white/38 hover:text-white/70 hover:border-white/18 transition-all text-sm shrink-0"
-              >
-                <ArrowLeft size={16} />
-              </button>
-            )}
-            {step < TOTAL_STEPS ? (
-              <button
-                onClick={() => canNext() && setStep(s => s + 1)}
-                className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl font-bold text-base transition-all ${
-                  canNext()
-                    ? 'bg-white text-black hover:bg-white/90'
-                    : 'bg-white/5 text-white/22 cursor-not-allowed'
-                }`}
-              >
-                ถัดไป <ArrowRight size={16} />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black text-base transition-all disabled:opacity-60"
-              >
-                วิเคราะห์ช่องของฉันเลย <ArrowRight size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </main>
+      </Field>
+      <Field label="เคยลองแล้วยังไม่เวิร์ก (เลือกได้หลายข้อ)">
+        <MultiChipGrid
+          values={data.triedAndFailed}
+          options={TRIED_FAILED}
+          onToggle={(v) => toggle('triedAndFailed', v)}
+        />
+      </Field>
+      <Field label="ฐานคนดูส่วนใหญ่">
+        <ChipGrid
+          value={data.audienceBuyingPower}
+          options={BUYING_POWER}
+          onChange={(v) => update('audienceBuyingPower', v)}
+        />
+      </Field>
+      <Field label="Sub-niche ของคุณ" error={errors.subNiche}>
+        <input
+          className={inputCls(!!errors.subNiche)}
+          placeholder="เช่น รีวิวคาเฟ่กรุงเทพ, สอนเทรดคริปโตมือใหม่"
+          value={data.subNiche}
+          onChange={(e) => update('subNiche', e.target.value)}
+        />
+      </Field>
+      <Field label="คอนเทนต์ของคุณเป็นยังไง" hint="ไม่ต้องยาว 2–3 ประโยคพอ">
+        <textarea
+          rows={3}
+          className={`${inputCls()} resize-none`}
+          placeholder="เล่าให้ฟังหน่อย..."
+          value={data.contentDescription}
+          onChange={(e) => update('contentDescription', e.target.value)}
+        />
+      </Field>
+      <Field label="ปัญหาใหญ่ที่สุดตอนนี้">
+        <textarea
+          rows={2}
+          className={`${inputCls()} resize-none`}
+          placeholder="เช่น ยอด view นิ่ง, หาวิธีหาเงินไม่เจอ"
+          value={data.biggestProblem}
+          onChange={(e) => update('biggestProblem', e.target.value)}
+        />
+      </Field>
+      <Field label="เป้าหมายใน 90 วัน" error={errors.goalIn90Days}>
+        <textarea
+          rows={2}
+          className={`${inputCls()} resize-none`}
+          placeholder="เช่น มีรายได้จาก affiliate 5000/เดือน"
+          value={data.goalIn90Days}
+          onChange={(e) => update('goalIn90Days', e.target.value)}
+        />
+      </Field>
+    </>
   )
 }
