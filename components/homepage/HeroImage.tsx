@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { RADIUS, SHADOW } from '@/lib/design-tokens'
 
+// Wrapper intentionally has no overflow:hidden / borderRadius / boxShadow
+// so the floating analytics cards at image corners are never clipped.
 export function HeroImage() {
   return (
     <motion.div
@@ -14,21 +15,17 @@ export function HeroImage() {
         width: '100%',
         maxWidth: '480px',
         margin: '0 auto',
-        borderRadius: RADIUS.lg,
-        overflow: 'hidden',
-        boxShadow: SHADOW.float,
       }}
     >
       <Image
         src="/hero-composite.png"
         alt="Creator using MITA+ to track revenue"
-        width={600}
-        height={600}
+        width={1024}
+        height={1024}
         priority
         style={{
           width: '100%',
           height: 'auto',
-          objectFit: 'contain',
           display: 'block',
         }}
       />

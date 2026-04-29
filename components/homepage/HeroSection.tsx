@@ -108,7 +108,7 @@ export function HomepageHero() {
                 </PrimaryButton>
               </Link>
               <Link
-                href="/result/example"
+                href="/demo"
                 style={{
                   fontSize: '13px',
                   color: COLORS.text.secondary,
