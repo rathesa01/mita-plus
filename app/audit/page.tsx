@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { type AuditFormData } from '@/types'
 import { DEFAULT_FORM_DATA } from '@/lib/forms/auditDefaults'
+import { SUB_NICHES } from '@/lib/forms/subNiches'
 import MitaLogo from '@/app/components/MitaLogo'
 
 const STORAGE_KEY = 'mita_audit_draft'
@@ -75,12 +76,8 @@ const ALL_NICHES: Array<{ value: AuditFormData['niche']; label: string }> = [
   { value: 'other', label: 'อื่นๆ' },
 ]
 
-const AUDIENCE_TYPES: Array<{ value: AuditFormData['audienceType']; label: string }> = [
-  { value: 'general', label: 'คนทั่วไป' },
-  { value: 'niche', label: 'เฉพาะกลุ่ม' },
-  { value: 'professional', label: 'สายอาชีพ' },
-  { value: 'mixed', label: 'ผสม' },
-]
+// P-008-fix5: AUDIENCE_TYPES removed — audienceType field hidden (0 references in lib/*)
+// audienceType stays in AuditFormData type + schema for backward compat; default = 'general'
 
 const POSTING_FREQ: Array<{ value: AuditFormData['postingFrequency']; label: string }> = [
   { value: 'daily', label: 'ทุกวัน' },
@@ -179,7 +176,7 @@ function validateStep(step: number, data: AuditFormData): Errors {
       e.currentIncomeSources = "เลือกอย่างน้อย 1 ข้อ (หรือ 'ยังไม่มี')"
   }
   if (step === 3) {
-    if (!data.subNiche.trim()) e.subNiche = 'บอก sub-niche ของคุณหน่อยค่ะ'
+    // P-008-fix5: subNiche validation removed — now optional structured chip in Step 1
     if (!data.goalIn90Days.trim()) e.goalIn90Days = 'ตั้งเป้า 90 วันด้วยนะคะ'
   }
   return e
@@ -548,6 +545,47 @@ function MultiChipGrid<T extends string>({
   )
 }
 
+// P-008-fix5: Sub-niche chip with label + desc two-line layout
+function SubNicheChipGrid({
+  value,
+  options,
+  onChange,
+}: {
+  value: string
+  options: Array<{ value: string; label: string; desc: string }>
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {options.map((opt) => {
+        const active = value === opt.value
+        return (
+          <button
+            type="button"
+            key={opt.value}
+            onClick={() => onChange(active ? '' : opt.value)}
+            className={[
+              'rounded-xl border px-3 py-2.5 text-left text-sm transition-all',
+              active
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border bg-background text-foreground hover:border-foreground/40',
+            ].join(' ')}
+          >
+            <div className="font-medium leading-tight">{opt.label}</div>
+            <div
+              className={`mt-0.5 text-xs leading-tight ${
+                active ? 'text-background/60' : 'text-muted-foreground'
+              }`}
+            >
+              {opt.desc}
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 /* ══════════════════════════════════════════════════
    Step components
 ══════════════════════════════════════════════════ */
@@ -608,7 +646,7 @@ function Step1({
                 <button
                   type="button"
                   key={value}
-                  onClick={() => update('niche', value)}
+                  onClick={() => { update('niche', value); update('subNiche', '') }}
                   className={[
                     'flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all',
                     active
@@ -634,18 +672,24 @@ function Step1({
           <ChipGrid
             value={data.niche}
             options={nicheList!}
-            onChange={(v) => update('niche', v)}
+            onChange={(v) => { update('niche', v); update('subNiche', '') }}
             cols={3}
           />
         )}
       </Field>
-      <Field label="ผู้ติดตามส่วนใหญ่">
-        <ChipGrid
-          value={data.audienceType}
-          options={AUDIENCE_TYPES}
-          onChange={(v) => update('audienceType', v)}
-        />
-      </Field>
+      {/* P-008-fix5: Sub-niche structured selector — shows only when niche has sub-options */}
+      {SUB_NICHES[data.niche] && (
+        <Field
+          label="แนว Content เพิ่มเติม"
+          hint="เลือกแนว content เพื่อให้ AI วิเคราะห์ได้ละเอียดขึ้น"
+        >
+          <SubNicheChipGrid
+            value={data.subNiche}
+            options={SUB_NICHES[data.niche]!}
+            onChange={(v) => update('subNiche', v)}
+          />
+        </Field>
+      )}
     </>
   )
 }
@@ -821,14 +865,7 @@ function Step4({
           onChange={(v) => update('audienceBuyingPower', v)}
         />
       </Field>
-      <Field label="Sub-niche ของคุณ" error={errors.subNiche}>
-        <input
-          className={inputCls(!!errors.subNiche)}
-          placeholder="เช่น รีวิวคาเฟ่กรุงเทพ, สอนเทรดคริปโตมือใหม่"
-          value={data.subNiche}
-          onChange={(e) => update('subNiche', e.target.value)}
-        />
-      </Field>
+      {/* P-008-fix5: sub-niche free-text removed — moved to structured chip grid in Step 1 */}
       <Field label="คอนเทนต์ของคุณเป็นยังไง" hint="ไม่ต้องยาว 2–3 ประโยคพอ">
         <textarea
           rows={3}
