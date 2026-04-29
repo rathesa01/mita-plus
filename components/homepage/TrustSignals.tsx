@@ -11,7 +11,7 @@ interface TrustSignalsProps {
 export function TrustSignals({
   trustText = 'ฟรี · ไม่ต้องสมัคร',
   loginHref = '/login',
-  loginLabel = 'มีบัญชีแล้ว? login',
+  loginLabel = 'มีบัญชีแล้ว? เข้าสู่ระบบ',
   centered = false,
 }: TrustSignalsProps) {
   return (
