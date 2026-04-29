@@ -2,99 +2,157 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
 
 export function HeroSection() {
   return (
     <section
-      className="relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(160deg, #13102b 0%, #0d0d1a 60%, #080810 100%)',
-      }}
+      style={{ background: '#faf9f6', minHeight: '100svh' }}
+      className="flex flex-col"
     >
-      {/* Ambient glows */}
-      <div className="absolute pointer-events-none"
-        style={{ top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse, rgba(123,97,255,0.22) 0%, transparent 65%)', filter: 'blur(40px)' }} />
+      {/* ── Mobile/Desktop layout ── */}
+      <div className="relative flex-1 max-w-6xl mx-auto w-full px-5
+                      flex flex-col
+                      lg:flex-row lg:items-center lg:gap-14
+                      pt-24 pb-10 lg:pt-0 lg:min-h-[100svh]">
 
-      {/* Mobile: visual top → text bottom (1 screen) | Desktop: text left | visual right */}
-      <div className="relative z-10 max-w-6xl mx-auto px-5 flex flex-col lg:flex-row lg:items-center lg:gap-12 lg:min-h-[100svh] lg:py-0 pt-16 pb-4">
+        {/* ─────────── TEXT BLOCK ─────────── */}
+        <div className="lg:w-[44%] flex flex-col items-start order-1 lg:order-1">
 
-        {/* TEXT BLOCK */}
-        <div className="lg:w-[46%] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 mt-3 lg:mt-0 relative" style={{ zIndex: 50 }}>
-
-          {/* Label — plain colored text, no pill */}
-          <p className="font-bold mb-3 tracking-wide"
-            style={{ fontSize: 'clamp(0.8rem, 2vw, 0.95rem)', color: '#a78bfa' }}>
-            ● วิเคราะห์รายได้ Creator ทุกช่องทาง
-          </p>
+          {/* Tag pill */}
+          <div
+            className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full"
+            style={{
+              background: 'rgba(251,191,36,0.1)',
+              border: '1px solid rgba(251,191,36,0.35)',
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
+              วิเคราะห์รายได้ creator
+            </span>
+          </div>
 
           {/* Headline */}
-          <h1 className="font-black leading-[1.35] mb-3"
-            style={{ fontSize: 'clamp(1.9rem, 6vw, 3.8rem)' }}>
-            <span className="text-white">Follower และ View<br />ของคุณ ทำเงินได้</span>
-            <br />
-            <span style={{
-              background: 'linear-gradient(90deg, #7B61FF 0%, #FF9F1C 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>
+          <h1
+            className="font-black leading-[1.2] mb-4"
+            style={{ fontSize: 'clamp(2rem, 6.5vw, 3.6rem)', color: '#0d0d0d' }}
+          >
+            follower กับ view<br />
+            ของคุณ ทำเงินได้<br />
+            <span
+              style={{
+                background: 'linear-gradient(90deg, #f97316 0%, #f59e0b 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               เท่าไหร่จริงๆ?
             </span>
           </h1>
 
-          {/* Sub — short & punchy */}
-          <p className="mb-5"
-            style={{ fontSize: 'clamp(0.85rem, 2.5vw, 1rem)', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
+          {/* Sub — desktop only (above image) */}
+          <p
+            className="hidden lg:block mb-7"
+            style={{ fontSize: '1rem', color: 'rgba(0,0,0,0.42)', lineHeight: 1.65 }}
+          >
+            กรอกตัวเลขแค่ 3 อย่าง รู้ผลใน 3 นาที
+          </p>
+
+          {/* CTA — desktop */}
+          <div className="hidden lg:flex flex-col gap-3 w-full">
+            <Link href="/audit">
+              <button
+                className="h-14 px-8 rounded-full font-black text-base transition-all
+                           hover:opacity-85 active:scale-95 w-full sm:w-auto"
+                style={{ background: '#0d0d0d', color: '#fff', fontSize: '16px' }}
+              >
+                เริ่มฟรี · 3 นาที →
+              </button>
+            </Link>
+            <div className="flex items-center gap-4 text-xs" style={{ color: 'rgba(0,0,0,0.38)' }}>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"
+                  style={{ boxShadow: '0 0 6px #22c55e' }} />
+                ฟรี · ไม่ต้องสมัคร
+              </span>
+              <span>|</span>
+              <Link href="/pricing" style={{ color: '#f97316', textDecoration: 'underline' }}>
+                ดูแพ็คเกจ →
+              </Link>
+            </div>
+
+            {/* Stats — desktop */}
+            <div className="flex gap-8 mt-6 pt-6 border-t border-black/[0.06]">
+              {[
+                { n: '฿40K+', label: 'ศักยภาพรายได้/เดือน', sub: 'ตาม benchmark อุตสาหกรรม' },
+                { n: '3 นาที', label: 'ได้ผลวิเคราะห์', sub: 'ไม่ต้องรอ' },
+                { n: '100%', label: 'ฟรี', sub: 'ไม่มีเงื่อนไข' },
+              ].map((s) => (
+                <div key={s.n}>
+                  <p className="font-black text-xl" style={{ color: '#0d0d0d' }}>{s.n}</p>
+                  <p className="text-xs leading-snug mt-0.5" style={{ color: 'rgba(0,0,0,0.45)' }}>{s.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(0,0,0,0.28)' }}>{s.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ─────────── VISUAL BLOCK ─────────── */}
+        <div className="lg:w-[56%] order-2 w-full my-6 lg:my-0">
+          <HeroVisual />
+        </div>
+
+        {/* ─────────── MOBILE: sub + CTA + stats ─────────── */}
+        <div className="lg:hidden order-3 flex flex-col gap-4 w-full">
+
+          {/* Sub */}
+          <p style={{ fontSize: '15px', color: 'rgba(0,0,0,0.42)', lineHeight: 1.65 }}>
             กรอกตัวเลขแค่ 3 อย่าง รู้ผลใน 3 นาที
           </p>
 
           {/* CTA */}
-          <div className="flex flex-col items-center lg:items-start gap-3 w-full lg:w-auto">
-            <Link href="/audit" className="w-full sm:w-auto">
-              <button
-                className="w-full sm:w-auto h-12 px-6 rounded-full text-base font-bold transition-all hover:scale-105 hover:brightness-110 active:scale-95"
-                style={{
-                  background: 'linear-gradient(135deg, #7B61FF, #FF9F1C)',
-                  color: '#fff',
-                  boxShadow: '0 0 32px rgba(123,97,255,0.4)',
-                }}
-              >
-                เริ่มต้นฟรี — วิเคราะห์ช่องของฉัน →
-              </button>
+          <Link href="/audit" className="w-full">
+            <button
+              className="w-full h-14 rounded-full font-black text-base transition-all active:scale-95"
+              style={{ background: '#0d0d0d', color: '#fff', fontSize: '16px' }}
+            >
+              เริ่มฟรี · 3 นาที →
+            </button>
+          </Link>
+
+          {/* Trust */}
+          <div className="flex items-center justify-center gap-3 text-xs" style={{ color: 'rgba(0,0,0,0.38)' }}>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"
+                style={{ boxShadow: '0 0 5px #22c55e' }} />
+              ฟรี · ไม่ต้องสมัคร
+            </span>
+            <span>|</span>
+            <Link href="/pricing" style={{ color: 'rgba(0,0,0,0.5)', textDecoration: 'underline' }}>
+              ดูแพ็คเกจ
             </Link>
-            <div className="flex items-center gap-4 flex-wrap justify-center lg:justify-start">
-              <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ boxShadow: '0 0 6px #22c55e' }} />
-                ฟรี 100% · ไม่ต้องสมัคร
-              </p>
-              <Link href="/login" className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                มีบัญชีแล้ว? <span style={{ color: '#7B61FF', textDecoration: 'underline' }}>เข้าสู่ระบบ</span>
-              </Link>
-              <Link href="/pricing" className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                <span style={{ color: '#FF9F1C', textDecoration: 'underline' }}>ดูแพ็คเกจ</span> →
-              </Link>
-            </div>
           </div>
 
-          {/* Stats — desktop only */}
-          <div className="hidden lg:flex gap-8 mt-10">
+          {/* Stats */}
+          <div
+            className="grid grid-cols-3 gap-2 mt-1 pt-4"
+            style={{ borderTop: '1px solid rgba(0,0,0,0.07)' }}
+          >
             {[
-              { n: '฿40K+',  label: 'ศักยภาพรายได้/เดือน (ตาม benchmark อุตสาหกรรม)'  },
-              { n: '3 นาที', label: 'ได้ผลวิเคราะห์'       },
-              { n: '100%',   label: 'ฟรี ไม่มีเงื่อนไข'   },
+              { n: '฿40K+', label: 'ศักยภาพรายได้', sub: 'ตาม benchmark' },
+              { n: '3 นาที', label: 'ได้ผลวิเคราะห์', sub: 'ไม่ต้องรอ' },
+              { n: '100%', label: 'ฟรี', sub: 'ไม่มีเงื่อนไข' },
             ].map((s) => (
-              <div key={s.n}>
-                <p className="font-black text-lg" style={{
-                  background: 'linear-gradient(135deg, #7B61FF, #FF9F1C)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>{s.n}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
+              <div key={s.n} className="text-center">
+                <p className="font-black" style={{ fontSize: '20px', color: '#0d0d0d' }}>{s.n}</p>
+                <p style={{ fontSize: '10px', color: 'rgba(0,0,0,0.45)', lineHeight: 1.3 }}>{s.label}</p>
+                <p style={{ fontSize: '9px', color: 'rgba(0,0,0,0.28)' }}>{s.sub}</p>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* VISUAL BLOCK */}
-        <div className="lg:w-[54%] order-1 lg:order-2 flex items-center justify-center">
-          <HeroVisual />
         </div>
 
       </div>
@@ -102,24 +160,34 @@ export function HeroSection() {
   )
 }
 
+/* ─────────────────────────────────────────────────────────── */
+/*  HeroVisual — รูปภาพ + floating cards เหมือนเดิม           */
+/* ─────────────────────────────────────────────────────────── */
 function HeroVisual() {
   return (
-    /* Image defines height — no fixed height, no overflow */
     <div className="relative mx-auto w-full" style={{ maxWidth: '460px' }}>
 
       {/* Soft glow */}
-      <div className="absolute pointer-events-none rounded-full"
-        style={{ width: '60%', height: '60%', top: '20%', left: '20%', background: 'radial-gradient(circle, rgba(123,97,255,0.18) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+      <div
+        className="absolute pointer-events-none rounded-full"
+        style={{
+          width: '60%', height: '60%', top: '20%', left: '20%',
+          background: 'radial-gradient(circle, rgba(123,97,255,0.15) 0%, transparent 70%)',
+          filter: 'blur(50px)',
+        }}
+      />
 
-      {/* ── Analytics card LEFT (TikTok) — behind main image ── */}
-      <div className="absolute rounded-2xl overflow-hidden"
+      {/* Analytics card LEFT (TikTok) */}
+      <div
+        className="absolute rounded-2xl overflow-hidden"
         style={{
           width: '110px', top: '14%', left: '0px',
           transform: 'rotateZ(-5deg)',
-          zIndex: 3, opacity: 0.55,
-          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+          zIndex: 3, opacity: 0.7,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.18)',
           background: '#16162a', border: '1px solid rgba(255,255,255,0.1)',
-        }}>
+        }}
+      >
         <div className="px-3 pt-3 pb-2 flex items-center gap-2"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs"
@@ -155,15 +223,17 @@ function HeroVisual() {
         </div>
       </div>
 
-      {/* ── Analytics card RIGHT (Instagram) — behind main image ── */}
-      <div className="absolute rounded-2xl overflow-hidden"
+      {/* Analytics card RIGHT (Instagram) */}
+      <div
+        className="absolute rounded-2xl overflow-hidden"
         style={{
           width: '108px', top: '10%', right: '0px',
           transform: 'rotateZ(5deg)',
-          zIndex: 3, opacity: 0.55,
-          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+          zIndex: 3, opacity: 0.7,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.18)',
           background: '#16162a', border: '1px solid rgba(255,255,255,0.1)',
-        }}>
+        }}
+      >
         <div className="px-3 pt-3 pb-2 flex items-center gap-2"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs"
@@ -199,11 +269,11 @@ function HeroVisual() {
         </div>
       </div>
 
-      {/* ── Creator bubbles — faded ── */}
-      <div className="absolute" style={{ top: '12%', left: '2px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'left top' }}>
+      {/* Creator bubbles */}
+      <div className="absolute" style={{ top: '12%', left: '2px', zIndex: 4, opacity: 0.55, transform: 'scale(0.85)', transformOrigin: 'left top' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden"
-            style={{ border: '2px solid rgba(255,159,28,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+            style={{ border: '2px solid rgba(255,159,28,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
             <Image src="/influ-cooking.png" alt="Food creator" width={56} height={56} className="w-full h-full object-cover object-top" />
           </div>
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-white font-bold whitespace-nowrap rounded-full px-2 py-0.5"
@@ -213,10 +283,10 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute" style={{ top: '6%', right: '5px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
+      <div className="absolute" style={{ top: '6%', right: '5px', zIndex: 4, opacity: 0.55, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
         <div className="relative">
           <div className="w-12 h-12 rounded-full overflow-hidden"
-            style={{ border: '2px solid rgba(123,97,255,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+            style={{ border: '2px solid rgba(123,97,255,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
             <Image src="/influ-lifestyle.png" alt="Lifestyle creator" width={48} height={48} className="w-full h-full object-cover object-top" />
           </div>
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-white font-bold whitespace-nowrap rounded-full px-2 py-0.5"
@@ -226,10 +296,10 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute" style={{ top: '58%', right: '3px', zIndex: 4, opacity: 0.45, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
+      <div className="absolute" style={{ top: '58%', right: '3px', zIndex: 4, opacity: 0.55, transform: 'scale(0.85)', transformOrigin: 'right top' }}>
         <div className="relative">
           <div className="w-14 h-14 rounded-full overflow-hidden"
-            style={{ border: '2px solid rgba(34,197,94,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+            style={{ border: '2px solid rgba(34,197,94,0.5)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
             <Image src="/influ-fitness.png" alt="Fitness creator" width={56} height={56} className="w-full h-full object-cover object-top" />
           </div>
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-white font-bold whitespace-nowrap rounded-full px-2 py-0.5"
@@ -239,7 +309,7 @@ function HeroVisual() {
         </div>
       </div>
 
-      {/* ── Floating chips (all within 420px height) ── */}
+      {/* Floating chips */}
       <SmallCard style={{ top: '22%', left: '-5px', transform: 'rotateZ(-5deg)', zIndex: 25 }}>
         <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginBottom: '1px' }}>PROFIT</p>
         <p className="font-extrabold" style={{ fontSize: '18px', color: '#22c55e', lineHeight: 1 }}>+200%</p>
@@ -256,19 +326,19 @@ function HeroVisual() {
         <p className="font-bold" style={{ fontSize: '16px', color: '#22c55e', lineHeight: 1 }}>+400%</p>
       </SmallCard>
 
-      {/* ── Main composite image — normal flow, defines container height ── */}
+      {/* Main image */}
       <div className="relative z-[20] w-full">
         <Image
           src="/hero-composite.png"
           alt="Creator monetization"
           width={480} height={480}
           className="w-full h-auto"
-          style={{ filter: 'drop-shadow(0 20px 48px rgba(123,97,255,0.28)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))' }}
+          style={{ filter: 'drop-shadow(0 20px 48px rgba(0,0,0,0.15)) drop-shadow(0 4px 20px rgba(123,97,255,0.15))' }}
           priority
         />
       </div>
 
-      {/* 2 coins */}
+      {/* Coins */}
       <span className="absolute pointer-events-none select-none"
         style={{ top: '8%', left: '22%', zIndex: 25, fontSize: '1.1rem', transform: 'rotateZ(-18deg)', filter: 'drop-shadow(0 0 8px rgba(255,200,50,0.5))' }}>🪙</span>
       <span className="absolute pointer-events-none select-none"
@@ -285,7 +355,7 @@ function SmallCard({ children, style }: { children: React.ReactNode; style?: Rea
         padding: '8px 12px',
         background: 'rgba(18,18,36,0.88)',
         border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07)',
       }}>
       {children}
     </div>

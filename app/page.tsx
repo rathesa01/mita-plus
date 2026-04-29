@@ -50,7 +50,7 @@ export default function LandingPage() {
     <main className="bg-[#08080f] min-h-screen text-white overflow-x-hidden">
 
       {/* ── NAV ─────────────────────────────────── */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/[0.06] bg-[#08080f]/85 backdrop-blur-xl">
+      <nav className="fixed top-0 w-full z-50 border-b border-black/[0.06] bg-[#faf9f6]/90 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
 
           {/* Logo */}
@@ -64,20 +64,24 @@ export default function LandingPage() {
             {/* แพ็คเกจ — text link, desktop only */}
             <Link
               href="/pricing"
-              className="hidden sm:inline-flex text-[13px] font-medium text-white/45 hover:text-white/75 transition-colors px-2"
+              className="hidden sm:inline-flex text-[13px] font-medium transition-colors px-2"
+              style={{ color: 'rgba(0,0,0,0.45)' }}
             >
               แพ็คเกจ
             </Link>
 
             {/* divider — desktop only */}
-            <span className="hidden sm:block w-px h-4 bg-white/10" />
+            <span className="hidden sm:block w-px h-4 bg-black/10" />
 
             {/* เข้าสู่ระบบ — ghost pill */}
             <Link
               href="/login"
-              className="inline-flex items-center text-[13px] font-semibold text-white/70 hover:text-white
-                         border border-white/15 hover:border-white/30
-                         px-4 py-[7px] rounded-full transition-all hover:bg-white/5"
+              className="inline-flex items-center text-[13px] font-semibold
+                         border px-4 py-[7px] rounded-full transition-all"
+              style={{
+                color: 'rgba(0,0,0,0.6)',
+                borderColor: 'rgba(0,0,0,0.15)',
+              }}
             >
               เข้าสู่ระบบ
             </Link>
@@ -86,8 +90,8 @@ export default function LandingPage() {
             <Link
               href="/audit"
               className="inline-flex items-center gap-1.5 text-[13px] font-bold
-                         bg-white text-black px-4 py-[7px] rounded-full
-                         hover:bg-white/90 active:scale-95 transition-all"
+                         px-4 py-[7px] rounded-full active:scale-95 transition-all"
+              style={{ background: '#0d0d0d', color: '#fff' }}
             >
               เริ่มฟรี <ArrowRight size={12} />
             </Link>
