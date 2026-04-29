@@ -1,62 +1,106 @@
-// GET /api/auth/callback
-// URL นี้ถูก whitelist ใน Supabase แล้ว
+// GET /api/auth/callback — P-DEBUG-LOGIN-AGGRESSIVE Layer 2
 //
-// กรณี PKCE flow (code ใน query param): exchange code → redirect โดยตรง
-// กรณี Implicit flow (token ใน hash): server ไม่ได้ hash → ส่ง HTML กลับ
-//   browser อ่าน hash เอง แล้ว JS redirect ไป /auth/callback พร้อม hash ติดไปด้วย
+// Server-side OAuth callback handler using @supabase/ssr createServerClient.
+//
+// Why server-side is more reliable:
+//  - createServerClient reads PKCE code_verifier from request COOKIES
+//  - No localStorage cross-origin issues (was the root cause of the timeout bug)
+//  - Hardcoded redirectTo 'https://www.mitaplus.com/api/auth/callback' in login
+//    page ensures code ALWAYS arrives here (no non-www mismatch)
+//  - Handles both PKCE OAuth (code=) and magic link (token_hash=) flows
+//
+// Session cookies are set in the response → middleware can refresh them on
+// subsequent requests.
+
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function GET(req: NextRequest) {
-  const { searchParams, origin } = new URL(req.url)
-  const code = searchParams.get('code')
+  const { searchParams } = new URL(req.url)
+  const code      = searchParams.get('code')
+  const tokenHash = searchParams.get('token_hash')
+  const type      = searchParams.get('type') as 'magiclink' | 'email' | null
 
-  // ── PKCE flow: มี code ใน URL ──────────────────────────────────────────
-  if (code) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+  // canonical origin — always www
+  const origin = 'https://www.mitaplus.com'
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  const cookieStore = await cookies()
 
-    if (!error && data.user) {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('plan')
-        .eq('id', data.user.id)
-        .single()
-
-      const destination = (profile?.plan === 'starter' || profile?.plan === 'pro')
-        ? '/starter'
-        : '/pricing'
-
-      return NextResponse.redirect(`${origin}${destination}`)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // setAll may throw in read-only contexts; safe to ignore here
+            // since the session will be set via the response headers
+          }
+        },
+      },
     }
+  )
+
+  // ── PKCE / OAuth flow: ?code= ──────────────────────────────────────────
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('plan')
+          .eq('id', user.id)
+          .single() as { data: { plan: string } | null; error: unknown }
+
+        const dest = (profile?.plan === 'starter' || profile?.plan === 'pro')
+          ? '/starter'
+          : '/pricing'
+
+        return NextResponse.redirect(`${origin}${dest}`)
+      }
+    }
+
+    console.error('[MITA+] exchangeCodeForSession error:', error?.message)
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
   }
 
-  // ── Implicit flow: ไม่มี code → token อยู่ใน hash ──────────────────────
-  // Server ไม่ได้ hash fragment เลย ต้องให้ browser จัดการ
-  // ส่ง HTML กลับ: JS อ่าน window.location.hash แล้ว redirect ไป /auth/callback
-  const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>กำลังเข้าสู่ระบบ...</title></head>
-<body style="margin:0;background:#0B0B0F;display:flex;align-items:center;justify-content:center;min-height:100vh;">
-<p style="color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:14px;">กำลังเข้าสู่ระบบ...</p>
-<script>
-  // นำ hash fragment (access_token, refresh_token ฯลฯ) ไปให้ client-side page จัดการ
-  var hash = window.location.hash;
-  if (hash && hash.length > 1) {
-    window.location.replace('/auth/callback' + hash);
-  } else {
-    window.location.replace('/login?error=auth_failed');
-  }
-</script>
-</body>
-</html>`
+  // ── Magic link / OTP flow: ?token_hash= ───────────────────────────────
+  if (tokenHash && type) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
 
-  return new NextResponse(html, {
-    status: 200,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-  })
+    if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('plan')
+          .eq('id', user.id)
+          .single() as { data: { plan: string } | null; error: unknown }
+
+        const dest = (profile?.plan === 'starter' || profile?.plan === 'pro')
+          ? '/starter'
+          : '/pricing'
+
+        return NextResponse.redirect(`${origin}${dest}`)
+      }
+    }
+
+    console.error('[MITA+] verifyOtp error:', error?.message)
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+  }
+
+  // ── Fallback: no code, no token_hash ──────────────────────────────────
+  return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }

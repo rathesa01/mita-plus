@@ -1,22 +1,29 @@
 'use client'
 /**
- * Supabase client-side auth client
- * ใช้ NEXT_PUBLIC_ keys เพื่อให้ browser เข้าถึงได้
+ * Supabase browser client — P-DEBUG-LOGIN-AGGRESSIVE Layer 2
+ *
+ * Migrated from @supabase/supabase-js createClient → @supabase/ssr createBrowserClient
+ *
+ * Key differences:
+ *  - createBrowserClient stores PKCE code_verifier in COOKIES (not localStorage)
+ *  - Cookies are scoped to domain (www + non-www share via .mitaplus.com)
+ *  - Works with createServerClient in /api/auth/callback for server-side exchange
+ *  - No need to specify flowType: 'pkce' — it's the default in @supabase/ssr
  */
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-let _client: ReturnType<typeof createClient> | null = null
+// Explicit return type preserves the same SupabaseClient shape as the old
+// createClient singleton — consuming code (auth/callback, starter, login)
+// gets identical TypeScript inference as before.
+let _client: SupabaseClient | null = null
 
-export function getSupabaseClient() {
+export function getSupabaseClient(): SupabaseClient | null {
   if (_client) return _client
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null
-  _client = createClient(url, key, {
-    auth: {
-      flowType: 'pkce', // PKCE flow — ใช้ code exchange ผ่าน /auth/callback (client-side)
-    },
-  })
+  _client = createBrowserClient(url, key) as SupabaseClient
   return _client
 }
 

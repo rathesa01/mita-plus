@@ -39,6 +39,10 @@ export default function LoginPage() {
   }
 
   // ── Google OAuth ──────────────────────────────
+  // P-DEBUG-LOGIN-AGGRESSIVE Layer 3:
+  // Hardcode www canonical URL → /api/auth/callback (server-side handler).
+  // Previously used window.location.origin which could resolve to non-www if
+  // the user landed on mitaplus.com, causing PKCE code_verifier origin mismatch.
   const loginWithGoogle = async () => {
     if (!supabase) return
     setLoading(true)
@@ -46,13 +50,15 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: 'https://www.mitaplus.com/api/auth/callback',
       },
     })
     if (error) { setError(error.message); setLoading(false) }
   }
 
   // ── Magic Link ────────────────────────────────
+  // Also hardcoded to www/api/auth/callback for consistency (server-side handler
+  // now supports token_hash= OTP flow as well).
   const sendMagicLink = async () => {
     if (!supabase || !email.trim()) return
     setLoading(true)
@@ -60,7 +66,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: 'https://www.mitaplus.com/api/auth/callback',
       },
     })
     if (error) {
