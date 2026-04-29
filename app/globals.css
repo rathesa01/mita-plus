@@ -105,6 +105,24 @@
 .glow-green  { box-shadow: 0 0 60px rgba(16,185,129,0.10); }
 .glow-violet { box-shadow: 0 0 60px rgba(139,92,246,0.10); }
 
+/* ── Audit page cream theme override (P-008-fix1) ──────────────────────────
+   data-theme="light" scopes these overrides to #audit only —
+   does not affect other dark pages (homepage, starter, login, dashboard)      */
+[data-theme="light"] {
+  --background:        oklch(0.99 0.006 75);      /* #FFFAF5 cream */
+  --foreground:        oklch(0.13 0.004 265);     /* #1D1D1F near-black */
+  --card:              oklch(1 0 0);              /* #FFFFFF */
+  --card-foreground:   oklch(0.13 0.004 265);
+  --muted:             oklch(0.965 0 0);          /* #F5F5F7 */
+  --muted-foreground:  oklch(0.44 0 0);           /* #6B6B6B */
+  --border:            oklch(0 0 0 / 0.08);
+  --input:             oklch(0 0 0 / 0.08);
+  --destructive:       oklch(0.43 0.13 25);       /* #A32D2D */
+  --ring:              oklch(0.6 0 0);
+  --accent:            oklch(0.965 0 0);
+  --accent-foreground: oklch(0.13 0.004 265);
+}
+
 /* ── MITA+ Design Token CSS Variables ───────── */
 :root {
   --mita-bg:             #0B0B0F;

@@ -9,6 +9,10 @@
 //   - Logo: text span → <MitaLogo size="sm" />
 //   - ReactNode: imported from react (not React.ReactNode)
 //   - globals.css: --color-brand-purple alias added for text-brand-purple
+// P-008-fix1 (2026-04-29):
+//   - outer wrapper: bg-background → inline style #FFFAF5 + data-theme="light"
+//   - globals.css: [data-theme="light"] overrides Tailwind tokens → cream palette
+//   - scoped to /audit only — does not affect other dark pages
 
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -286,7 +290,11 @@ export default function AuditFormV2() {
   const meta = STEP_META[step]
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <div
+      className="min-h-screen font-sans"
+      style={{ backgroundColor: '#FFFAF5', color: '#1D1D1F' }}
+      data-theme="light"
+    >
       <div className="mx-auto max-w-2xl px-5 py-8 md:py-14">
 
         {/* ── Logo ── */}
