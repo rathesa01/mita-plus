@@ -91,8 +91,8 @@ const INCOME_SOURCES: Array<{
   label: string
 }> = [
   { value: 'ads_revenue', label: 'Ads Revenue' },
-  { value: 'sponsorship', label: 'Sponsorship' },
-  { value: 'affiliate', label: 'Affiliate' },
+  { value: 'sponsorship', label: 'Sponsor / รับรีวิวแบรนด์' },
+  { value: 'affiliate', label: 'Affiliate (ค่าคอมมิชชั่น)' },
   { value: 'own_product', label: 'ขายของเอง' },
   { value: 'coaching', label: 'Coaching' },
   { value: 'merchandise', label: 'Merch' },
@@ -108,8 +108,8 @@ const CONTENT_DURATION: Array<{ value: AuditFormData['contentDuration']; label: 
 ]
 
 const TRIED_FAILED: Array<{ value: AuditFormData['triedAndFailed'][number]; label: string }> = [
-  { value: 'affiliate', label: 'Affiliate' },
-  { value: 'sponsorship', label: 'Sponsorship' },
+  { value: 'affiliate', label: 'Affiliate (ค่าคอมมิชชั่น)' },
+  { value: 'sponsorship', label: 'Sponsor / รับรีวิวแบรนด์' },
   { value: 'own_product', label: 'ขายของเอง' },
   { value: 'coaching', label: 'Coaching' },
   { value: 'live_selling', label: 'Live ขายของ' },
@@ -736,7 +736,7 @@ function Step1({
           />
         </div>
       </Field>
-      <Field label="แพลตฟอร์มหลัก">
+      <Field label="เลือกแพลตฟอร์มหลักของคุณ">
         <ChipGrid
           value={data.platform}
           options={PLATFORMS}
@@ -744,7 +744,7 @@ function Step1({
           cols={3}
         />
       </Field>
-      <Field label="Niche ของคุณ">
+      <Field label="เลือก Niche ของคุณ">
         {!showAll ? (
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
             {POPULAR_NICHES.map(({ value, label, Icon }) => {
@@ -787,8 +787,8 @@ function Step1({
       {/* P-008-fix5: Sub-niche structured selector — shows only when niche has sub-options */}
       {SUB_NICHES[data.niche] && (
         <Field
-          label="แนว Content เพิ่มเติม"
-          hint="เลือกแนว content เพื่อให้ AI วิเคราะห์ได้ละเอียดขึ้น"
+          label="เลือกแนวให้ละเอียดขึ้น"
+          hint="เพื่อให้ AI วิเคราะห์แม่นขึ้น"
         >
           <SubNicheChipGrid
             value={data.subNiche}
@@ -883,8 +883,8 @@ function Step3({
 }) {
   const checks: Array<{ key: keyof AuditFormData; label: string }> = [
     { key: 'hasProduct', label: 'มีสินค้าหรือบริการของตัวเอง' },
-    { key: 'hasFunnel', label: 'มี funnel หรือ landing page' },
-    { key: 'hasAffiliate', label: 'เคยทำ affiliate' },
+    { key: 'hasFunnel', label: 'Funnel / หน้าขาย' },
+    { key: 'hasAffiliate', label: 'Affiliate (ค่าคอมมิชชั่น)' },
     { key: 'hasClosingSystem', label: 'มีระบบปิดการขาย' },
   ]
   return (
@@ -964,21 +964,21 @@ function Step4({
 }) {
   return (
     <>
-      <Field label="ทำคอนเทนต์มานานแค่ไหน">
+      <Field label="ทำมานานแค่ไหนแล้ว?">
         <ChipGrid
           value={data.contentDuration}
           options={CONTENT_DURATION}
           onChange={(v) => update('contentDuration', v)}
         />
       </Field>
-      <Field label="เคยลองแล้วยังไม่เวิร์ก (เลือกได้หลายข้อ)">
+      <Field label="เคยลองทำเงินแบบไหนแล้วไม่เวิร์ก?">
         <MultiChipGrid
           values={data.triedAndFailed}
           options={TRIED_FAILED}
           onToggle={(v) => toggle('triedAndFailed', v)}
         />
       </Field>
-      <Field label="ฐานคนดูส่วนใหญ่">
+      <Field label="คนดูส่วนใหญ่เป็นกลุ่มไหน?">
         <ChipGrid
           value={data.audienceBuyingPower}
           options={BUYING_POWER}
