@@ -50,16 +50,20 @@ export function HeroImage() {
         margin: '0 auto',
       }}
     >
+      {/* unoptimized: bypass Next.js Image optimizer — preserves full 1024x1024
+          including corner content (analytics cards) that gets cropped to 512px */}
       <Image
         src="/hero-composite.png"
         alt="Creator using MITA+ to track revenue"
         width={1024}
         height={1024}
         priority
+        unoptimized
         style={{
           width: '100%',
           height: 'auto',
           display: 'block',
+          maxWidth: '600px',
         }}
       />
 

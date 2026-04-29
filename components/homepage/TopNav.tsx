@@ -7,9 +7,10 @@ import MitaLogo from '@/app/components/MitaLogo'
 import { COLORS, RADIUS } from '@/lib/design-tokens'
 
 const NAV_LINKS = [
-  { href: '#how-it-works', label: 'วิธีใช้งาน' },
-  { href: '/pricing',      label: 'แพ็คเกจ' },
-  { href: '/login',        label: 'เข้าสู่ระบบ' },
+  { href: '#how-it-works',            label: 'วิธีใช้งาน', external: false },
+  { href: '/pricing',                  label: 'แพ็คเกจ',   external: false },
+  { href: 'https://lin.ee/xqB3kzY',   label: 'ติดต่อเรา', external: true  },
+  { href: '/login',                    label: 'เข้าสู่ระบบ', external: false },
 ]
 
 export function TopNav() {
@@ -71,9 +72,21 @@ export function TopNav() {
             className="hidden md:flex"
             style={{ alignItems: 'center', gap: '28px' }}
           >
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link key={href} href={href} style={linkStyle}>{label}</Link>
-            ))}
+            {NAV_LINKS.map(({ href, label, external }) =>
+              external ? (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={linkStyle}
+                >
+                  {label}
+                </a>
+              ) : (
+                <Link key={href} href={href} style={linkStyle}>{label}</Link>
+              )
+            )}
 
             <Link
               href="/audit"
@@ -198,23 +211,38 @@ export function TopNav() {
                 ✕
               </button>
 
-              {NAV_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMenuOpen(false)}
-                  style={{
-                    fontSize: '16px',
-                    color: COLORS.text.primary,
-                    textDecoration: 'none',
-                    padding: '15px 0',
-                    borderBottom: `1px solid ${COLORS.border}`,
-                    transition: 'opacity 0.15s',
-                  }}
-                >
-                  {label}
-                </Link>
-              ))}
+              {NAV_LINKS.map(({ href, label, external }) => {
+                const drawerLinkStyle: React.CSSProperties = {
+                  fontSize: '16px',
+                  color: COLORS.text.primary,
+                  textDecoration: 'none',
+                  padding: '15px 0',
+                  borderBottom: `1px solid ${COLORS.border}`,
+                  transition: 'opacity 0.15s',
+                  display: 'block',
+                }
+                return external ? (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    style={drawerLinkStyle}
+                  >
+                    {label}
+                  </a>
+                ) : (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setMenuOpen(false)}
+                    style={drawerLinkStyle}
+                  >
+                    {label}
+                  </Link>
+                )
+              })}
 
               <Link
                 href="/audit"
