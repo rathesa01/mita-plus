@@ -121,6 +121,12 @@
   --ring:              oklch(0.6 0 0);
   --accent:            oklch(0.965 0 0);
   --accent-foreground: oklch(0.13 0.004 265);
+  /* ── MITA+ semantic vars for Lovable components (P-009) ── */
+  --coral:             #D85A30;
+  --coral-bg:          #FAECE7;
+  --coral-text:        #993C1D;
+  --brand-purple:      #7F77DD;
+  --success:           #1D9E75;
 }
 
 /* ── MITA+ Design Token CSS Variables ───────── */

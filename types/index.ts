@@ -114,6 +114,9 @@ export type LeakType =
 
 export type LeakSeverity = 'critical' | 'high' | 'medium' | 'low'
 
+// ── SHARE (P-009) ─────────────────────────────
+export type ShareChannel = 'line' | 'x' | 'copy'
+
 export interface RevenueLeak {
   id: LeakType
   severity: LeakSeverity
