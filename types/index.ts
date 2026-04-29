@@ -213,6 +213,15 @@ export interface WeekPlan {
   actions:    string[]
 }
 
+// ── CheckinEntry — shared shape for weekly check-ins ─────
+export interface CheckinEntry {
+  week_no:       number
+  income_range:  string
+  income_approx: number
+  clips:         number
+  date:          string
+}
+
 export interface DashboardV2Props {
   user: {
     name:         string
@@ -221,7 +230,7 @@ export interface DashboardV2Props {
   }
   plan:        { roadmap: WeekPlan[] } | null
   currentWeek: number
-  checkins:    Array<{ income_approx: number }>
+  checkins:    CheckinEntry[]
   coachReply:  string | null
   hasAudit:    boolean
   hasChannel:  boolean
@@ -229,6 +238,19 @@ export interface DashboardV2Props {
   activeTab:   DashboardTab
   onCheckIn:   () => void
   onTabChange: (tab: DashboardTab) => void
+
+  // ── Legacy tab props (P-010-fix1) ──────────────────────
+  userId?:              string | null
+  niche?:               string
+  platform?:            string
+  affiliateData?:       Record<string, unknown> | null
+  contentExampleData?:  Record<string, unknown> | null
+  targetIncome?:        number
+  showFirstVisit?:      boolean
+  onDismissFirstVisit?: () => void
+  currentEarned?:       number
+  streak?:              number
+  onConnectChannel?:    () => void
 }
 
 // ── FULL RESULT ───────────────────────────────

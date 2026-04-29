@@ -1,8 +1,6 @@
 'use client'
 // ── P-010-adapt · Starter Dashboard wrapper — wires Supabase + auth → StarterDashboardV2 ──
-// Replaces old dark-theme starter page. Backup: page.legacy.tsx
-// Auth: Supabase session (existing flow)
-// Data: user_profiles table
+// P-010-fix1: Added showFirstVisit, affiliateData, contentExampleData, streak, currentEarned
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -10,16 +8,7 @@ import { Loader2 } from 'lucide-react'
 import CheckInModal from './CheckInModal'
 import { getSupabaseClient, type UserProfile } from '@/lib/db/supabaseClient'
 import StarterDashboardV2 from '@/components/starter/StarterDashboardV2'
-import type { DashboardTab, AuditResult, WeekPlan } from '@/types'
-
-// ── Local type (mirrors UserProfile weekly_checkins shape) ────────────────────
-interface CheckinEntry {
-  week_no:       number
-  income_range:  string
-  income_approx: number
-  clips:         number
-  date:          string
-}
+import type { DashboardTab, AuditResult, WeekPlan, CheckinEntry } from '@/types'
 
 // ── Page component ────────────────────────────────────────────────────────────
 export default function StarterPage() {
@@ -28,9 +17,10 @@ export default function StarterPage() {
   const [authState, setAuthState] = useState<'loading' | 'no_auth' | 'no_plan' | 'ok'>('loading')
   const [profile, setProfile]     = useState<UserProfile | null>(null)
   const [activeTab, setActiveTab] = useState<DashboardTab>('plan')
-  const [checkInOpen, setCheckInOpen]     = useState(false)
-  const [coachReply, setCoachReply]       = useState<string | null>(null)
+  const [checkInOpen, setCheckInOpen]       = useState(false)
+  const [coachReply, setCoachReply]         = useState<string | null>(null)
   const [checkinHistory, setCheckinHistory] = useState<CheckinEntry[]>([])
+  const [showFirstVisit, setShowFirstVisit] = useState(false)
 
   const supabase = getSupabaseClient()
 
@@ -80,6 +70,22 @@ export default function StarterPage() {
     init()
     return () => sub?.unsubscribe()
   }, [supabase, loadProfile])
+
+  // ── First-visit banner (session-scoped, shows once per session) ─────────────
+  useEffect(() => {
+    if (authState !== 'ok') return
+    const key = 'mita_first_visit_dismissed'
+    if (typeof window !== 'undefined' && !sessionStorage.getItem(key)) {
+      setShowFirstVisit(true)
+    }
+  }, [authState])
+
+  const handleDismissFirstVisit = () => {
+    setShowFirstVisit(false)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('mita_first_visit_dismissed', '1')
+    }
+  }
 
   // ── Loading state ───────────────────────────────────────────────────────────
   if (authState === 'loading') {
@@ -168,8 +174,26 @@ export default function StarterPage() {
   // user score from audit
   const userScore = (audit?.score?.total ?? 0) as number
 
-  // target income for CheckInModal
+  // target income for CheckInModal + Milestones
   const targetIncome = Math.round((audit?.revenueEstimation?.realistic ?? 5000) as number)
+
+  // currentEarned: sum of all check-in income_approx
+  const currentEarned = checkinHistory.reduce((sum, c) => sum + (c.income_approx ?? 0), 0)
+
+  // streak: consecutive days with check-ins (simple: count of checkin entries as proxy)
+  const streak = Math.max(1, checkinHistory.length)
+
+  // affiliate data from profile
+  const affiliateData = profile?.affiliate_products ?? null
+
+  // content example data from profile
+  const contentExampleData = profile?.content_example ?? null
+
+  // niche + platform from audit input
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const niche    = ((audit as any)?.input?.niche    as string | undefined) ?? 'food'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const platform = ((audit as any)?.input?.platform as string | undefined) ?? 'tiktok'
 
   return (
     <div style={{ backgroundColor: '#FFFAF5' }} data-theme='light'>
@@ -185,6 +209,18 @@ export default function StarterPage() {
         activeTab={activeTab}
         onCheckIn={() => setCheckInOpen(true)}
         onTabChange={setActiveTab}
+        // Legacy tab props (P-010-fix1)
+        userId={profile?.id ?? null}
+        niche={niche}
+        platform={platform}
+        affiliateData={affiliateData as Record<string, unknown> | null}
+        contentExampleData={contentExampleData as Record<string, unknown> | null}
+        targetIncome={targetIncome}
+        showFirstVisit={showFirstVisit}
+        onDismissFirstVisit={handleDismissFirstVisit}
+        currentEarned={currentEarned}
+        streak={streak}
+        onConnectChannel={() => router.push('/starter/connect')}
       />
 
       {/* ── CheckInModal (reused from original) ─────────────────────────── */}
@@ -198,10 +234,8 @@ export default function StarterPage() {
         }}
         weekNo={currentWeek}
         creatorName={displayName}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        niche={((audit as any)?.input?.niche ?? 'food') as string}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        platform={((audit as any)?.input?.platform ?? 'tiktok').toLowerCase() as string}
+        niche={niche}
+        platform={platform.toLowerCase()}
         targetIncome={targetIncome}
         userId={profile?.id ?? null}
         isFirstCheckin={checkinHistory.length === 0}

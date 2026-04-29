@@ -1,7 +1,7 @@
 'use client'
 // ── P-010-adapt · StarterDashboardV2 — Lovable → MITA+ adapted ──────────────
+// P-010-fix1: Restored Products / Clips / Milestones tabs from legacy
 // Source: Lovable.dev "Mita AI Studio" · 29 Apr 2026
-// Adaptations: import path @/types/dashboard → @/types · 'use client' added
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -20,6 +20,13 @@ import {
 } from 'lucide-react'
 import type { DashboardV2Props, DashboardTab, WeekPlan } from '@/types'
 
+// ── Legacy tab components (P-010-fix1) ────────────────────────────────────────
+import ProductsTab            from '@/components/starter/legacy/ProductsTab'
+import ContentExampleTab      from '@/components/starter/legacy/ContentExampleTab'
+import MilestonesTab          from '@/components/starter/legacy/MilestonesTab'
+import { IncomeGraph, FirstVisitBanner, QuickWinSection } from '@/components/starter/legacy/LegacyPlanExtras'
+import type { ContentExampleData } from '@/components/starter/legacy/ContentExampleTab'
+
 /* ───────────────── Helpers ───────────────── */
 
 function formatTHB(n: number): string {
@@ -36,7 +43,7 @@ function useCountUp(target: number, durationMs = 1500, start = true): number {
     let raf = 0
     const t0 = performance.now()
     const tick = (now: number) => {
-      const p = Math.min(1, (now - t0) / durationMs)
+      const p     = Math.min(1, (now - t0) / durationMs)
       const eased = 1 - Math.pow(1 - p, 3)
       setVal(target * eased)
       if (p < 1) raf = requestAnimationFrame(tick)
@@ -48,10 +55,10 @@ function useCountUp(target: number, durationMs = 1500, start = true): number {
 }
 
 const WEEK_THEMES: Record<number, { color: string; bg: string; label: string }> = {
-  1: { color: 'var(--success)',      bg: 'color-mix(in oklab, var(--success) 14%, transparent)',      label: 'Setup'    },
-  2: { color: 'var(--brand-purple)', bg: 'color-mix(in oklab, var(--brand-purple) 14%, transparent)', label: 'Build'    },
-  3: { color: 'var(--coral)',        bg: 'var(--coral-bg)',                                            label: 'Scale'    },
-  4: { color: 'oklch(0.55 0.15 240)', bg: 'oklch(0.94 0.04 240)',                                     label: 'Compound' },
+  1: { color: 'var(--success)',       bg: 'color-mix(in oklab, var(--success) 14%, transparent)',       label: 'Setup'    },
+  2: { color: 'var(--brand-purple)',  bg: 'color-mix(in oklab, var(--brand-purple) 14%, transparent)',  label: 'Build'    },
+  3: { color: 'var(--coral)',         bg: 'var(--coral-bg)',                                             label: 'Scale'    },
+  4: { color: 'oklch(0.55 0.15 240)', bg: 'oklch(0.94 0.04 240)',                                       label: 'Compound' },
 }
 
 /* ───────────────── Top Nav ───────────────── */
@@ -91,10 +98,10 @@ function ConfettiBurst() {
   return (
     <div className='pointer-events-none absolute inset-0 overflow-hidden'>
       {pieces.map((_, i) => {
-        const angle = (Math.PI * 2 * i) / pieces.length
-        const dist = 80 + Math.random() * 80
-        const x = Math.cos(angle) * dist
-        const y = Math.sin(angle) * dist
+        const angle  = (Math.PI * 2 * i) / pieces.length
+        const dist   = 80 + Math.random() * 80
+        const x      = Math.cos(angle) * dist
+        const y      = Math.sin(angle) * dist
         const colors = ['var(--coral)', 'var(--brand-purple)', 'var(--success)', 'oklch(0.78 0.15 80)']
         return (
           <motion.span
@@ -235,8 +242,8 @@ function CoachReplyCard({ reply, onReply }: { reply: string; onReply: () => void
 function OnboardingCard({ hasAudit, hasChannel }: { hasAudit: boolean; hasChannel: boolean }) {
   if (hasAudit && hasChannel) return null
   const items = [
-    { done: hasAudit,   icon: ClipboardList, label: 'ทำ Audit วิเคราะห์ช่อง',    action: 'ทำเลย →'    },
-    { done: hasChannel, icon: Link2,         label: 'เชื่อมช่อง Social Media',   action: 'เชื่อมเลย →' },
+    { done: hasAudit,   icon: ClipboardList, label: 'ทำ Audit วิเคราะห์ช่อง',   action: 'ทำเลย →'    },
+    { done: hasChannel, icon: Link2,         label: 'เชื่อมช่อง Social Media',  action: 'เชื่อมเลย →' },
   ]
   return (
     <div className='rounded-2xl border border-black/5 bg-card p-5 shadow-sm'>
@@ -415,25 +422,68 @@ function PlanTab({
   )
 }
 
-/* ───────────────── Placeholder Tab ───────────────── */
+/* ───────────────── Dark Tab Wrapper ───────────────── */
 
-function PlaceholderTab({ tab }: { tab: DashboardTab }) {
-  const labels: Record<DashboardTab, string> = {
-    plan:       'แผน',
-    products:   'สินค้า',
-    clips:      'คลิป',
-    milestones: 'เป้าหมาย',
-  }
+function DarkWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div className='rounded-2xl border border-dashed border-black/10 bg-card p-10 text-center'>
-      <div
-        className='mx-auto flex h-12 w-12 items-center justify-center rounded-full'
-        style={{ background: 'var(--coral-bg)', color: 'var(--coral-text)' }}
+    <div
+      data-theme='dark'
+      style={{ background: '#0B0B0F', borderRadius: '20px', padding: '16px', minHeight: '200px' }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/* ───────────────── Feature Gates ───────────────── */
+
+function ProductsFeatureGate() {
+  return (
+    <div style={{ textAlign: 'center', padding: '32px 20px' }}>
+      <span style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }}>🔒</span>
+      <p style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 900, color: '#fff' }}>ทำ Audit ก่อนนะคะ</p>
+      <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>
+        MITA+ ต้องรู้จักช่องของคุณก่อน<br />ถึงจะแนะนำสินค้าที่ตรงที่สุดได้ค่ะ
+      </p>
+      <a
+        href='/audit'
+        style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(135deg, #7B61FF, #22C55E)', color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
       >
-        <Sparkles className='h-5 w-5' />
-      </div>
-      <h3 className='mt-4 text-base font-semibold text-foreground'>แท็บ &ldquo;{labels[tab]}&rdquo;</h3>
-      <p className='mt-1 text-sm text-muted-foreground'>section นี้กำลังออกแบบใหม่ — เร็วๆ นี้</p>
+        ทำ Audit ฟรี 3 นาที →
+      </a>
+    </div>
+  )
+}
+
+function ClipsFeatureGate() {
+  return (
+    <div style={{ textAlign: 'center', padding: '32px 20px' }}>
+      <span style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }}>🔒</span>
+      <p style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 900, color: '#fff' }}>ทำ Audit ก่อนนะคะ</p>
+      <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>
+        MITA+ ต้องรู้จัก niche ของคุณก่อน<br />ถึงจะหาคลิปตัวอย่างที่ตรงได้ค่ะ
+      </p>
+      <a
+        href='/audit'
+        style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(135deg, #7B61FF, #3ECFFF)', color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
+      >
+        ทำ Audit ฟรี 3 นาที →
+      </a>
+    </div>
+  )
+}
+
+function ChannelAccuracyWarning({ onConnect }: { onConnect: () => void }) {
+  return (
+    <div style={{ padding: '12px 14px', marginBottom: '12px', borderRadius: '12px', background: 'rgba(255,159,28,0.08)', border: '1px solid rgba(255,159,28,0.25)' }}>
+      <p style={{ margin: '0 0 4px', fontSize: '12px', fontWeight: 700, color: '#FF9F1C' }}>⚠️ เชื่อมช่องเพื่อความแม่นยำสูงขึ้น</p>
+      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+        ตอนนี้ใช้ข้อมูลจาก Audit เท่านั้น —{' '}
+        <button onClick={onConnect} style={{ background: 'none', border: 'none', color: '#FF9F1C', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '11px' }}>
+          เชื่อมช่อง →
+        </button>{' '}
+        เพื่อให้ AI แนะนำสินค้าได้แม่นขึ้น
+      </p>
     </div>
   )
 }
@@ -441,10 +491,10 @@ function PlaceholderTab({ tab }: { tab: DashboardTab }) {
 /* ───────────────── Bottom Tab Switcher ───────────────── */
 
 const TABS: { id: DashboardTab; label: string; icon: typeof Calendar }[] = [
-  { id: 'plan',       label: 'แผน',     icon: Calendar   },
+  { id: 'plan',       label: 'แผน',     icon: Calendar    },
   { id: 'products',   label: 'สินค้า',  icon: ShoppingBag },
-  { id: 'clips',      label: 'คลิป',    icon: Film       },
-  { id: 'milestones', label: 'เป้าหมาย', icon: Trophy    },
+  { id: 'clips',      label: 'คลิป',    icon: Film        },
+  { id: 'milestones', label: 'เป้าหมาย', icon: Trophy     },
 ]
 
 function BottomTabSwitcher({ active, onChange }: { active: DashboardTab; onChange: (tab: DashboardTab) => void }) {
@@ -495,18 +545,22 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
   const {
     user, plan, currentWeek, checkins, coachReply,
     hasAudit, hasChannel, audit, onCheckIn, onTabChange, activeTab,
+    // Legacy props
+    userId, niche, platform, affiliateData, contentExampleData,
+    targetIncome, showFirstVisit, onDismissFirstVisit,
+    currentEarned, streak, onConnectChannel,
   } = props
 
-  const [activeWeek, setActiveWeek]     = useState(currentWeek)
-  const [doneActions, setDoneActions]   = useState<Set<number>>(new Set())
+  const [activeWeek, setActiveWeek]   = useState(currentWeek)
+  const [doneActions, setDoneActions] = useState<Set<number>>(new Set())
   useEffect(() => { setDoneActions(new Set()) }, [activeWeek])
 
   const cumulativeIncome = useMemo(
     () => checkins.reduce((sum, c) => sum + (c.income_approx || 0), 0),
     [checkins],
   )
-  const realistic      = (audit?.revenueEstimation?.realistic ?? 0) as number
-  const target         = realistic * 3 // 90 days
+  const realistic       = (audit?.revenueEstimation?.realistic ?? 0) as number
+  const target          = realistic * 3
   const percentToTarget = target > 0 ? Math.min(100, (cumulativeIncome / target) * 100) : 0
 
   const currentWeekPlan = plan?.roadmap.find((w) => w.week === activeWeek)
@@ -521,6 +575,15 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
       return next
     })
   }
+
+  const handleConnectChannel = onConnectChannel ?? (() => { window.location.href = '/starter/connect' })
+
+  // Derived legacy values with safe defaults
+  const safeNiche        = niche    ?? (audit?.input?.niche    as string) ?? 'general'
+  const safePlatform     = platform ?? (audit?.input?.platform as string) ?? 'tiktok'
+  const safeTargetIncome = targetIncome  ?? Math.round((audit?.revenueEstimation?.realistic ?? 5000) as number)
+  const safeCurrentEarned = currentEarned ?? cumulativeIncome
+  const safeStreak       = streak ?? 1
 
   return (
     <div className='min-h-screen bg-background font-sans text-foreground'>
@@ -549,21 +612,96 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'plan' ? (
-                <PlanTab
-                  plan={plan}
-                  currentWeek={currentWeek}
-                  activeWeek={activeWeek}
-                  setActiveWeek={setActiveWeek}
-                  doneActions={doneActions}
-                  toggleAction={toggleAction}
-                  coachReply={coachReply}
-                  hasAudit={hasAudit}
-                  hasChannel={hasChannel}
-                  onCheckIn={onCheckIn}
-                />
-              ) : (
-                <PlaceholderTab tab={activeTab} />
+              {/* ── Plan Tab ── */}
+              {activeTab === 'plan' && (
+                <div className='space-y-4'>
+                  {/* First Visit Banner */}
+                  {showFirstVisit && (
+                    <FirstVisitBanner
+                      name={user.name}
+                      onDismiss={onDismissFirstVisit ?? (() => {})}
+                    />
+                  )}
+
+                  <PlanTab
+                    plan={plan}
+                    currentWeek={currentWeek}
+                    activeWeek={activeWeek}
+                    setActiveWeek={setActiveWeek}
+                    doneActions={doneActions}
+                    toggleAction={toggleAction}
+                    coachReply={coachReply}
+                    hasAudit={hasAudit}
+                    hasChannel={hasChannel}
+                    onCheckIn={onCheckIn}
+                  />
+
+                  {/* Income Graph — shown after first check-in */}
+                  {checkins.length > 0 && (
+                    <IncomeGraph checkins={checkins} weekNo={currentWeek} />
+                  )}
+
+                  {/* Quick Win Section — always visible */}
+                  {hasAudit && (
+                    <QuickWinSection
+                      audit={audit}
+                      hasChannel={hasChannel}
+                      onConnectChannel={handleConnectChannel}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* ── Products Tab ── */}
+              {activeTab === 'products' && (
+                <DarkWrapper>
+                  {!hasAudit
+                    ? <ProductsFeatureGate />
+                    : (
+                      <>
+                        {!hasChannel && (
+                          <ChannelAccuracyWarning onConnect={handleConnectChannel} />
+                        )}
+                        <ProductsTab
+                          affiliateData={affiliateData ?? null}
+                          userId={userId ?? null}
+                          niche={safeNiche}
+                          platform={safePlatform}
+                          onRefresh={() => {/* parent can refresh via loadProfile */}}
+                        />
+                      </>
+                    )
+                  }
+                </DarkWrapper>
+              )}
+
+              {/* ── Clips Tab ── */}
+              {activeTab === 'clips' && (
+                <DarkWrapper>
+                  {!hasAudit
+                    ? <ClipsFeatureGate />
+                    : (
+                      <ContentExampleTab
+                        userId={userId ?? null}
+                        cachedData={(contentExampleData as ContentExampleData | null) ?? null}
+                        niche={safeNiche}
+                      />
+                    )
+                  }
+                </DarkWrapper>
+              )}
+
+              {/* ── Milestones Tab ── */}
+              {activeTab === 'milestones' && (
+                <DarkWrapper>
+                  <MilestonesTab
+                    monPlan={plan}
+                    currentEarned={safeCurrentEarned}
+                    displayName={user.name}
+                    targetIncome={safeTargetIncome}
+                    streak={safeStreak}
+                  />
+                </DarkWrapper>
               )}
             </motion.div>
           </AnimatePresence>
