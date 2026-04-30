@@ -26,7 +26,7 @@ import MitaLogo from '@/app/components/MitaLogo'
 import ProductsTabCream       from '@/components/starter/cream/ProductsTabCream'
 import ClipsTabCream          from '@/components/starter/cream/ClipsTabCream'
 import type { ClipsData }     from '@/components/starter/cream/ClipsTabCream'
-import MilestonesTab          from '@/components/starter/legacy/MilestonesTab'
+import MilestonesTabCream     from '@/components/starter/cream/MilestonesTabCream'
 import { IncomeGraph, FirstVisitBanner, QuickWinSection } from '@/components/starter/legacy/LegacyPlanExtras'
 
 /* ───────────────── Helpers ───────────────── */
@@ -735,15 +735,18 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
 
               {/* ── Milestones Tab ── */}
               {activeTab === 'milestones' && (
-                <DarkWrapper label='เป้าหมายและความก้าวหน้าของคุณ'>
-                  <MilestonesTab
-                    monPlan={plan}
+                <div className='animate-in fade-in duration-200'>
+                  <MilestonesTabCream
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    monPlan={plan as any}
                     currentEarned={safeCurrentEarned}
                     displayName={user.name}
                     targetIncome={safeTargetIncome}
                     streak={safeStreak}
+                    hasChannel={hasChannel}
+                    onConnectChannel={handleConnectChannel}
                   />
-                </DarkWrapper>
+                </div>
               )}
             </motion.div>
           </AnimatePresence>
