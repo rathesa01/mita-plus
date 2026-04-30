@@ -17,11 +17,12 @@ import {
   ShoppingBag,
   Film,
   Trophy,
+  Lock,
 } from 'lucide-react'
 import type { DashboardV2Props, DashboardTab, WeekPlan } from '@/types'
 
-// ── Legacy tab components (P-010-fix1) ────────────────────────────────────────
-import ProductsTab            from '@/components/starter/legacy/ProductsTab'
+// ── Tab components ────────────────────────────────────────────────────────────
+import ProductsTabCream       from '@/components/starter/cream/ProductsTabCream'
 import ContentExampleTab      from '@/components/starter/legacy/ContentExampleTab'
 import MilestonesTab          from '@/components/starter/legacy/MilestonesTab'
 import { IncomeGraph, FirstVisitBanner, QuickWinSection } from '@/components/starter/legacy/LegacyPlanExtras'
@@ -456,15 +457,29 @@ function DarkWrapper({ children, label }: { children: React.ReactNode; label?: s
 
 function ProductsFeatureGate() {
   return (
-    <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-      <span style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }}>🔒</span>
-      <p style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 900, color: '#fff' }}>ทำ Audit ก่อนนะคะ</p>
-      <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>
+    <div
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        borderRadius: 18,
+        padding: '32px 24px',
+        textAlign: 'center',
+        margin: '4px 0',
+      }}
+    >
+      <Lock size={28} color='#D85A30' style={{ margin: '0 auto 14px' }} />
+      <p style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.01em' }}>ทำ Audit ก่อนนะคะ</p>
+      <p style={{ margin: '0 0 20px', fontSize: '12px', color: '#6B6B6B', lineHeight: 1.65 }}>
         MITA+ ต้องรู้จักช่องของคุณก่อน<br />ถึงจะแนะนำสินค้าที่ตรงที่สุดได้ค่ะ
       </p>
       <a
         href='/audit'
-        style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(135deg, #7F77DD, #D85A30)', color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
+        style={{
+          display: 'inline-block', padding: '12px 28px',
+          background: 'linear-gradient(135deg, #7F77DD, #D85A30)',
+          color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none',
+        }}
       >
         ทำ Audit ฟรี 3 นาที →
       </a>
@@ -671,25 +686,21 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
 
               {/* ── Products Tab ── */}
               {activeTab === 'products' && (
-                <DarkWrapper label='สินค้าที่แนะนำสำหรับช่องคุณ'>
-                  {!hasAudit
-                    ? <ProductsFeatureGate />
-                    : (
-                      <>
-                        {!hasChannel && (
-                          <ChannelAccuracyWarning onConnect={handleConnectChannel} />
-                        )}
-                        <ProductsTab
-                          affiliateData={affiliateData ?? null}
-                          userId={userId ?? null}
-                          niche={safeNiche}
-                          platform={safePlatform}
-                          onRefresh={() => {/* parent can refresh via loadProfile */}}
-                        />
-                      </>
-                    )
-                  }
-                </DarkWrapper>
+                <div className='animate-in fade-in duration-200'>
+                  {!hasAudit ? (
+                    <ProductsFeatureGate />
+                  ) : (
+                    <ProductsTabCream
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      affiliateData={(affiliateData as any) ?? null}
+                      userId={userId}
+                      niche={safeNiche}
+                      onRefresh={() => {/* parent can refresh via loadProfile */}}
+                      hasChannel={hasChannel}
+                      onConnectChannel={handleConnectChannel}
+                    />
+                  )}
+                </div>
               )}
 
               {/* ── Clips Tab ── */}
