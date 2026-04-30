@@ -20,6 +20,7 @@ import {
   Lock,
 } from 'lucide-react'
 import type { DashboardV2Props, DashboardTab, WeekPlan } from '@/types'
+import MitaLogo from '@/app/components/MitaLogo'
 
 // ── Tab components ────────────────────────────────────────────────────────────
 import ProductsTabCream       from '@/components/starter/cream/ProductsTabCream'
@@ -68,10 +69,7 @@ function TopNav({ score }: { score: number }) {
   return (
     <div className='sticky top-0 z-40 backdrop-blur-md bg-[color-mix(in_oklab,var(--background)_85%,transparent)] border-b border-black/5'>
       <div className='mx-auto flex max-w-2xl items-center justify-between px-4 py-3'>
-        <div className='flex items-center gap-2'>
-          <span className='text-lg font-semibold tracking-tight text-foreground'>MITA</span>
-          <span className='text-lg font-semibold' style={{ color: 'var(--brand-purple)' }}>+</span>
-        </div>
+        <MitaLogo size='sm' />
         <div className='flex items-center gap-2'>
           <div
             className='rounded-full px-2.5 py-1 text-[11px] font-semibold'
