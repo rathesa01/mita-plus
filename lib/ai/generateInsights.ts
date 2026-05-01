@@ -31,7 +31,7 @@ export async function generateInsights(
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 2500,
-      temperature: 0.7,
+      temperature: 0.9,
       system: buildSystemPrompt(),
       messages: [
         {
