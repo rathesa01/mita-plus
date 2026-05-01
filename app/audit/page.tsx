@@ -14,7 +14,7 @@
 //   - globals.css: [data-theme="light"] overrides Tailwind tokens → cream palette
 //   - scoped to /audit only — does not affect other dark pages
 
-import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { Suspense, useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -202,7 +202,8 @@ function validateStep(step: number, data: AuditFormData): Errors {
   return e
 }
 
-export default function AuditFormV2() {
+// Wrapped in Suspense by the default export below (required for useSearchParams in Next.js App Router)
+function AuditFormV2() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isOnboarding = searchParams.get('onboarding') === '1'
@@ -1057,5 +1058,19 @@ function Step4({
         />
       </Field>
     </>
+  )
+}
+
+// ── Page export: Suspense boundary required for useSearchParams in App Router ──
+export default function AuditPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#FFFAF5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 28, height: 28, border: '3px solid rgba(216,90,48,0.2)', borderTopColor: '#D85A30', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    }>
+      <AuditFormV2 />
+    </Suspense>
   )
 }
