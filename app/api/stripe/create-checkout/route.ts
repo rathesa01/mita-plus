@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
     if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set')
     if (!serviceKey) throw new Error('SUPABASE_SERVICE_KEY is not set')
 
+    // ── Key-mode diagnostic (safe: shows only prefix + mode) ─────────────
+    const keyMode = secretKey.startsWith('sk_live_') ? 'LIVE' : secretKey.startsWith('sk_test_') ? 'TEST' : 'UNKNOWN'
+    const keyPrefix = secretKey.substring(0, 22) + '...'
+    console.log(`[checkout] key mode=${keyMode} prefix=${keyPrefix}`)
+
     const stripe = new Stripe(secretKey, { apiVersion: '2026-03-25.dahlia' })
     const supabaseAdmin = createClient(supabaseUrl, serviceKey)
     const { priceId, userId, email, plan } = await req.json()
