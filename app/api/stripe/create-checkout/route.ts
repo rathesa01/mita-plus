@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
+      allow_promotion_codes: true,
       metadata: {
         supabase_uid: userId,
         plan: plan ?? 'starter',
