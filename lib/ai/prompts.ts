@@ -189,10 +189,35 @@ export function buildSystemPrompt(): string {
 4. ใช้คำ generic เช่น 'gap', 'หายไปตลอดกาล', 'ทุก view คือโอกาส' เกิน 1 ครั้ง/output
 5. ใช้โครงสร้าง 'X แต่ Y' ติดต่อกันเกิน 1 ครั้ง
 
+🚨 BANNED PHRASES (output มีคำเหล่านี้ = fail — ต้อง regenerate):
+- "มี {N} คนติดตาม แต่รายได้ยังอยู่ที่"
+- "ทั้งที่ follower ระดับนี้ควรได้"
+- "นั่นคือ gap ที่ยังปิดไม่ได้"
+- "ทุก 1,000 view ทำให้เงินแค่"
+- "creator คนอื่นได้ ฿X ต่อ 1,000 view เดียวกัน"
+- "นี่คือ gap ที่ซ่อนอยู่"
+
 ทุก output ต้อง:
 - ใช้ keyword/นาม specific จาก contentDescription ของ creator คนนี้
 - เคารพ MONETIZATION POSTURE (อย่าบอกให้ทำสิ่งที่มีแล้ว — ให้ optimize สิ่งที่มี)
-- มี structure ประโยคหลากหลาย ไม่ซ้ำแบบกับ output ก่อนๆ`
+- มี structure ประโยคหลากหลาย ไม่ซ้ำแบบกับ output ก่อนๆ
+
+=== FEW-SHOT EXAMPLES ===
+
+✅ ตัวอย่าง output ที่ดี (personalized):
+contentDescription: "รีวิว BB cream เกาหลี ราคาประหยัด"
+{
+  "keywordsExtracted": ["BB cream", "เกาหลี", "ราคาประหยัด", "รีวิว"],
+  "creatorSummary": "Creator รีวิว BB cream เกาหลีราคาประหยัด — คนดูส่วนใหญ่กำลังหา dupe ของแพงก่อนควักกระเป๋า",
+  "shock": "BB cream เกาหลีที่คุณรีวิวอยู่ commission ผ่าน Shopee ได้แค่ 5% — แต่ TikTok Shop Affiliate category เดียวกันให้ 12-18% · เปลี่ยน platform ที่ลงลิงก์ = รายได้ต่อคลิกเพิ่ม 3 เท่า โดยไม่ต้องเปลี่ยน content เลย",
+  "whyItHappens": "คนที่ดูรีวิว BB cream ราคาประหยัดไม่ได้กำลัง browse — เขาตัดสินใจซื้อแล้ว 80% แค่รอตัวที่ใช่ · ปัญหาคือ link ที่ใส่พาไปหน้า category กว้างมาก ไม่ใช่หน้าสินค้าตัวที่รีวิว conversion จึงหาย · จุดเปลี่ยน: ลิงก์ตรงไปสินค้าตัวเดียวกันบน TikTok Shop Affiliate + pin comment แรก = conversion rate เพิ่ม 40%"
+}
+
+❌ ตัวอย่าง output ที่ห้าม (template-y):
+{
+  "shock": "คุณมี 15,000 คนติดตาม แต่รายได้ยังอยู่ที่ ฿1,500 — ทั้งที่ follower ระดับนี้ควรได้ ฿13,340 นั่นคือ gap ที่ยังปิดไม่ได้"
+}
+เหตุผลที่ fail: ไม่มีคำ 'BB cream', 'เกาหลี', 'ราคาประหยัด' เลย · ใช้ banned phrase "ทั้งที่ follower ระดับนี้ควรได้"`
 }
 
 export function buildUserPrompt(
@@ -253,18 +278,24 @@ export function buildUserPrompt(
     data.hasClosingSystem && '✅ ระบบปิดการขาย',
   ].filter(Boolean).join(', ') || '❌ ยังไม่มีเลย'
 
-  return `=== ⚡ PRIMARY INPUT — อ่านก่อน ใช้เป็นหลัก ===
+  return `=== CREATOR'S OWN WORDS (อ่านก่อนทุกอย่าง) ===
+"${contentDescription || subNiche || nicheTH}"
+${data.biggestProblem ? `ปัญหาที่บอกเอง: "${data.biggestProblem}"` : ''}
+${data.goalIn90Days ? `เป้าที่ต้องการ: "${data.goalIn90Days}"` : ''}
+
+⚠️ คำในเครื่องหมาย "..." ด้านบน คือคำที่ creator พิมพ์เองจริงๆ
+คำ/วลี specific ที่อยู่ในนั้น **ต้องปรากฏในช่อง shock หรือ whyItHappens อย่างน้อย 2 คำ**
+ถ้า output ไม่มีคำเหล่านั้น = generic = fail
+
+=== ⚡ PRIMARY INPUT ===
 ชื่อ creator: ${data.name}
-สิ่งที่ทำ (เขียนเอง): "${contentDescription || subNiche || nicheTH}"
-ปัญหาใหญ่ที่สุดตอนนี้ (เขียนเอง): "${data.biggestProblem || 'ไม่ระบุ'}"
-เป้าหมาย 90 วัน (เขียนเอง): "${data.goalIn90Days || 'ไม่ระบุ'}"
 เคยลองแล้วไม่ work: ${triedText || 'ไม่ระบุ'}
 
-INSTRUCTIONS:
-1. อ่าน contentDescription ด้านบน · จับ keyword/นาม specific (สินค้า สถานที่ เป้าหมาย ปัญหา)
-2. ระบุ sub-segment ของ niche ที่ specific กว่า blueprint ด้านล่าง
-3. ใช้ keyword จาก description ใน shock/whyItHappens — ห้ามใช้คำ generic จาก blueprint อย่างเดียว
-4. Reason จาก description จริง · ห้าม paraphrase blueprint แค่ตัวเลขเปลี่ยน
+INSTRUCTIONS (Reasoning chain — ทำก่อนเขียน output):
+Step 1: อ่าน "CREATOR'S OWN WORDS" ด้านบน · จดคำ/วลี specific 3-5 คำ (ชื่อสินค้า สถานที่ เป้าหมาย ปัญหา) → ใส่ใน keywordsExtracted
+Step 2: เขียน creatorSummary 1 ประโยคจาก keywords เหล่านั้น + platform + niche · ห้าม paraphrase blueprint
+Step 3: เขียน shock โดยใช้ keyword อย่างน้อย 2 ตัวจาก keywordsExtracted (ห้ามใช้ banned phrase)
+Step 4: เขียน whyItHappens ตาม MONETIZATION POSTURE · ใช้ keyword จาก description + biggestProblem
 
 (blueprint ด้านล่างใช้เป็น reference เสริม · ไม่ใช่ primary)
 
@@ -315,10 +346,14 @@ ${topLeaks.map((l, i) => `${i+1}. [${l.severity.toUpperCase()}] ${l.title}: -฿
 
 ---
 
-ตอบเป็น JSON เท่านั้น ห้ามมีข้อความนอก JSON ครบ 4 field:
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความนอก JSON ครบ 6 field (keywordsExtracted + creatorSummary + 4 หลัก):
 
 {
-  "shock": "เขียน 2-3 ประโยคที่ทำให้ ${data.name} อ่านแล้วหยุดคิด โดย: (1) อ้างถึง keyword/นาม specific จาก contentDescription '${contentDescription || subNiche}' ของเขา (2) ห้ามใช้คำ 'gap' 'หาย' 'ทุก view' หรือ phrase generic (3) ใช้ตัวเลขจริง ฿${currentPer1k} vs ฿${realisticPer1k} แต่ห้ามขึ้นประโยคด้วยตัวเลข (4) หลีกเลี่ยงโครงสร้าง 'X แต่ Y' (5) ถ้าเขาบอกปัญหาใน biggestProblem '${data.biggestProblem}' → echo ปัญหานั้นในคำของเขาเอง",
+  "keywordsExtracted": ["keyword1", "keyword2", "keyword3"],
+
+  "creatorSummary": "1 ประโยคสรุป creator นี้จาก keywords + niche + platform ในคำของคุณเอง (ห้าม paraphrase blueprint)",
+
+  "shock": "เขียน 2-3 ประโยคที่ทำให้ ${data.name} อ่านแล้วหยุดคิด โดย: (1) ต้องใช้ keyword อย่างน้อย 2 ตัวจาก keywordsExtracted ที่ extract มา (2) ห้ามใช้ banned phrase (3) ใช้ตัวเลขจริง ฿${currentPer1k} vs ฿${realisticPer1k} แต่ห้ามขึ้นประโยคด้วยตัวเลข (4) หลีกเลี่ยงโครงสร้าง 'X แต่ Y' (5) ถ้ามี biggestProblem '${data.biggestProblem || ''}' → echo ปัญหานั้นในคำของเขาเอง",
 
   "whyItHappens": "${
     data.hasAffiliate && data.monthlyIncome > 0
@@ -359,5 +394,9 @@ ${topLeaks.map((l, i) => `${i+1}. [${l.severity.toUpperCase()}] ${l.title}: -฿
   "upside": "projection สมเหตุสมผล — ถ้า ${data.name} ทำวิธีที่แนะนำ: เดือน 1 ฿X (เพราะ...) / เดือน 2 ฿Y (เพราะ...) / เดือน 3 ฿Z (เพราะ...) ตัวเลขต้อง conservative และสมเหตุสมผลกับ ${data.followers.toLocaleString()} followers + ${nicheTH} อย่า overpromise ปิดด้วย 1 ประโยคที่ทำให้รู้สึกว่าทำได้จริง ไม่ใช่ฝัน"
 }
 
-⚠️ CRITICAL: ทุก field ห้าม generic · ต้องมีชื่อ platform/program จริง · ต้องมีตัวเลขจริง · ต้องมี keyword จาก contentDescription '${contentDescription}' ใน shock หรือ whyItHappens · ต้องเคารพ MONETIZATION POSTURE`
+⚠️ CRITICAL:
+- keywordsExtracted ต้องมี 3-5 คำ/วลีจาก "CREATOR'S OWN WORDS" จริงๆ (ไม่ใช่ niche generic เช่น "beauty" "lifestyle")
+- shock + whyItHappens ต้องมีคำจาก keywordsExtracted อย่างน้อย 2 คำ
+- ห้ามมี banned phrase ใด ๆ ใน shock
+- ต้องมีชื่อ platform/program จริง · ตัวเลข ฿ จริง · เคารพ MONETIZATION POSTURE`
 }
