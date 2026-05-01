@@ -71,6 +71,16 @@ export default function StarterPage() {
     return () => sub?.unsubscribe()
   }, [supabase, loadProfile])
 
+  // ── Guard: paid user with no audit → force audit onboarding ─────────────────
+  useEffect(() => {
+    if (authState !== 'ok' || !profile) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hasAuditData = !!(profile as any).audit_data
+    if (!hasAuditData) {
+      router.replace('/audit?onboarding=1')
+    }
+  }, [authState, profile, router])
+
   // ── First-visit banner (session-scoped, shows once per session) ─────────────
   useEffect(() => {
     if (authState !== 'ok') return

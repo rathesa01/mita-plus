@@ -40,27 +40,36 @@ async function getCachedPaths(userId: string): Promise<RevenuePathsCache | null>
 async function getLatestAudit(userId: string) {
   const db = getDb()
 
-  // Step 1: Resolve user email via Supabase Admin API
-  const { data: { user }, error: userErr } = await db.auth.admin.getUserById(userId)
-  if (userErr || !user?.email) {
-    console.warn('[MITA+] revenue/recommend: cannot fetch user email', userErr?.message)
-    return null
-  }
-
-  // Step 2: Query latest audit_results by email stored in input JSONB
-  const { data: audits, error: auditErr } = await db
+  // Primary: query by user_id (fast index, no email lookup needed)
+  const { data: byUserId } = await db
     .from('audit_results')
-    .select('input, score_total, leaks, ai_insights, createdAt')
-    .filter('input->>email', 'eq', user.email)
-    .order('createdAt', { ascending: false })
+    .select('input, score_total, leaks, ai_insights, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
     .limit(1)
 
-  if (auditErr) {
-    console.warn('[MITA+] revenue/recommend: audit query failed', auditErr.message)
+  if (byUserId && byUserId.length > 0) return byUserId[0]
+
+  // Fallback: query by email (legacy audits saved before user_id column)
+  const { data: { user }, error: userErr } = await db.auth.admin.getUserById(userId)
+  if (userErr || !user?.email) {
+    console.warn('[MITA+] revenue/recommend: cannot resolve user email', userErr?.message)
     return null
   }
 
-  return audits?.[0] ?? null
+  const { data: byEmail, error: emailErr } = await db
+    .from('audit_results')
+    .select('input, score_total, leaks, ai_insights, created_at')
+    .filter('input->>email', 'eq', user.email)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (emailErr) {
+    console.warn('[MITA+] revenue/recommend: email fallback query failed', emailErr.message)
+    return null
+  }
+
+  return byEmail?.[0] ?? null
 }
 
 // ── Call Claude Haiku to generate paths ──────────────────────────────────────

@@ -15,6 +15,7 @@
 //   - scoped to /audit only — does not affect other dark pages
 
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles,
@@ -35,6 +36,7 @@ import { type AuditFormData } from '@/types'
 import { DEFAULT_FORM_DATA } from '@/lib/forms/auditDefaults'
 import { SUB_NICHES } from '@/lib/forms/subNiches'
 import MitaLogo from '@/app/components/MitaLogo'
+import { getSupabaseClient } from '@/lib/db/supabaseClient'
 
 const STORAGE_KEY = 'mita_audit_draft'
 
@@ -201,6 +203,10 @@ function validateStep(step: number, data: AuditFormData): Errors {
 }
 
 export default function AuditFormV2() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const isOnboarding = searchParams.get('onboarding') === '1'
+
   const [step, setStep] = useState(0)
   const [data, setData] = useState<AuditFormData>(DEFAULT_FORM_DATA)
   const [errors, setErrors] = useState<Errors>({})
@@ -277,10 +283,18 @@ export default function AuditFormV2() {
     setSubmitting(true)
     setSubmitError(null)
     try {
+      // Attach userId if user is logged in — enables user_id linkage in audit_results
+      let userId: string | null = null
+      try {
+        const supabase = getSupabaseClient()
+        const { data: { session } } = await (supabase?.auth.getSession() ?? Promise.resolve({ data: { session: null } }))
+        userId = session?.user?.id ?? null
+      } catch { /* unauthenticated — proceed without userId */ }
+
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, ...(userId ? { userId } : {}) }),
       })
       if (res.status === 429) {
         setSubmitError('ลองอีกครั้งใน 1 นาที')
@@ -294,7 +308,12 @@ export default function AuditFormV2() {
       } catch {
         /* ignore */
       }
-      window.location.href = `/result?id=${encodeURIComponent(json.id)}`
+      // Onboarding flow: redirect to /starter instead of /result
+      if (isOnboarding) {
+        router.replace('/starter?from=onboarding')
+      } else {
+        window.location.href = `/result?id=${encodeURIComponent(json.id)}`
+      }
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด')
       setSubmitting(false)
@@ -316,6 +335,30 @@ export default function AuditFormV2() {
         <div className="mb-8 flex items-center justify-center">
           <MitaLogo size="sm" />
         </div>
+
+        {/* ── Onboarding banner (shown when ?onboarding=1) ── */}
+        {isOnboarding && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(127,119,221,0.08), rgba(216,90,48,0.08))',
+            border: '1px solid rgba(216,90,48,0.22)',
+            borderRadius: 14,
+            padding: '12px 16px',
+            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <Sparkles size={20} color="#D85A30" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: '#1D1D1F', marginBottom: 2 }}>
+                ขั้นสุดท้าย — ทำ audit ให้ MITA+ ค่ะ
+              </div>
+              <div style={{ fontSize: 11, color: '#6B6B6B', lineHeight: 1.5 }}>
+                แค่ 3 นาที · MITA+ จะคัด 3 ทางหารายได้ที่ตรงกับช่องคุณที่สุด
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Progress bar ── */}
         <div className="mb-8">

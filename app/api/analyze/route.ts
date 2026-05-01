@@ -24,7 +24,7 @@ async function notifyDiscord(content: string) {
 function fmt(n: number) { return Math.round(n).toLocaleString('th-TH') }
 
 // ── Save full result ลง audit_results table ────
-async function saveAuditResult(result: AuditResult): Promise<string | null> {
+async function saveAuditResult(result: AuditResult, userId?: string | null): Promise<string | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_KEY
   if (!url || !key) return null
@@ -35,6 +35,7 @@ async function saveAuditResult(result: AuditResult): Promise<string | null> {
       .from('audit_results')
       .insert({
         id:                  result.id,
+        user_id:             userId ?? null,
         platform:            result.input.platform,
         niche:               result.input.niche,
         followers:           result.input.followers,
@@ -99,6 +100,11 @@ export async function POST(req: NextRequest) {
 
   const data = parsed.data
 
+  // ── Extract userId from body (passed by client when logged in) ───────────
+  const bodyUserId = typeof raw === 'object' && raw !== null
+    ? ((raw as Record<string, unknown>).userId as string | undefined) ?? null
+    : null
+
   try {
     // ── 3. Deterministic analysis ─────────────────
     const analysis = analyzeAudit(data)
@@ -120,10 +126,9 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 5. Save full result ลง DB (await — ต้องการ id) ──
-    await saveAuditResult(result)
+    await saveAuditResult(result, bodyUserId)
 
     // ── 5b. Fire-and-forget: pre-generate Revenue Paths if userId present ──
-    const bodyUserId = (raw as Record<string, unknown>)?.userId
     if (bodyUserId && typeof bodyUserId === 'string') {
       void fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/api/revenue/recommend`, {
         method:  'POST',

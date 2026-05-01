@@ -12,27 +12,54 @@ export default function SubscribeSuccess() {
 
   useEffect(() => {
     const run = async () => {
+      const supabase = getSupabaseClient()
+      let userId: string | null = null
+      let userEmail: string | null = null
+
       try {
         // Link audit data to user account if available in localStorage
         const auditRaw = localStorage.getItem('mitaplus_audit')
-        if (auditRaw) {
-          const supabase = getSupabaseClient()
-          const { data: { session } } = await (supabase?.auth.getSession() ?? Promise.resolve({ data: { session: null } }))
-          const userId = session?.user?.id
+        const { data: { session } } = await (supabase?.auth.getSession() ?? Promise.resolve({ data: { session: null } }))
+        userId = session?.user?.id ?? null
+        userEmail = session?.user?.email ?? null
 
-          if (userId && supabase) {
-            await supabase.from('user_profiles').update({
-              audit_data: JSON.parse(auditRaw),
-            } as any).eq('id', userId)
-            localStorage.removeItem('mitaplus_audit')
-          }
+        if (userId && supabase && auditRaw) {
+          await supabase.from('user_profiles').update({
+            audit_data: JSON.parse(auditRaw),
+          } as any).eq('id', userId)
+          localStorage.removeItem('mitaplus_audit')
         }
       } catch (e) {
         console.error('Failed to save audit data:', e)
       }
 
       setReady(true)
-      setTimeout(() => router.replace('/starter'), 2500)
+
+      // After 2.5s: check if user has done an audit — if not, force onboarding
+      setTimeout(async () => {
+        if (!supabase || !userId) { router.replace('/starter'); return }
+
+        try {
+          const orFilter = [
+            userId ? `user_id.eq.${userId}` : null,
+            userEmail ? `input->>email.eq.${userEmail}` : null,
+          ].filter(Boolean).join(',')
+
+          const { count } = await supabase
+            .from('audit_results')
+            .select('*', { count: 'exact', head: true })
+            .or(orFilter)
+
+          if (count && count > 0) {
+            router.replace('/starter')
+          } else {
+            // Paid but no audit — force onboarding
+            router.replace('/audit?onboarding=1')
+          }
+        } catch {
+          router.replace('/starter')
+        }
+      }, 2500)
     }
 
     // Give webhook a moment to process payment first
