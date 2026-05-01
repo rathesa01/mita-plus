@@ -122,6 +122,16 @@ export async function POST(req: NextRequest) {
     // ── 5. Save full result ลง DB (await — ต้องการ id) ──
     await saveAuditResult(result)
 
+    // ── 5b. Fire-and-forget: pre-generate Revenue Paths if userId present ──
+    const bodyUserId = (raw as Record<string, unknown>)?.userId
+    if (bodyUserId && typeof bodyUserId === 'string') {
+      void fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/api/revenue/recommend`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ userId: bodyUserId }),
+      }).catch(() => { /* fire-and-forget — ignore errors */ })
+    }
+
     // ── 6. Lead + notify (fire-and-forget) ────────
     const gap = analysis.revenueEstimation.totalMissed
     const hasEmail = !!(data.email && data.email.length > 0)

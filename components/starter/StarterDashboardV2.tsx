@@ -32,7 +32,9 @@ import ProductsTabCream       from '@/components/starter/cream/ProductsTabCream'
 import ClipsTabCream          from '@/components/starter/cream/ClipsTabCream'
 import type { ClipsData }     from '@/components/starter/cream/ClipsTabCream'
 import MilestonesTabCream     from '@/components/starter/cream/MilestonesTabCream'
+import RevenuePathsSection    from '@/components/starter/cream/RevenuePathsSection'
 import { IncomeGraph, FirstVisitBanner, QuickWinSection } from '@/components/starter/legacy/LegacyPlanExtras'
+import type { RevenuePath }   from '@/types/revenuePath'
 
 /* ───────────────── Helpers ───────────────── */
 
@@ -716,6 +718,49 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
   }, [userId])
   useEffect(() => { fetchPlanState() }, [fetchPlanState])
 
+  // ── Revenue Paths state ────────────────────────────────────────────────────
+  const [revenuePaths, setRevenuePaths]       = useState<RevenuePath[]>([])
+  const [loadingPaths, setLoadingPaths]       = useState(false)
+  const [lastRefreshed, setLastRefreshed]     = useState<Date | null>(null)
+  const [pathsRefreshCount, setPathsRefreshCount] = useState(0)
+  const PATHS_LOCK_DAYS = 14
+
+  function pathsCanRefresh(): boolean {
+    if (!lastRefreshed) return true
+    const ageDays = (Date.now() - lastRefreshed.getTime()) / (1000 * 60 * 60 * 24)
+    return ageDays >= PATHS_LOCK_DAYS
+  }
+
+  const loadRevenuePaths = useCallback(async (forceRefresh = false) => {
+    if (!userId) return
+    setLoadingPaths(true)
+    try {
+      const url = forceRefresh
+        ? `/api/revenue/recommend?refresh=1`
+        : `/api/revenue/recommend`
+      const res = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ userId }),
+      })
+      if (!res.ok) return
+      const json = await res.json()
+      if (Array.isArray(json.paths)) {
+        setRevenuePaths(json.paths)
+        setLastRefreshed(new Date(json.generated_at))
+        setPathsRefreshCount(json.refresh_count ?? 1)
+      }
+    } catch {
+      // non-critical
+    } finally {
+      setLoadingPaths(false)
+    }
+  }, [userId])
+
+  useEffect(() => {
+    if (userId) { loadRevenuePaths() }
+  }, [userId, loadRevenuePaths])
+
   const cumulativeIncome = useMemo(
     () => checkins.reduce((sum, c) => sum + (c.income_approx || 0), 0),
     [checkins],
@@ -813,6 +858,18 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
                       onConnectChannel={handleConnectChannel}
                     />
                   )}
+
+                  {/* Revenue Paths Section */}
+                  <RevenuePathsSection
+                    paths={revenuePaths}
+                    onRefresh={() => loadRevenuePaths(true)}
+                    canRefresh={pathsCanRefresh()}
+                    lastRefreshed={lastRefreshed}
+                    loading={loadingPaths}
+                    onPathClick={(id) => {
+                      window.location.href = `/starter/path/${id}`
+                    }}
+                  />
                 </div>
               )}
 
