@@ -40,24 +40,27 @@ async function getCachedPaths(userId: string): Promise<RevenuePathsCache | null>
 async function getLatestAudit(userId: string) {
   const db = getDb()
 
-  // First try via user_profiles.audit_result_id
-  const { data: profile } = await db
-    .from('user_profiles')
-    .select('audit_result_id')
-    .eq('id', userId)
-    .single()
-
-  if (profile?.audit_result_id) {
-    const { data: audit } = await db
-      .from('audit_results')
-      .select('input, score_total, leaks, ai_insights')
-      .eq('id', profile.audit_result_id)
-      .single()
-    if (audit) return audit
+  // Step 1: Resolve user email via Supabase Admin API
+  const { data: { user }, error: userErr } = await db.auth.admin.getUserById(userId)
+  if (userErr || !user?.email) {
+    console.warn('[MITA+] revenue/recommend: cannot fetch user email', userErr?.message)
+    return null
   }
 
-  // Fallback: latest audit by any matching session (best effort)
-  return null
+  // Step 2: Query latest audit_results by email stored in input JSONB
+  const { data: audits, error: auditErr } = await db
+    .from('audit_results')
+    .select('input, score_total, leaks, ai_insights, createdAt')
+    .filter('input->>email', 'eq', user.email)
+    .order('createdAt', { ascending: false })
+    .limit(1)
+
+  if (auditErr) {
+    console.warn('[MITA+] revenue/recommend: audit query failed', auditErr.message)
+    return null
+  }
+
+  return audits?.[0] ?? null
 }
 
 // ── Call Claude Haiku to generate paths ──────────────────────────────────────
