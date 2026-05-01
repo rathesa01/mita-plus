@@ -37,6 +37,17 @@ export async function POST(req: NextRequest) {
 
     let customerId = profile?.stripe_customer_id
 
+    // ── Verify existing customer is valid in current mode (test vs live) ──
+    if (customerId) {
+      try {
+        await stripe.customers.retrieve(customerId)
+      } catch {
+        // Customer doesn't exist in this mode (e.g. test→live migration) → create fresh
+        console.warn(`[checkout] customer ${customerId} not found in ${keyMode} mode — creating new`)
+        customerId = null
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email,
