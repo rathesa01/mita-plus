@@ -3,7 +3,7 @@
 // P-010-fix1: Restored Products / Clips / Milestones tabs from legacy
 // Source: Lovable.dev "Mita AI Studio" · 29 Apr 2026
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles,
@@ -18,9 +18,13 @@ import {
   Film,
   Trophy,
   Lock,
+  AlertCircle,
 } from 'lucide-react'
 import type { DashboardV2Props, DashboardTab, WeekPlan } from '@/types'
 import MitaLogo from '@/app/components/MitaLogo'
+import { getSupabaseClient } from '@/lib/db/supabaseClient'
+import { getPlanState } from '@/lib/access/checkPlan'
+import type { PlanState } from '@/lib/access/checkPlan'
 
 // ── Tab components ────────────────────────────────────────────────────────────
 import ProductsTabCream       from '@/components/starter/cream/ProductsTabCream'
@@ -532,6 +536,83 @@ function ChannelAccuracyWarning({ onConnect }: { onConnect: () => void }) {
   )
 }
 
+/* ───────────────── Expiry Banner ───────────────── */
+
+function ExpiryBanner({ planState }: { planState: PlanState }) {
+  const { daysLeft, inGracePeriod } = planState
+
+  // Show only when within 7 days of expiry or in grace period
+  const showWarning     = daysLeft <= 7 && daysLeft > 0
+  const showGrace       = inGracePeriod
+  if (!showWarning && !showGrace) return null
+
+  // Days left in grace: 3 - how many days past expiry
+  const daysPastExpiry  = showGrace ? Math.max(0, Math.ceil(-daysLeft)) : 0
+  const graceDaysLeft   = Math.max(0, 3 - daysPastExpiry)
+
+  const isExpired = showGrace
+  const bg        = isExpired ? 'rgba(216,90,48,0.10)' : 'rgba(216,90,48,0.06)'
+  const border    = isExpired ? 'rgba(216,90,48,0.35)' : 'rgba(216,90,48,0.20)'
+  const textColor = isExpired ? '#B03A1A' : '#D85A30'
+
+  return (
+    <div
+      style={{
+        background:   bg,
+        border:       `1px solid ${border}`,
+        borderRadius: 14,
+        padding:      '12px 14px',
+        display:      'flex',
+        alignItems:   'flex-start',
+        gap:          10,
+        marginBottom: 4,
+      }}
+    >
+      <AlertCircle size={16} color={textColor} style={{ marginTop: 2, flexShrink: 0 }} />
+      <div style={{ flex: 1 }}>
+        {isExpired ? (
+          <>
+            <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: textColor }}>
+              แพลนหมดอายุแล้ว
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: '#6B6B6B', lineHeight: 1.5 }}>
+              {graceDaysLeft > 0
+                ? `ยังเข้าใช้ได้อีก ${graceDaysLeft} วัน (Grace Period) · ต่ออายุก่อนหมดนะคะ`
+                : 'Grace Period หมดแล้ว — กรุณาต่ออายุเพื่อใช้งานต่อค่ะ'
+              }
+            </p>
+          </>
+        ) : (
+          <>
+            <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: textColor }}>
+              เหลืออีก {daysLeft} วัน
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: '#6B6B6B', lineHeight: 1.5 }}>
+              ต่ออายุ ฿199 ผ่าน PromptPay · ใช้ได้ต่ออีก 30 วันทันที
+            </p>
+          </>
+        )}
+        <a
+          href='/pricing'
+          style={{
+            display:       'inline-block',
+            marginTop:     8,
+            padding:       '6px 16px',
+            background:    textColor,
+            color:         '#fff',
+            borderRadius:  8,
+            fontSize:      12,
+            fontWeight:    700,
+            textDecoration:'none',
+          }}
+        >
+          {isExpired ? 'ต่ออายุตอนนี้ →' : 'แสกน QR ต่ออายุ →'}
+        </a>
+      </div>
+    </div>
+  )
+}
+
 /* ───────────────── Bottom Tab Switcher ───────────────── */
 
 const TABS: { id: DashboardTab; label: string; icon: typeof Calendar }[] = [
@@ -599,6 +680,21 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
   const [doneActions, setDoneActions] = useState<Set<number>>(new Set())
   useEffect(() => { setDoneActions(new Set()) }, [activeWeek])
 
+  // ── Expiry state ──────────────────────────────────────────────────────────
+  const [planState, setPlanState] = useState<PlanState | null>(null)
+  const fetchPlanState = useCallback(async () => {
+    if (!userId) return
+    try {
+      const supabase = getSupabaseClient()
+      if (!supabase) return
+      const state = await getPlanState(supabase, userId)
+      setPlanState(state)
+    } catch {
+      // non-critical — fail silently
+    }
+  }, [userId])
+  useEffect(() => { fetchPlanState() }, [fetchPlanState])
+
   const cumulativeIncome = useMemo(
     () => checkins.reduce((sum, c) => sum + (c.income_approx || 0), 0),
     [checkins],
@@ -636,6 +732,9 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
         <div className='mb-1 text-sm text-muted-foreground'>
           สวัสดี, <span className='font-medium text-foreground'>{user.name}</span>
         </div>
+        {/* ── Expiry Banner (shown 7 days before or during grace period) ── */}
+        {planState && <ExpiryBanner planState={planState} />}
+
         <div className='mt-4'>
           <SmartHeroKPI
             cumulativeIncome={cumulativeIncome}

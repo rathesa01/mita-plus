@@ -28,14 +28,25 @@ export async function POST(req: NextRequest) {
 
     switch (event.type) {
 
-      // ✅ One-time payment หรือ subscription สำเร็จ → activate plan 30 วัน
+      // ✅ One-time payment สำเร็จ → activate / extend forward 30 วัน
       case 'checkout.session.completed': {
         const uid = obj.metadata?.supabase_uid
         const plan = (obj.metadata?.plan ?? 'starter') as 'starter' | 'pro'
 
         if (uid) {
-          // plan_expires_at = วันนี้ + 30 วัน
-          const expiresAt = new Date()
+          // Extend forward: ถ้ายังไม่หมด → เพิ่มต่อจากวันที่หมดเดิม (ไม่เสียวันที่เหลือ)
+          const { data: currentProfile } = await supabaseAdmin
+            .from('user_profiles')
+            .select('plan_expires_at')
+            .eq('id', uid)
+            .single()
+
+          const now = new Date()
+          const currentExpires = currentProfile?.plan_expires_at
+            ? new Date(currentProfile.plan_expires_at)
+            : now
+          const baseDate = currentExpires > now ? currentExpires : now
+          const expiresAt = new Date(baseDate)
           expiresAt.setDate(expiresAt.getDate() + 30)
 
           await supabaseAdmin.from('user_profiles').update({
@@ -45,7 +56,8 @@ export async function POST(req: NextRequest) {
             stripe_customer_id: obj.customer,
           }).eq('id', uid)
 
-          console.log(`✅ Plan activated: ${uid} → ${plan} (expires: ${expiresAt.toISOString()})`)
+          const wasExtended = currentExpires > now
+          console.log(`✅ Plan ${wasExtended ? 'extended' : 'activated'}: ${uid} → ${plan} (expires: ${expiresAt.toISOString()})`)
         }
         break
       }
@@ -57,7 +69,19 @@ export async function POST(req: NextRequest) {
           const sub = await stripe.subscriptions.retrieve(subId)
           const uid = sub.metadata?.supabase_uid
           if (uid) {
-            const expiresAt = new Date()
+            // Extend forward เช่นกัน
+            const { data: currentProfile } = await supabaseAdmin
+              .from('user_profiles')
+              .select('plan_expires_at')
+              .eq('id', uid)
+              .single()
+
+            const now = new Date()
+            const currentExpires = currentProfile?.plan_expires_at
+              ? new Date(currentProfile.plan_expires_at)
+              : now
+            const baseDate = currentExpires > now ? currentExpires : now
+            const expiresAt = new Date(baseDate)
             expiresAt.setDate(expiresAt.getDate() + 30)
 
             await supabaseAdmin.from('user_profiles').update({
@@ -65,7 +89,7 @@ export async function POST(req: NextRequest) {
               plan_expires_at: expiresAt.toISOString(),
             }).eq('id', uid)
 
-            console.log(`✅ Subscription renewed: ${uid}`)
+            console.log(`✅ Subscription renewed (extended): ${uid} (expires: ${expiresAt.toISOString()})`)
           }
         }
         break

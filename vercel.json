@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/refresh-products",
       "schedule": "0 19 * * 0"
+    },
+    {
+      "path": "/api/cron/expire-plans",
+      "schedule": "0 1 * * *"
     }
   ]
 }

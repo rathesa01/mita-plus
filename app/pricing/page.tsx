@@ -43,12 +43,12 @@ const TIERS = [
     icon: Star,
     name: 'Starter',
     price: '199',
-    period: '/เดือน',
+    period: '/เดือน · แสกน QR',
     tagline: 'ดูเต็มทุกจุดที่เสียเงิน',
     color: '#7B61FF',
     gradient: 'linear-gradient(135deg, rgba(123,97,255,0.18), rgba(123,97,255,0.06))',
     border: 'rgba(123,97,255,0.35)',
-    ctaText: 'สมัคร Starter — ฿199/เดือน',
+    ctaText: 'แสกน QR PromptPay · ฿199',
     ctaHref: null,
     ctaStyle: 'purple' as const,
     priceId: PRICE_STARTER,
@@ -240,7 +240,7 @@ function TierCard({
 
       {tier.id !== 'free' && !('comingSoon' in tier && tier.comingSoon) && (
         <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.22)', marginTop: '10px' }}>
-          ยกเลิกได้ทุกเดือน · ไม่มีสัญญา
+          จ่ายครั้งเดียวผ่าน PromptPay · ใช้ได้ 30 วัน · ต่ออายุได้ทุกเมื่อ
         </p>
       )}
     </motion.div>
