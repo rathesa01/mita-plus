@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { PartyPopper, CheckCircle2, Loader2 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/db/supabaseClient'
 
 export default function SubscribeSuccess() {
   const router = useRouter()
-  const [statusText, setStatusText] = useState('กำลังเตรียมแผนของคุณ...')
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     const run = async () => {
@@ -20,7 +21,6 @@ export default function SubscribeSuccess() {
           const userId = session?.user?.id
 
           if (userId && supabase) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await supabase.from('user_profiles').update({
               audit_data: JSON.parse(auditRaw),
             } as any).eq('id', userId)
@@ -31,64 +31,102 @@ export default function SubscribeSuccess() {
         console.error('Failed to save audit data:', e)
       }
 
-      setStatusText('พร้อมแล้ว! กำลังพาไปหน้าแผนของคุณ...')
-      setTimeout(() => router.replace('/starter'), 1500)
+      setReady(true)
+      setTimeout(() => router.replace('/starter'), 2500)
     }
 
     // Give webhook a moment to process payment first
-    const t = setTimeout(run, 1500)
+    const t = setTimeout(run, 1000)
     return () => clearTimeout(t)
   }, [router])
 
   return (
     <div style={{
-      background: '#0F0F13', minHeight: '100vh',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      padding: '24px', gap: '16px',
+      background: '#FFFAF5',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '32px 24px',
+      gap: '0',
     }}>
+      {/* Icon circle */}
       <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        style={{ fontSize: '72px', lineHeight: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+        style={{
+          width: 88,
+          height: 88,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, rgba(216,90,48,0.12) 0%, rgba(216,90,48,0.06) 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 24,
+        }}
       >
-        🎉
+        <PartyPopper size={44} color='#D85A30' strokeWidth={1.6} />
       </motion.div>
+
+      {/* Heading */}
       <motion.h1
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        style={{ margin: 0, fontSize: '26px', fontWeight: 900, color: '#fff', textAlign: 'center' }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        style={{
+          margin: '0 0 12px',
+          fontSize: 22,
+          fontWeight: 800,
+          color: '#1D1D1F',
+          textAlign: 'center',
+          letterSpacing: '-0.3px',
+          lineHeight: 1.3,
+        }}
       >
         ยินดีต้อนรับสู่ MITA+!
       </motion.h1>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        style={{ margin: 0, fontSize: '15px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.7 }}
-      >
-        ชำระเงินสำเร็จค่ะ ✅<br />
-        {statusText}
-      </motion.p>
+
+      {/* Check + status */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
+        transition={{ delay: 0.3 }}
         style={{
-          marginTop: '8px', padding: '3px 3px',
-          background: 'rgba(123,97,255,0.15)',
-          borderRadius: '99px', width: '200px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          marginBottom: 28,
         }}
       >
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: '100%' }}
-          transition={{ duration: 2.8, ease: 'linear', delay: 0.3 }}
-          style={{ height: '4px', background: 'linear-gradient(90deg, #7B61FF, #3ECFFF)', borderRadius: '99px' }}
-        />
+        <CheckCircle2 size={15} color='#D85A30' strokeWidth={2} />
+        <span style={{ fontSize: 14, color: '#D85A30', fontWeight: 600 }}>
+          ชำระเงินสำเร็จค่ะ
+        </span>
       </motion.div>
+
+      {/* Loading spinner */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: ready ? 1 : 0.4 }}
+        transition={{ delay: 0.5 }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+      >
+        <Loader2
+          size={16}
+          color='#D85A30'
+          strokeWidth={2}
+          style={{ animation: 'spin 1s linear infinite' }}
+        />
+        <span style={{ fontSize: 13, color: 'rgba(29,29,31,0.45)', fontWeight: 500 }}>
+          {ready ? 'กำลังพาไปหน้าแผนของคุณ...' : 'กำลังเตรียมแผนของคุณ...'}
+        </span>
+      </motion.div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }

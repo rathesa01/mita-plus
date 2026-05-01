@@ -19,6 +19,7 @@ import {
   Trophy,
   Lock,
   AlertCircle,
+  Crown,
 } from 'lucide-react'
 import type { DashboardV2Props, DashboardTab, WeekPlan } from '@/types'
 import MitaLogo from '@/app/components/MitaLogo'
@@ -69,12 +70,32 @@ const WEEK_THEMES: Record<number, { color: string; bg: string; label: string }> 
 
 /* ───────────────── Top Nav ───────────────── */
 
-function TopNav({ score }: { score: number }) {
+function PlanBadge({ plan }: { plan?: 'free' | 'starter' | 'pro' | 'none' }) {
+  if (!plan || plan === 'free' || plan === 'none') return null
+  const isStarter = plan === 'starter'
+  return (
+    <div
+      className='flex items-center gap-1 rounded-full px-2.5 py-1'
+      style={{
+        background: isStarter ? 'rgba(216,90,48,0.12)' : 'rgba(127,119,221,0.14)',
+        color:      isStarter ? '#D85A30'               : '#7F77DD',
+      }}
+    >
+      <Crown size={11} strokeWidth={2.2} />
+      <span className='text-[11px] font-bold leading-none'>
+        {isStarter ? 'Starter' : 'Pro'}
+      </span>
+    </div>
+  )
+}
+
+function TopNav({ score, plan }: { score: number; plan?: 'free' | 'starter' | 'pro' | 'none' }) {
   return (
     <div className='sticky top-0 z-40 backdrop-blur-md bg-[color-mix(in_oklab,var(--background)_85%,transparent)] border-b border-black/5'>
       <div className='mx-auto flex max-w-2xl items-center justify-between px-4 py-3'>
         <MitaLogo size='sm' />
         <div className='flex items-center gap-2'>
+          <PlanBadge plan={plan} />
           <div
             className='rounded-full px-2.5 py-1 text-[11px] font-semibold'
             style={{ background: 'var(--coral-bg)', color: 'var(--coral-text)' }}
@@ -727,7 +748,7 @@ export default function StarterDashboardV2(props: DashboardV2Props) {
 
   return (
     <div className='min-h-screen bg-background font-sans text-foreground'>
-      <TopNav score={user.score} />
+      <TopNav score={user.score} plan={planState?.plan} />
       <main className='mx-auto max-w-2xl px-4 pb-8 pt-5'>
         <div className='mb-1 text-sm text-muted-foreground'>
           สวัสดี, <span className='font-medium text-foreground'>{user.name}</span>
