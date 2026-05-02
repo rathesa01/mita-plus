@@ -168,12 +168,13 @@ const STEP_META = [
   },
 ]
 
-const LOADING_MESSAGES = [
-  'กำลังวิเคราะห์ niche ของคุณ...',
-  'เปรียบเทียบกับ creator ใน benchmark...',
-  'คำนวณ revenue gap...',
-  'เลือกช่องทางที่เหมาะกับคุณ...',
-  'สร้างแผนปฏิบัติ 90 วัน...',
+// Progressive loading stages — time-based (ms from submit start)
+const LOADING_STAGES: Array<{ ms: number; text: string }> = [
+  { ms: 0,     text: 'กำลังเช็ค niche ของคุณ...' },
+  { ms: 4000,  text: 'AI กำลังหา revenue blocker...' },
+  { ms: 9000,  text: 'คำนวณรายได้ที่หายไป...' },
+  { ms: 14000, text: 'สร้างแผน 90 วัน...' },
+  { ms: 18000, text: 'เกือบเสร็จแล้วค่ะ...' },
 ]
 
 type Errors = Partial<Record<keyof AuditFormData, string>>
@@ -238,14 +239,14 @@ function AuditFormV2() {
     }
   }, [data])
 
-  // Cycle loading messages while submitting
+  // Time-based progressive loading stages
   useEffect(() => {
     if (!submitting) return
     setLoadingIdx(0)
-    const id = window.setInterval(() => {
-      setLoadingIdx((i) => Math.min(i + 1, LOADING_MESSAGES.length - 1))
-    }, 2000)
-    return () => window.clearInterval(id)
+    const timers = LOADING_STAGES.slice(1).map((stage, i) =>
+      window.setTimeout(() => setLoadingIdx(i + 1), stage.ms)
+    )
+    return () => timers.forEach(window.clearTimeout)
   }, [submitting])
 
   const update = <K extends keyof AuditFormData>(key: K, value: AuditFormData[K]) => {
@@ -284,13 +285,22 @@ function AuditFormV2() {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      // Attach userId if user is logged in — enables user_id linkage in audit_results
+      // Get userId + plan (both from same session call — one round-trip)
       let userId: string | null = null
+      let userPlan: string | null = null
       try {
         const supabase = getSupabaseClient()
         const { data: { session } } = await (supabase?.auth.getSession() ?? Promise.resolve({ data: { session: null } }))
         userId = session?.user?.id ?? null
-      } catch { /* unauthenticated — proceed without userId */ }
+        if (userId && supabase) {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('plan')
+            .eq('id', userId)
+            .single()
+          userPlan = profile?.plan ?? null
+        }
+      } catch { /* unauthenticated — proceed without userId/plan */ }
 
       const res = await fetch('/api/analyze', {
         method: 'POST',
@@ -304,14 +314,12 @@ function AuditFormV2() {
       }
       if (!res.ok) throw new Error('เกิดข้อผิดพลาด ลองใหม่อีกครั้งค่ะ')
       const json = (await res.json()) as { id: string }
-      try {
-        localStorage.removeItem(STORAGE_KEY)
-      } catch {
-        /* ignore */
-      }
-      // Onboarding flow: redirect to /starter instead of /result
-      if (isOnboarding) {
-        router.replace('/starter?from=onboarding')
+      try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
+
+      // Paid user OR onboarding → /starter direct (skip /result Soft Gate)
+      const isPaid = userPlan === 'starter' || userPlan === 'pro'
+      if (isOnboarding || isPaid) {
+        router.replace('/starter')
       } else {
         window.location.href = `/result?id=${encodeURIComponent(json.id)}`
       }
@@ -490,7 +498,7 @@ function AuditFormV2() {
                     transition={{ duration: 0.25 }}
                     className="text-sm text-muted-foreground"
                   >
-                    {LOADING_MESSAGES[loadingIdx]}
+                    {LOADING_STAGES[loadingIdx]?.text ?? LOADING_STAGES[0].text}
                   </motion.p>
                 </AnimatePresence>
               </div>

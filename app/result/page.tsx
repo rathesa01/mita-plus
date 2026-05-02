@@ -11,6 +11,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { AuditResult, ShareChannel } from '@/types'
 import ResultPageV2 from '@/components/result/ResultPageV2'
+import { getSupabaseClient } from '@/lib/db/supabaseClient'
 
 // ── Inner (needs useSearchParams — must be wrapped in Suspense) ──────────────
 function ResultPageInner() {
@@ -20,15 +21,39 @@ function ResultPageInner() {
 
   const [result,      setResult]      = useState<AuditResult | null>(null)
   const [isLoggedIn,  setIsLoggedIn]  = useState(false)
+  const [isPaid,      setIsPaid]      = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
 
-  // ── Auth check (LINE session) ────────────────────────────────────────────
+  // ── Auth check: LINE session OR paid Supabase plan ───────────────────────
   useEffect(() => {
+    let done = false
+
+    // Check LINE session (existing)
     fetch('/api/auth/line/session')
       .then(r => r.json())
-      .then(({ user }) => setIsLoggedIn(!!user))
-      .catch(() => setIsLoggedIn(false))
-      .finally(() => setAuthLoading(false))
+      .then(({ user }) => { if (!done) setIsLoggedIn(!!user) })
+      .catch(() => {})
+
+    // Check Supabase paid plan
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        if (!session?.user) { if (!done) setAuthLoading(false); return }
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('plan')
+          .eq('id', session.user.id)
+          .single()
+        if (!done) {
+          setIsPaid(profile?.plan === 'starter' || profile?.plan === 'pro')
+          setAuthLoading(false)
+        }
+      }).catch(() => { if (!done) setAuthLoading(false) })
+    } else {
+      setAuthLoading(false)
+    }
+
+    return () => { done = true }
   }, [])
 
   // ── Load result: DB → sessionStorage fallback ────────────────────────────
@@ -92,14 +117,46 @@ function ResultPageInner() {
   const handleUpgrade    = () => router.push('/pricing')
 
   return (
-    <ResultPageV2
-      result={result}
-      isLoggedIn={isLoggedIn}
-      onLineLogin={handleLineLogin}
-      onEmailLogin={handleEmailLogin}
-      onShare={handleShare}
-      onUpgrade={handleUpgrade}
-    />
+    <>
+      {/* Sticky back-to-dashboard button for paid users */}
+      {isPaid && (
+        <div style={{
+          position: 'fixed',
+          top: 12,
+          left: 12,
+          zIndex: 50,
+        }}>
+          <button
+            type='button'
+            onClick={() => router.push('/starter')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: '#1D1D1F',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 16px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+            }}
+          >
+            ← กลับ Dashboard
+          </button>
+        </div>
+      )}
+      <ResultPageV2
+        result={result}
+        isLoggedIn={isLoggedIn || isPaid}
+        onLineLogin={handleLineLogin}
+        onEmailLogin={handleEmailLogin}
+        onShare={handleShare}
+        onUpgrade={handleUpgrade}
+      />
+    </>
   )
 }
 
